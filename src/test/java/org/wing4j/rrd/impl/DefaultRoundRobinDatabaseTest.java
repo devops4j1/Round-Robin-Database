@@ -2,10 +2,7 @@ package org.wing4j.rrd.impl;
 
 import com.google.gson.Gson;
 import org.junit.Test;
-import org.wing4j.rrd.MergeType;
-import org.wing4j.rrd.RoundRobinConnection;
-import org.wing4j.rrd.RoundRobinDatabase;
-import org.wing4j.rrd.RoundRobinView;
+import org.wing4j.rrd.*;
 
 import java.util.concurrent.TimeUnit;
 
@@ -18,18 +15,34 @@ public class DefaultRoundRobinDatabaseTest {
     public void testWrite() throws Exception {
         final RoundRobinDatabase database = DefaultRoundRobinDatabase.init();
         final RoundRobinConnection connection = database.open(1, TimeUnit.DAYS, "success", "fail", "request", "response", "other");
+        connection.addTrigger(new RoundRobinTrigger() {
+            @Override
+            public String getName() {
+                return "request";
+            }
+
+            @Override
+            public boolean accept(int time, long data) {
+                return data > 1000;
+            }
+
+            @Override
+            public void trigger(int time, long data) {
+                System.out.println("触发" + time + ","+ data);
+            }
+        });
         Thread[] threads = new Thread[200];
         for (int i = 0; i < 200; i++) {
             threads[i] = new Thread() {
                 @Override
                 public void run() {
-                    for (int j = 0; j < 1; j++) {
+                    for (int j = 0; j < 2000; j++) {
                         connection.increase("success");
                     }
-                    for (int j = 0; j < 1; j++) {
+                    for (int j = 0; j < 2000; j++) {
                         connection.increase("fail");
                     }
-                    for (int j = 0; j < 1; j++) {
+                    for (int j = 0; j < 2000; j++) {
                         connection.increase("request");
                     }
                 }
@@ -62,6 +75,22 @@ public class DefaultRoundRobinDatabaseTest {
         Thread.sleep(2 * 1000);
 
         connection.freezen();
+        connection.addTrigger(new RoundRobinTrigger() {
+            @Override
+            public String getName() {
+                return "request";
+            }
+
+            @Override
+            public boolean accept(int time, long data) {
+                return true;
+            }
+
+            @Override
+            public void trigger(int time, long data) {
+                System.out.println("触发");
+            }
+        });
         connection.merge(view, MergeType.ADD);
         connection.merge(view, MergeType.ADD);
         connection.merge(view, MergeType.ADD);

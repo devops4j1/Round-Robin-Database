@@ -83,6 +83,12 @@ public interface RoundRobinConnection {
     RoundRobinView slice(int second, String... name);
 
     /**
+     * 增加触发器
+     * @param trigger 触发器
+     * @return 连接上下文
+     */
+    RoundRobinConnection addTrigger(RoundRobinTrigger trigger);
+    /**
      * 合并切片数据到数据库
      * @param view 切片视图数据
      * @param mergeType 合并类型
@@ -90,6 +96,13 @@ public interface RoundRobinConnection {
      */
     RoundRobinConnection merge(RoundRobinView view, MergeType mergeType);
 
+    /**
+     * 合并切片数据到数据库
+     * @param view 切片视图数据
+     * @param time 合并起始时间点
+     * @param mergeType 合并类型
+     * @return 连接上下文
+     */
     RoundRobinConnection merge(RoundRobinView view, int time, MergeType mergeType);
     /**
      * 设置持久化文件名

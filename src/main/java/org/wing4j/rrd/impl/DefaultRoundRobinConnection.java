@@ -6,6 +6,10 @@ import org.wing4j.rrd.v1.RoundRobinFormatV1;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by wing4j on 2017/7/29.
@@ -19,12 +23,21 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
     String[] header = null;
     volatile RoundRobinDatabase database;
     volatile String fileName;
+    volatile List<RoundRobinTrigger>[] triggers;
+    /**
+     * 任务执行线程池
+     */
+    volatile ScheduledExecutorService taskExecutor = Executors.newScheduledThreadPool(20);
 
     DefaultRoundRobinConnection(RoundRobinDatabase database, String[] header, long[][] data, String fileName) {
         this.database = database;
         this.header = header;
         this.data = data;
         this.fileName = fileName;
+        this.triggers = new ArrayList[header.length];
+        for (int i = 0; i < this.triggers.length; i++) {
+            this.triggers[i] = new ArrayList<>();
+        }
     }
 
     @Override
@@ -114,11 +127,23 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public RoundRobinConnection increase(int sec, String name, int i) {
-        int idx = getIndex(name);
+    public RoundRobinConnection increase(final int sec, String name, int i) {
+        final int idx = getIndex(name);
         synchronized (this.header[idx]) {
             this.data[sec][idx] = this.data[sec][idx] + i;
         }
+        final long data0 = this.data[sec][idx];
+        final List<RoundRobinTrigger> triggers = this.triggers[idx];
+        taskExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                for (RoundRobinTrigger trigger : triggers){
+                    if(trigger.accept(sec, data0)){
+                        trigger.trigger(sec, data0);
+                    }
+                }
+            }
+        });
         return this;
     }
 
@@ -142,6 +167,12 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
             }
         }
         return new RoundRobinView(name, timeline0, data0, pos);
+    }
+
+    @Override
+    public RoundRobinConnection addTrigger(RoundRobinTrigger trigger) {
+        this.triggers[getIndex(trigger.getName())].add(trigger);
+        return this;
     }
 
     @Override
