@@ -68,7 +68,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
             }
             data[i] = col;
         }
-        RoundRobinConnection connection = new DefaultRoundRobinConnection(this, header, data);
+        RoundRobinConnection connection = new DefaultRoundRobinConnection(this, header, data, null);
         connections.add(connection);
         return connection;
     }
@@ -78,7 +78,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
         RoundRobinFormat format = new RoundRobinFormatV1();
         format.readFormFile(fileName);
         //创建一个计时器，进行数据的异步写入
-        RoundRobinConnection connection = new DefaultRoundRobinConnection(this, format.getHeader(), format.getData());
+        RoundRobinConnection connection = new DefaultRoundRobinConnection(this, format.getHeader(), format.getData(), fileName);
         connections.add(connection);
         return connection;
     }

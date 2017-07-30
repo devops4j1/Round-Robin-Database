@@ -7,6 +7,19 @@ import java.io.InputStream;
  * Created by wing4j on 2017/7/29.
  */
 public interface RoundRobinConnection {
+    int DAY_SECOND = 24 * 60 * 60;
+
+    /**
+     * 冻结数据
+     * @return
+     */
+    RoundRobinConnection freezen();
+
+    /**
+     * 解冻
+     * @return
+     */
+    RoundRobinConnection unfreezen();
     /**
      * 获取数据库
      * @return
@@ -25,8 +38,8 @@ public interface RoundRobinConnection {
      */
     long[][] read(String... name);
     /**
-     * 是否包含表头
-     * @param name 表头名字
+     * 是否包含头名称
+     * @param name 头名称
      * @return
      */
     boolean contain(String name);
@@ -34,13 +47,14 @@ public interface RoundRobinConnection {
      * 对应表头数据自增1
      * @param sec
      * @param name
+     * @return 连接上下文
      */
     RoundRobinConnection increase(int sec,String name);
 
     /**
      * 对应表头数据自增1
      * @param name
-     * @return
+     * @return 连接上下文
      */
     RoundRobinConnection increase(String name);
 
@@ -56,10 +70,27 @@ public interface RoundRobinConnection {
      * @param sec
      * @param name
      * @param i
-     * @return
+     * @return 连接上下文
      */
     RoundRobinConnection increase(int sec,String name, int i);
 
+    /**
+     * 数据切片,获取距今size秒之前的切片数据
+     * @param second 秒数
+     * @param name 头名称数组
+     * @return 视图切片
+     */
+    RoundRobinView slice(int second, String... name);
+
+    /**
+     * 合并切片数据到数据库
+     * @param view 切片视图数据
+     * @param mergeType 合并类型
+     * @return 连接上下文
+     */
+    RoundRobinConnection merge(RoundRobinView view, MergeType mergeType);
+
+    RoundRobinConnection merge(RoundRobinView view, int time, MergeType mergeType);
     /**
      * 设置持久化文件名
      * @param fileName
