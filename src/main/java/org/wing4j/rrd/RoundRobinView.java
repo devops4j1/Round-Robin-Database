@@ -2,6 +2,11 @@ package org.wing4j.rrd;
 
 import lombok.Data;
 import lombok.ToString;
+import org.wing4j.rrd.v1.RoundRobinFormatV1;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by wing4j on 2017/7/30.
@@ -50,4 +55,10 @@ public class RoundRobinView {
         }
         return data0;
     }
+
+    public void write(OutputStream os) throws IOException {
+        RoundRobinFormat format = new RoundRobinFormatV1(header, data, time, 1);
+        format.write(os);
+    }
+
 }

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import org.junit.Test;
 import org.wing4j.rrd.*;
 
+import java.io.FileOutputStream;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -101,6 +102,9 @@ public class DefaultRoundRobinDatabaseTest {
         connection.unfreezen();
         json = new Gson().toJson(connection.slice(24 * 60 * 60, "request").read("request"));
         System.out.println(json);
+        FileOutputStream fos = new FileOutputStream("D:/123.rrd");
+        connection.slice(24 * 60 * 60, "request").write(fos);
+        fos.close();
         connection.close();
     }
 }

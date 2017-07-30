@@ -4,9 +4,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.wing4j.rrd.RoundRobinFormat;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
@@ -173,6 +171,75 @@ public class RoundRobinFormatV1 implements RoundRobinFormat {
                 fos.close();
             }
         }
+    }
+
+    @Override
+    public void read(InputStream is) throws IOException {
+
+    }
+
+    @Override
+    public void write(OutputStream os) throws IOException {
+        int headerMaxLen = 0;
+        String[] header0 = new String[header.length - 1];
+        for (int i = 1; i < header.length; i++) {
+            header0[i - 1] = header[i];
+            if (header0[i - 1].length() > headerMaxLen) {
+                headerMaxLen = header0[i - 1].length();
+            }
+        }
+        int fileSize = 4;//文件版本号
+        fileSize += 4;//文件时间指针
+        fileSize += 4;//头数量
+        fileSize += 4;//头长度
+        fileSize += headerMaxLen * header0.length * 4;//文件头
+        fileSize += header0.length * data.length * 8;//数据区
+
+        ByteBuffer buffer = ByteBuffer.allocate(fileSize);
+        buffer.putInt(version);
+        if (DEBUG) {
+            System.out.println("version:" + version);
+        }
+        buffer.putInt(current);
+        if (DEBUG) {
+            System.out.println("current:" + current);
+        }
+        buffer.putInt(header0.length);
+        if (DEBUG) {
+            System.out.println("head size:" + header0.length);
+        }
+        buffer.putInt(headerMaxLen);
+        if (DEBUG) {
+            System.out.println("head length:" + headerMaxLen);
+        }
+        for (int i = 0; i < header0.length; i++) {
+            header0[i] = fill(header0[i], true, ' ', headerMaxLen);
+            char[] chars = header0[i].toCharArray();
+            for (char c : chars) {
+                buffer.putChar(c);
+            }
+            if (DEBUG) {
+                System.out.println("header:" + header0[i]);
+            }
+        }
+        buffer.putInt(header0.length);
+        if (DEBUG) {
+            System.out.println("head size:" + header0.length);
+        }
+        buffer.putInt(data.length);
+        if (DEBUG) {
+            System.out.println("data size:" + header0.length);
+        }
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 1; j < header.length; j++) {
+                buffer.putLong(data[i][j]);
+                if (DEBUG) {
+                    System.out.println("data[" + i + "][" + j + "]:" + data[i][j]);
+                }
+            }
+        }
+        buffer.flip();
+        os.write(buffer.array());
     }
 
     String fill(String in, boolean rightFillStyle, char fillChar, int len) {

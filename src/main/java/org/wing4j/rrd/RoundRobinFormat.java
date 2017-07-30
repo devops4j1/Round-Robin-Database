@@ -1,6 +1,8 @@
 package org.wing4j.rrd;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by wing4j on 2017/7/29.
@@ -26,4 +28,6 @@ public interface RoundRobinFormat {
     void readFormFile(String fileName) throws IOException;
 
     void writeToFile(String fileName) throws IOException;
+    void read(InputStream is) throws IOException;
+    void write(OutputStream os) throws IOException;
 }
