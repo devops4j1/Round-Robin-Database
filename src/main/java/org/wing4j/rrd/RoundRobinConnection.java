@@ -105,11 +105,10 @@ public interface RoundRobinConnection {
      */
     RoundRobinConnection merge(RoundRobinView view, int time, MergeType mergeType);
     /**
-     * 设置持久化文件名
-     * @param fileName
+     * 持久化
      * @return
      */
-    RoundRobinConnection persistent(String fileName) throws IOException;
+    RoundRobinConnection persistent() throws IOException;
 
     /**
      * 关闭连接

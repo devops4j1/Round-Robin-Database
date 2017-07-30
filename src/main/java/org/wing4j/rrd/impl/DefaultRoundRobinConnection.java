@@ -209,8 +209,7 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public RoundRobinConnection persistent(String fileName) throws IOException {
-        this.fileName = fileName;
+    public RoundRobinConnection persistent() throws IOException {
         RoundRobinFormat format = new RoundRobinFormatV1(header, data, getCurrent(), 1);
         format.writeToFile(fileName);
         //序列化数据
@@ -234,7 +233,7 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public void close() throws IOException {
-        persistent(this.fileName);
+        persistent();
         database.close(this);
     }
 

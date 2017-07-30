@@ -9,11 +9,11 @@ import java.util.concurrent.TimeUnit;
 public interface RoundRobinDatabase {
     /**
      * 初始化数据库
-     *
+     * @param fileName 文件名
      * @param names 表头
      * @return 初始化成功返回真
      */
-    RoundRobinConnection open(int time, TimeUnit timeUnit, String... names);
+    RoundRobinConnection open(String fileName, String... names);
     /**
      * 打开数据库
      *

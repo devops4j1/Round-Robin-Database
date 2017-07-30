@@ -1,5 +1,6 @@
 package org.wing4j.rrd.impl;
 
+import org.wing4j.rrd.RoundRobinConfig;
 import org.wing4j.rrd.RoundRobinConnection;
 import org.wing4j.rrd.RoundRobinDatabase;
 import org.wing4j.rrd.RoundRobinFormat;
@@ -16,14 +17,16 @@ import java.util.concurrent.TimeUnit;
 public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     Set<RoundRobinConnection> connections = new HashSet<>();
     static RoundRobinDatabase database;
-    private DefaultRoundRobinDatabase() {
+    RoundRobinConfig config;
+    private DefaultRoundRobinDatabase(RoundRobinConfig config) {
+        this.config = config;
     }
 
-    public static RoundRobinDatabase init(){
+    public static RoundRobinDatabase init(RoundRobinConfig config){
         if(database == null){
             synchronized (RoundRobinDatabase.class){
                 if(database == null){
-                    database = new DefaultRoundRobinDatabase();
+                    database = new DefaultRoundRobinDatabase(config);
                 }
             }
         }
@@ -40,7 +43,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     }
 
     @Override
-    public RoundRobinConnection open(int time, TimeUnit timeUnit, String... names) {
+    public RoundRobinConnection open(String fileName, String... names) {
         String[] header = new String[names.length + 1];
         if (contain(names, "index")) {
             throw new RuntimeException();
@@ -49,16 +52,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
         for (int i = 0; i < names.length; i++) {
             header[i + 1] = names[i];
         }
-        int size = 0;
-        if(timeUnit == TimeUnit.DAYS){
-            size = time * 24 * 60 * 60;
-        }else if(timeUnit == TimeUnit.HOURS){
-            size = time * 60 * 60;
-        }else if(timeUnit == TimeUnit.MINUTES){
-            size = time * 60;
-        }else{
-            throw new RuntimeException("不支持的时间单位");
-        }
+        int size = 1 * RoundRobinConnection.DAY_SECOND;
         long[][] data = new long[size][header.length];
         for (int i = 0; i < size; i++) {
             long[] col = new long[header.length];
@@ -68,7 +62,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
             }
             data[i] = col;
         }
-        RoundRobinConnection connection = new DefaultRoundRobinConnection(this, header, data, null);
+        RoundRobinConnection connection = new DefaultRoundRobinConnection(this, header, data, fileName);
         connections.add(connection);
         return connection;
     }

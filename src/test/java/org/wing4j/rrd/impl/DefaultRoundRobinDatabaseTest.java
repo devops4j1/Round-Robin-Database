@@ -13,8 +13,8 @@ public class DefaultRoundRobinDatabaseTest {
 
     @Test
     public void testWrite() throws Exception {
-        final RoundRobinDatabase database = DefaultRoundRobinDatabase.init();
-        final RoundRobinConnection connection = database.open(1, TimeUnit.DAYS, "success", "fail", "request", "response", "other");
+        final RoundRobinDatabase database = DefaultRoundRobinDatabase.init(new RoundRobinConfig());
+        final RoundRobinConnection connection = database.open("D:/1.json", "success", "fail", "request", "response", "other");
         connection.addTrigger(new RoundRobinTrigger() {
             @Override
             public String getName() {
@@ -23,7 +23,7 @@ public class DefaultRoundRobinDatabaseTest {
 
             @Override
             public boolean accept(int time, long data) {
-                return data > 1000;
+                return data > 2000 * 200 -1;
             }
 
             @Override
@@ -52,13 +52,13 @@ public class DefaultRoundRobinDatabaseTest {
             thrad.start();
         }
         Thread.sleep(60 * 1000);
-        connection.persistent("D:/1.json");
+        connection.persistent();
         connection.close();
     }
 
     @Test
     public void testRead() throws Exception {
-        RoundRobinDatabase database = DefaultRoundRobinDatabase.init();
+        RoundRobinDatabase database = DefaultRoundRobinDatabase.init(new RoundRobinConfig());
         RoundRobinConnection connection = database.open("D:/1.json");
         long[][] data = connection.read("success", "request", "fail");
         String json = new Gson().toJson(data[0]);
