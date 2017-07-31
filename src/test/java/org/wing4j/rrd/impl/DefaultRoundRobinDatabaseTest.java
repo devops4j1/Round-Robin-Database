@@ -5,7 +5,6 @@ import org.junit.Test;
 import org.wing4j.rrd.*;
 
 import java.io.FileOutputStream;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by liucheng on 2017/7/28.
@@ -15,7 +14,7 @@ public class DefaultRoundRobinDatabaseTest {
     @Test
     public void testWrite() throws Exception {
         final RoundRobinDatabase database = DefaultRoundRobinDatabase.init(new RoundRobinConfig());
-        final RoundRobinConnection connection = database.open("D:/1.json", "success", "fail", "request", "response", "other");
+        final RoundRobinConnection connection = database.open("D:/1.csv", "success", "fail", "request", "response", "other");
         connection.addTrigger(new RoundRobinTrigger() {
             @Override
             public String getName() {
@@ -52,8 +51,8 @@ public class DefaultRoundRobinDatabaseTest {
         for (Thread thrad : threads) {
             thrad.start();
         }
-        Thread.sleep(60 * 1000);
-        connection.persistent();
+        Thread.sleep(10 * 1000);
+        connection.persistent(FormatType.CSV, 1);
         connection.close();
     }
 

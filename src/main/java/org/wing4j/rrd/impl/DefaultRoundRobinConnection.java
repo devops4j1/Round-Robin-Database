@@ -2,7 +2,8 @@ package org.wing4j.rrd.impl;
 
 
 import org.wing4j.rrd.*;
-import org.wing4j.rrd.v1.RoundRobinFormatV1;
+import org.wing4j.rrd.format.bin.v1.RoundRobinFormatBinV1;
+import org.wing4j.rrd.format.csv.v1.RoundRobinFormatCsvV1;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +25,7 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
     volatile RoundRobinDatabase database;
     volatile String fileName;
     volatile List<RoundRobinTrigger>[] triggers;
+    FormatType formatType = FormatType.BIN;
     /**
      * 任务执行线程池
      */
@@ -37,6 +39,9 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
         this.triggers = new ArrayList[header.length];
         for (int i = 0; i < this.triggers.length; i++) {
             this.triggers[i] = new ArrayList<>();
+        }
+        if (fileName != null && fileName.trim().toLowerCase().endsWith(".csv")) {
+            formatType = FormatType.CSV;
         }
     }
 
@@ -137,8 +142,8 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
         taskExecutor.submit(new Runnable() {
             @Override
             public void run() {
-                for (RoundRobinTrigger trigger : triggers){
-                    if(trigger.accept(sec, data0)){
+                for (RoundRobinTrigger trigger : triggers) {
+                    if (trigger.accept(sec, data0)) {
                         trigger.trigger(sec, data0);
                     }
                 }
@@ -209,11 +214,22 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public RoundRobinConnection persistent() throws IOException {
-        RoundRobinFormat format = new RoundRobinFormatV1(header, data, getCurrent(), 1);
-        format.writeToFile(fileName);
+    public RoundRobinConnection persistent(FormatType formatType, int version) throws IOException {
+        if (formatType == FormatType.BIN && version == 1) {
+            RoundRobinFormat format = new RoundRobinFormatBinV1(header, data, getCurrent());
+            format.write(fileName);
+        } else if (formatType == FormatType.CSV && version == 1) {
+            RoundRobinFormat format = new RoundRobinFormatCsvV1(header, data, getCurrent());
+            format.write(fileName);
+        } else {
+            throw new RoundRobinRuntimeException("不支持的文件格式和文件版本");
+        }
         //序列化数据
         return this;
+    }
+
+    public RoundRobinConnection persistent() throws IOException {
+        return persistent(formatType, 1);
     }
 
     /**
@@ -233,7 +249,9 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public void close() throws IOException {
-        persistent();
+        if (database.getConfig().isAutoPersistent()) {
+            persistent();
+        }
         database.close(this);
     }
 

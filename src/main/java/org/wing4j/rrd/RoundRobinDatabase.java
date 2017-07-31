@@ -21,6 +21,7 @@ public interface RoundRobinDatabase {
      */
     RoundRobinConnection open(String fileName) throws IOException;
 
+    RoundRobinConfig getConfig();
     /**
      * 关闭数据库
      */

@@ -106,7 +106,16 @@ public interface RoundRobinConnection {
     RoundRobinConnection merge(RoundRobinView view, int time, MergeType mergeType);
     /**
      * 持久化
-     * @return
+     * @param formatType 持久化文件格式
+     * @param version 版本号
+     * @return 连接上下文
+     */
+    RoundRobinConnection persistent(FormatType formatType, int version) throws IOException;
+
+    /**
+     * 持久化为BIN格式最新版本
+     * @return 连接上下文
+     * @throws IOException
      */
     RoundRobinConnection persistent() throws IOException;
 

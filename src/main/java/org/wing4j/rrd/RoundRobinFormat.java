@@ -1,8 +1,8 @@
 package org.wing4j.rrd;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 
 /**
  * Created by wing4j on 2017/7/29.
@@ -25,9 +25,9 @@ public interface RoundRobinFormat {
 
     void setVersion(int version);
 
-    void readFormFile(String fileName) throws IOException;
+    void read(String fileName) throws IOException;
 
-    void writeToFile(String fileName) throws IOException;
-    void read(InputStream is) throws IOException;
-    void write(OutputStream os) throws IOException;
+    void write(String fileName) throws IOException;
+    void read(ReadableByteChannel channel) throws IOException;
+    void write(WritableByteChannel channel) throws IOException;
 }

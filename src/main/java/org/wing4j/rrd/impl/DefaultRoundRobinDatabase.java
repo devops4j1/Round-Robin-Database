@@ -4,12 +4,11 @@ import org.wing4j.rrd.RoundRobinConfig;
 import org.wing4j.rrd.RoundRobinConnection;
 import org.wing4j.rrd.RoundRobinDatabase;
 import org.wing4j.rrd.RoundRobinFormat;
-import org.wing4j.rrd.v1.RoundRobinFormatV1;
+import org.wing4j.rrd.format.bin.v1.RoundRobinFormatBinV1;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by wing4j on 2017/7/28.
@@ -69,12 +68,17 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     @Override
     public RoundRobinConnection open(String fileName) throws IOException {
         //创建一个二进制文件
-        RoundRobinFormat format = new RoundRobinFormatV1();
-        format.readFormFile(fileName);
+        RoundRobinFormat format = new RoundRobinFormatBinV1();
+        format.read(fileName);
         //创建一个计时器，进行数据的异步写入
         RoundRobinConnection connection = new DefaultRoundRobinConnection(this, format.getHeader(), format.getData(), fileName);
         connections.add(connection);
         return connection;
+    }
+
+    @Override
+    public RoundRobinConfig getConfig() {
+        return config;
     }
 
     @Override
