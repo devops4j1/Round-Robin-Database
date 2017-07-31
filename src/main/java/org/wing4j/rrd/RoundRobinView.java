@@ -33,8 +33,7 @@ public class RoundRobinView {
         this.data = data;
         this.time = time;
     }
-
-    public int getIndex(String name) {
+    int getIndex(String name) {
         int idx = 0;
         for (String name0 : header) {
             if (name.equals(name0)) {
@@ -46,7 +45,19 @@ public class RoundRobinView {
         throw new RuntimeException("未找到" + name);
     }
 
-    public long[] read(String name){
+    public RoundRobinResultSet read() {
+        return read(header);
+    }
+    public RoundRobinResultSet read(String... name) {
+        long[][] data0 = new long[name.length][data.length];
+        for (int i = 0; i < name.length; i++) {
+            data0[i] = read(name[i]);
+        }
+        RoundRobinResultSet resultSet = new RoundRobinResultSet(name, data0);
+        return resultSet;
+    }
+
+    long[] read(String name) {
         long[] data0 = new long[data.length];
         int idx = getIndex(name);
         for (int i = 0; i < data0.length; i++) {

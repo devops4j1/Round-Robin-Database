@@ -1,13 +1,11 @@
 package org.wing4j.rrd;
 
-import lombok.Data;
 
 import java.util.Iterator;
 
 /**
  * Created by wing4j on 2017/7/31.
  */
-@Data
 public class RoundRobinResultSet implements Iterable{
     String[] header;
     long[][] data;
@@ -25,6 +23,7 @@ public class RoundRobinResultSet implements Iterable{
     public long[] getData(String name){
         return data[getIndex(name)];
     }
+
     int getIndex(String name) {
         int idx = 0;
         for (String name0 : header) {

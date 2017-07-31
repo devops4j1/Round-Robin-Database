@@ -85,7 +85,7 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
 
     long[] read(String name) {
         long[] data0 = new long[data.length];
-        int idx = getIndex(name);
+        int idx = getIndex(name, header);
         int current = getCurrent();
         for (int i = 0; i < data0.length; i++) {
             data0[i] = data[(i + current) % data0.length][idx];
@@ -108,9 +108,9 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
         return increase(sec, name, 1);
     }
 
-    int getIndex(String name) {
+    int getIndex(String name, String[] names) {
         int idx = 0;
-        for (String name0 : header) {
+        for (String name0 : names) {
             if (name.equals(name0)) {
                 return idx;
             } else {
@@ -134,7 +134,7 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public RoundRobinConnection increase(final int sec, String name, int i) {
-        final int idx = getIndex(name);
+        final int idx = getIndex(name, header);
         synchronized (this.header[idx]) {
             this.data[sec][idx] = this.data[sec][idx] + i;
         }
@@ -159,7 +159,7 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
         int[] timeline0 = new int[second];
         int[] indexes = new int[name.length];
         for (int i = 0; i < name.length; i++) {
-            indexes[i] = getIndex(name[i]);
+            indexes[i] = getIndex(name[i], header);
         }
         int pos = getCurrent();
         pos = pos - second;
@@ -177,7 +177,7 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public RoundRobinConnection addTrigger(RoundRobinTrigger trigger) {
-        this.triggers[getIndex(trigger.getName())].add(trigger);
+        this.triggers[getIndex(trigger.getName(), header)].add(trigger);
         return this;
     }
 
@@ -197,8 +197,8 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
         data = view.getData();
         header = view.getHeader();
         for (String name : header) {
-            int idx0 = view.getIndex(name);
-            int idx1 = getIndex(name);
+            int idx0 = getIndex(name, view.getHeader());
+            int idx1 = getIndex(name, header);
             for (int i = 0; i < data.length; i++) {
                 if (mergeType == MergeType.REP) {
                     this.data[time + i][idx1] = data[i][idx0];
