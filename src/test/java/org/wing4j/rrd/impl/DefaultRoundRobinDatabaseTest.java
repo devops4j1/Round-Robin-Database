@@ -14,7 +14,7 @@ public class DefaultRoundRobinDatabaseTest {
     @Test
     public void testWrite() throws Exception {
         final RoundRobinDatabase database = DefaultRoundRobinDatabase.init(new RoundRobinConfig());
-        final RoundRobinConnection connection = database.open("D:/1.csv", "success", "fail", "request", "response", "other");
+        final RoundRobinConnection connection = database.open("D:/1.rrd", "mo9.success", "mo9.fail", "mo9.request", "mo9.response", "mo9.other");
         connection.addTrigger(new RoundRobinTrigger() {
             @Override
             public String getName() {
@@ -52,7 +52,7 @@ public class DefaultRoundRobinDatabaseTest {
             thrad.start();
         }
         Thread.sleep(10 * 1000);
-        connection.persistent(FormatType.CSV, 1);
+        connection.persistent();
         connection.close();
     }
 
@@ -102,7 +102,6 @@ public class DefaultRoundRobinDatabaseTest {
         json = new Gson().toJson(connection.slice(24 * 60 * 60, "request").read("request"));
         System.out.println(json);
         FileOutputStream fos = new FileOutputStream("D:/123.rrd");
-        connection.slice(24 * 60 * 60, "request").write(fos);
         fos.close();
         connection.close();
     }
