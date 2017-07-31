@@ -1,4 +1,4 @@
-package org.wing4j.rrd.format.csv.v1;
+package org.wing4j.rrd.core.format.csv.v1;
 
 import org.junit.Test;
 import org.wing4j.rrd.RoundRobinFormat;

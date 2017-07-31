@@ -1,4 +1,4 @@
-package org.wing4j.rrd.format.csv.v1;
+package org.wing4j.rrd.core.format.csv.v1;
 
 import lombok.Data;
 import org.wing4j.rrd.RoundRobinFormat;
@@ -6,8 +6,6 @@ import org.wing4j.rrd.RoundRobinRuntimeException;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;

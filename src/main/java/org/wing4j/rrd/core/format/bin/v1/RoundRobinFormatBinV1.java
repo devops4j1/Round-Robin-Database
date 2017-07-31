@@ -1,12 +1,10 @@
-package org.wing4j.rrd.format.bin.v1;
+package org.wing4j.rrd.core.format.bin.v1;
 
 import lombok.Data;
 import org.wing4j.rrd.RoundRobinFormat;
-import org.wing4j.rrd.RoundRobinRuntimeException;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channel;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;

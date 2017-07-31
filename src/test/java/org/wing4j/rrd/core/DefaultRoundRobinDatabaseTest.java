@@ -1,10 +1,9 @@
-package org.wing4j.rrd.impl;
+package org.wing4j.rrd.core;
 
 import com.google.gson.Gson;
 import org.junit.Test;
 import org.wing4j.rrd.*;
-
-import java.io.FileOutputStream;
+import org.wing4j.rrd.core.DefaultRoundRobinDatabase;
 
 /**
  * Created by liucheng on 2017/7/28.
@@ -60,10 +59,11 @@ public class DefaultRoundRobinDatabaseTest {
     public void testRead() throws Exception {
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(new RoundRobinConfig());
         RoundRobinConnection connection = database.open("D:/2.rrd");
-        long[][] data = connection.read(connection.getHeader());
-        String json = new Gson().toJson(data[0]);
+        RoundRobinResultSet resultSet = connection.read(connection.getHeader());
+        long[] data = resultSet.getData("mo9.request");
+        String json = new Gson().toJson(data);
+        System.out.println(json);
         connection.persistent(FormatType.CSV, 1);
-//        System.out.println(json);
 //        json = new Gson().toJson(data[1]);
 //        System.out.println(json);
 //        json = new Gson().toJson(data[2]);
@@ -75,7 +75,7 @@ public class DefaultRoundRobinDatabaseTest {
 //        System.out.println(json);
 //        Thread.sleep(2 * 1000);
 
-//        connection.freezen();
+//        connection.lock();
 //        connection.addTrigger(new RoundRobinTrigger() {
 //            @Override
 //            public String getName() {
@@ -99,11 +99,19 @@ public class DefaultRoundRobinDatabaseTest {
 ////        connection.merge(view, (int)(System.currentTimeMillis() % (24 * 60 * 60)), MergeType.ADD);
 ////        connection.merge(view, (int)(System.currentTimeMillis() % (24 * 60 * 60)), MergeType.ADD);
 ////        connection.merge(view, (int)(System.currentTimeMillis() % (24 * 60 * 60)), MergeType.ADD);
-//        connection.unfreezen();
+//        connection.unlock();
 //        json = new Gson().toJson(connection.slice(24 * 60 * 60, "mo9.request").read("mo9.request"));
 //        System.out.println(json);
 //        FileOutputStream fos = new FileOutputStream("D:/123.rrd");
 //        fos.close();
         connection.close();
+    }
+
+    @Test
+    public void testOpen() throws Exception {
+        final RoundRobinDatabase database = DefaultRoundRobinDatabase.init(new RoundRobinConfig());
+        RoundRobinConnection connection = database.open("localhost", 8002);
+        RoundRobinResultSet resultSet = connection.read("mo9.request");
+        long[] data = resultSet.getData("mo9.request");
     }
 }

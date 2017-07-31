@@ -1,9 +1,9 @@
-package org.wing4j.rrd.impl;
+package org.wing4j.rrd.core;
 
 
 import org.wing4j.rrd.*;
-import org.wing4j.rrd.format.bin.v1.RoundRobinFormatBinV1;
-import org.wing4j.rrd.format.csv.v1.RoundRobinFormatCsvV1;
+import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
+import org.wing4j.rrd.core.format.csv.v1.RoundRobinFormatCsvV1;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,7 +46,7 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public RoundRobinConnection freezen() {
+    public RoundRobinConnection lock() {
         if (status != Status.NORMAL) {
             throw new RuntimeException("数据库未进行冻结");
         }
@@ -55,7 +55,7 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public RoundRobinConnection unfreezen() {
+    public RoundRobinConnection unlock() {
         if (status != Status.FREEZEN) {
             throw new RuntimeException("数据库未进行冻结");
         }
@@ -74,12 +74,13 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public long[][] read(String... name) {
+    public RoundRobinResultSet read(String... name) {
         long[][] data0 = new long[name.length][data.length];
         for (int i = 0; i < name.length; i++) {
             data0[i] = read(name[i]);
         }
-        return data0;
+        RoundRobinResultSet resultSet = new RoundRobinResultSet(name, data0);
+        return resultSet;
     }
 
     long[] read(String name) {
@@ -215,12 +216,19 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public RoundRobinConnection persistent(FormatType formatType, int version) throws IOException {
+        String fileName = this.fileName;
         if (formatType == FormatType.BIN && version == 1) {
+            if(!fileName.trim().toLowerCase().endsWith(".rrd")){
+                fileName = fileName.substring(0, fileName.length() - 4);
+            }
             RoundRobinFormat format = new RoundRobinFormatBinV1(header, data, getCurrent());
-            format.write(fileName);
+            format.write(fileName + ".rrd");
         } else if (formatType == FormatType.CSV && version == 1) {
+            if(!fileName.trim().toLowerCase().endsWith(".csv")){
+                fileName = fileName.substring(0, fileName.length() - 4);
+            }
             RoundRobinFormat format = new RoundRobinFormatCsvV1(header, data, getCurrent());
-            format.write(fileName);
+            format.write(fileName + ".csv");
         } else {
             throw new RoundRobinRuntimeException("不支持的文件格式和文件版本");
         }

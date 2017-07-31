@@ -1,10 +1,13 @@
-package org.wing4j.rrd.impl;
+package org.wing4j.rrd.core;
 
 import org.wing4j.rrd.RoundRobinConfig;
 import org.wing4j.rrd.RoundRobinConnection;
 import org.wing4j.rrd.RoundRobinDatabase;
 import org.wing4j.rrd.RoundRobinFormat;
-import org.wing4j.rrd.format.bin.v1.RoundRobinFormatBinV1;
+import org.wing4j.rrd.client.RemoteRoundRobinConnection;
+import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
+import org.wing4j.rrd.net.connector.RoundRobinConnector;
+import org.wing4j.rrd.net.connector.impl.SocketRoundRobinConnector;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -42,7 +45,15 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     }
 
     @Override
-    public RoundRobinConnection open(String fileName, String... names) {
+    public RoundRobinConnection open(String address, int port) throws IOException {
+        RoundRobinConnector connector = new SocketRoundRobinConnector(address, port);
+        RoundRobinConnection connection = new RemoteRoundRobinConnection(this, connector);
+        connections.add(connection);
+        return connection;
+    }
+
+    @Override
+    public RoundRobinConnection open(String fileName, String... names) throws IOException {
         String[] header = new String[names.length + 1];
         if (contain(names, "index")) {
             throw new RuntimeException();
