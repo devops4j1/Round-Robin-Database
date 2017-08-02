@@ -15,10 +15,10 @@ public class AioAcceptHandler implements CompletionHandler<AsynchronousSocketCha
  
     public void completed(AsynchronousSocketChannel socket, AsynchronousServerSocketChannel attachment) { 
         try { 
-         System.out.println("AioAcceptHandler.completed called");
-            attachment.accept(attachment, this); 
-            System.out.println("有客户端连接:" + socket.getRemoteAddress().toString()); 
-            startRead(socket); 
+            attachment.accept(attachment, this);
+            System.out.println(Thread.currentThread().getName() + " 有客户端连接"+ socket.getRemoteAddress().toString());
+            ByteBuffer clientBuffer = ByteBuffer.allocate(1024);
+            socket.read(clientBuffer, clientBuffer, new AioReadHandler(socket));
         } catch (IOException e) { 
             e.printStackTrace(); 
         } 
@@ -26,15 +26,5 @@ public class AioAcceptHandler implements CompletionHandler<AsynchronousSocketCha
  
     public void failed(Throwable exc, AsynchronousServerSocketChannel attachment) { 
         exc.printStackTrace(); 
-    } 
- 
-    public void startRead(AsynchronousSocketChannel socket) { 
-        ByteBuffer clientBuffer = ByteBuffer.allocate(1024); 
-        socket.read(clientBuffer, clientBuffer, new AioReadHandler(socket)); 
-        try { 
-            
-        } catch (Exception e) { 
-            e.printStackTrace(); 
-        } 
-    } 
+    }
 }

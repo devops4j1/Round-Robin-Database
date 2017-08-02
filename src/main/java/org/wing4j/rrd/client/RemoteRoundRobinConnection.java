@@ -17,10 +17,12 @@ import java.io.InputStream;
 public class RemoteRoundRobinConnection implements RoundRobinConnection{
     volatile RoundRobinDatabase database;
     volatile RoundRobinConnector connector;
+    RoundRobinConfig config;
 
-    public RemoteRoundRobinConnection(RoundRobinDatabase database, RoundRobinConnector connector) {
+    public RemoteRoundRobinConnection(RoundRobinDatabase database, RoundRobinConnector connector, RoundRobinConfig config) {
         this.database = database;
         this.connector = connector;
+        this.config = config;
     }
 
     @Override
@@ -75,22 +77,32 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection{
 
     @Override
     public RoundRobinConnection addTrigger(RoundRobinTrigger trigger) {
-        return null;
+        return this;
     }
 
     @Override
     public RoundRobinConnection merge(RoundRobinView view, MergeType mergeType) {
-        return null;
+        try {
+            this.connector.write(view, view.getTime(), mergeType);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return this;
     }
 
     @Override
     public RoundRobinConnection merge(RoundRobinView view, int time, MergeType mergeType) {
-        return null;
+        try {
+            this.connector.write(view, view.getTime(), mergeType);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return this;
     }
 
     @Override
     public RoundRobinConnection persistent(FormatType formatType, int version) throws IOException {
-        return null;
+        return this;
     }
 
     @Override
@@ -101,10 +113,5 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection{
     @Override
     public void close() throws IOException {
 
-    }
-
-    @Override
-    public InputStream toStream() {
-        return null;
     }
 }

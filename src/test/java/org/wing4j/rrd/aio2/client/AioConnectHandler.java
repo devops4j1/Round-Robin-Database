@@ -5,34 +5,31 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 
-public class AioConnectHandler implements CompletionHandler<Void, AsynchronousSocketChannel>{
- private Integer content = 0;
- public AioConnectHandler(Integer value){
-  this.content = value;
- }
- 
-    public void completed(Void attachment,AsynchronousSocketChannel connector) { 
-        try {  
-         connector.write(ByteBuffer.wrap(String.valueOf(content).getBytes())).get();
-         startRead(connector); 
-        } catch (ExecutionException e) { 
-            e.printStackTrace(); 
-        } catch (InterruptedException ep) { 
-            ep.printStackTrace(); 
-        } 
-    } 
- 
-    public void failed(Throwable exc, AsynchronousSocketChannel attachment) { 
-        exc.printStackTrace(); 
-    } 
- 
-    public void startRead(AsynchronousSocketChannel socket) { 
-        ByteBuffer clientBuffer = ByteBuffer.allocate(1024); 
-        socket.read(clientBuffer, clientBuffer, new AioReadHandler(socket)); 
-        try { 
-            
-        } catch (Exception e) { 
-            e.printStackTrace(); 
-        } 
+public class AioConnectHandler implements CompletionHandler<Void, AsynchronousSocketChannel> {
+    private Integer content = 0;
+
+    public AioConnectHandler(Integer value) {
+        this.content = value;
+    }
+
+    public void completed(Void attachment, final AsynchronousSocketChannel connector) {
+        ByteBuffer buffer1 = ByteBuffer.wrap(String.valueOf(content).getBytes());
+        connector.write(buffer1, buffer1, new CompletionHandler<Integer, ByteBuffer>() {
+            @Override
+            public void completed(Integer result, ByteBuffer attachment) {
+                System.out.println(Thread.currentThread().getName() + " write finish");
+                ByteBuffer clientBuffer = ByteBuffer.allocate(1024);
+                connector.read(clientBuffer, clientBuffer, new AioReadHandler(connector));
+            }
+
+            @Override
+            public void failed(Throwable exc, ByteBuffer attachment) {
+
+            }
+        });
+    }
+
+    public void failed(Throwable exc, AsynchronousSocketChannel attachment) {
+        exc.printStackTrace();
     }
 }

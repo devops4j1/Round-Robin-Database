@@ -14,7 +14,7 @@ public class RoundRobinFormatCsvV1Test {
         data[1023][1] = Long.MAX_VALUE;
         data[1022][1] = Long.MIN_VALUE;
         data[1021][1] = Long.MAX_VALUE / 2;
-        String[] header = {"request"};
+        String[] header = {"request","response"};
         RoundRobinFormat format = new RoundRobinFormatCsvV1(header, data, (int) (System.currentTimeMillis() / 1000));
         format.write("D:/1.csv");
     }

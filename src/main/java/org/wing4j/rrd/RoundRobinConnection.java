@@ -123,10 +123,4 @@ public interface RoundRobinConnection {
      * 关闭连接
      */
     void close() throws IOException;
-
-    /**
-     * 转换成流输出
-     * @return
-     */
-    InputStream toStream();
 }

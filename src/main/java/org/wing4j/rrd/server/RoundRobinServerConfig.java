@@ -13,9 +13,13 @@ import java.util.Set;
 @ToString
 public class RoundRobinServerConfig {
     /**
+     * 管理端口
+     */
+    int managePort;
+    /**
      * 监听端口
      */
-    int listenPort;
+    int listenPort = 8099;
     /**
      * 从节点
      */

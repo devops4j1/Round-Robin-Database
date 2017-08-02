@@ -249,12 +249,6 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
         //创建一个定时器，进行定期调用写入数据
     }
 
-
-    @Override
-    public InputStream toStream() {
-        return null;
-    }
-
     @Override
     public void close() throws IOException {
         if (database.getConfig().isAutoPersistent()) {

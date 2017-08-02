@@ -2,6 +2,8 @@ package org.wing4j.rrd.core.format.bin.v1;
 
 import lombok.Data;
 import org.wing4j.rrd.RoundRobinFormat;
+import org.wing4j.rrd.RoundRobinView;
+import org.wing4j.rrd.utils.HexUtils;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -23,7 +25,9 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
 
     public RoundRobinFormatBinV1() {
     }
-
+    public RoundRobinFormatBinV1(RoundRobinView view){
+        this(view.getHeader(), view.getData(), view.getTime());
+    }
     public RoundRobinFormatBinV1(String[] header, long[][] data, int current) {
         this.header = header;
         this.data = data;
@@ -62,15 +66,7 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
     }
 
     @Override
-    public void read(ReadableByteChannel channel) throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(5 * 1024 * 1024);
-        try {
-            channel.read(buffer);
-        } finally {
-            if (channel != null) {
-                channel.close();
-            }
-        }
+    public void read(ByteBuffer buffer) {
         buffer.flip();
         int version0 = buffer.getInt();
         if (DEBUG) {
@@ -88,9 +84,8 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
         if (DEBUG) {
             System.out.println("head length:" + headerMaxLen);
         }
-        String[] header0 = new String[headerLen + 1];
-        header0[0] = "index";
-        for (int i = 1; i < header0.length; i++) {
+        String[] header0 = new String[headerLen];
+        for (int i = 0; i < header0.length; i++) {
             char[] chars = new char[headerMaxLen];
             for (int j = 0; j < chars.length; j++) {
                 chars[j] = buffer.getChar();
@@ -111,11 +106,8 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
         long[][] data0 = new long[dataSize0][dataLen0 + 1];
         for (int i = 0; i < data0.length; i++) {
             data0[i][0] = i;
-            for (int j = 1; j < header0.length; j++) {
+            for (int j = 0; j < header0.length; j++) {
                 data0[i][j] = buffer.getLong();
-                if (DEBUG) {
-                    System.out.println("data[" + i + "][" + j + "]:" + data0[i][j]);
-                }
             }
         }
         this.version = version0;
@@ -125,13 +117,18 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
     }
 
     @Override
-    public void write(WritableByteChannel channel) throws IOException {
+    public ByteBuffer write() {
+        return write((ByteBuffer)null);
+    }
+
+    @Override
+    public ByteBuffer write(ByteBuffer buffer) {
         int headerMaxLen = 0;
-        String[] header0 = new String[header.length - 1];
-        for (int i = 1; i < header.length; i++) {
-            header0[i - 1] = header[i];
-            if (header0[i - 1].length() > headerMaxLen) {
-                headerMaxLen = header0[i - 1].length();
+        String[] header0 = new String[header.length];
+        for (int i = 0; i < header.length; i++) {
+            header0[i] = header[i];
+            if (header0[i].length() > headerMaxLen) {
+                headerMaxLen = header0[i].length();
             }
         }
         int fileSize = 4;//文件版本号
@@ -140,8 +137,9 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
         fileSize += 4;//头长度
         fileSize += headerMaxLen * header0.length * 4;//文件头
         fileSize += header0.length * data.length * 8;//数据区
-
-        ByteBuffer buffer = ByteBuffer.allocate(fileSize);
+        if(buffer == null){
+            buffer = ByteBuffer.allocate(fileSize);
+        }
         buffer.putInt(version);
         if (DEBUG) {
             System.out.println("version:" + version);
@@ -177,13 +175,39 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
             System.out.println("data size:" + header0.length);
         }
         for (int i = 0; i < data.length; i++) {
-            for (int j = 1; j < header.length; j++) {
+            for (int j = 0; j < header.length; j++) {
                 buffer.putLong(data[i][j]);
-                if (DEBUG) {
-                    System.out.println("data[" + i + "][" + j + "]:" + data[i][j]);
-                }
             }
         }
+        if (DEBUG) {
+            buffer.flip();
+            byte[] data11 = new byte[buffer.limit()];
+            buffer.get(data11);
+            System.out.println(HexUtils.toDisplayString(data11));
+        }
+        return buffer;
+    }
+
+    void read(ReadableByteChannel channel) throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(5 * 1024 * 1024);
+        try {
+            channel.read(buffer);
+            if (DEBUG) {
+                buffer.flip();
+                byte[] data11 = new byte[buffer.limit()];
+                buffer.get(data11);
+                System.out.println(HexUtils.toDisplayString(data11));
+            }
+        } finally {
+            if (channel != null) {
+                channel.close();
+            }
+        }
+        read(buffer);
+    }
+
+    void write(WritableByteChannel channel) throws IOException {
+        ByteBuffer buffer = write();
         buffer.flip();
         channel.write(buffer);
     }

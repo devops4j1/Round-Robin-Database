@@ -1,5 +1,10 @@
 package org.wing4j.rrd.net.connector;
 
+import org.wing4j.rrd.MergeType;
+import org.wing4j.rrd.RoundRobinView;
+
+import java.io.IOException;
+
 /**
  * Created by wing4j on 2017/7/31.
  * 连接器
@@ -23,15 +28,13 @@ public interface RoundRobinConnector {
      * @param names
      * @return
      */
-    long[][] read(int time, int size, String... names);
+    RoundRobinView read(int time, int size, String... names);
 
     /**
      * 写入数据
-     * @param time
-     * @param data
-     * @param names
+     * @param view
      */
-    RoundRobinConnector write(int time, long[][] data, String... names);
+    RoundRobinConnector write(RoundRobinView view, int time, MergeType mergeType) throws IOException;
     RoundRobinConnector start();
     RoundRobinConnector close();
 }

@@ -7,7 +7,7 @@ import org.wing4j.rrd.RoundRobinFormat;
 import org.wing4j.rrd.client.RemoteRoundRobinConnection;
 import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
-import org.wing4j.rrd.net.connector.impl.SocketRoundRobinConnector;
+import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -46,33 +46,25 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
 
     @Override
     public RoundRobinConnection open(String address, int port) throws IOException {
-        RoundRobinConnector connector = new SocketRoundRobinConnector(address, port);
-        RoundRobinConnection connection = new RemoteRoundRobinConnection(this, connector);
+        RoundRobinConnector connector = new BioRoundRobinConnector(address, port);
+        RoundRobinConnection connection = new RemoteRoundRobinConnection(this, connector, config);
         connections.add(connection);
         return connection;
     }
 
     @Override
     public RoundRobinConnection open(String fileName, String... names) throws IOException {
-        String[] header = new String[names.length + 1];
-        if (contain(names, "index")) {
-            throw new RuntimeException();
-        }
-        header[0] = "index";
-        for (int i = 0; i < names.length; i++) {
-            header[i + 1] = names[i];
-        }
         int size = 1 * RoundRobinConnection.DAY_SECOND;
-        long[][] data = new long[size][header.length];
+        long[][] data = new long[size][names.length];
         for (int i = 0; i < size; i++) {
-            long[] col = new long[header.length];
+            long[] col = new long[names.length];
             col[0] = i;
             for (int j = 0; j < names.length; j++) {
-                col[j + 1] = 0L;
+                col[j] = 0L;
             }
             data[i] = col;
         }
-        RoundRobinConnection connection = new DefaultRoundRobinConnection(this, header, data, fileName);
+        RoundRobinConnection connection = new DefaultRoundRobinConnection(this, names, data, fileName);
         connections.add(connection);
         return connection;
     }

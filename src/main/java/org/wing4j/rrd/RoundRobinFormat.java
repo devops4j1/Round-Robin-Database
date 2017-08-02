@@ -1,6 +1,7 @@
 package org.wing4j.rrd;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
@@ -28,6 +29,9 @@ public interface RoundRobinFormat {
     void read(String fileName) throws IOException;
 
     void write(String fileName) throws IOException;
-    void read(ReadableByteChannel channel) throws IOException;
-    void write(WritableByteChannel channel) throws IOException;
+    void read(ByteBuffer buffer);
+
+    ByteBuffer write();
+
+    ByteBuffer write(ByteBuffer buffer);
 }

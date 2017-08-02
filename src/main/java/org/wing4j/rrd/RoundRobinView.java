@@ -5,6 +5,7 @@ import lombok.ToString;
 import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 
 /**
@@ -68,12 +69,12 @@ public class RoundRobinView {
 
     /**
      * 将视图数据写入流，进行持久化或者传输
-     * @param channel 通道
      * @throws IOException IO异常
      */
-    public void write(WritableByteChannel channel) throws IOException {
+    public ByteBuffer write() throws IOException {
         RoundRobinFormat format = new RoundRobinFormatBinV1(header, data, time);
-        format.write(channel);
+        ByteBuffer buffer = format.write();
+        return buffer;
     }
 
 }
