@@ -10,9 +10,13 @@ import org.wing4j.rrd.net.format.RoundRobinFormatNetworkV1;
 import org.wing4j.rrd.utils.HexUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousChannelGroup;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.CompletionHandler;
+import java.util.concurrent.*;
 
 /**
  * Created by wing4j on 2017/7/31.
@@ -22,12 +26,58 @@ import java.nio.ByteBuffer;
 public class AioRoundRobinConnector implements RoundRobinConnector {
     String address;
     int port;
-    Socket socket;
+    ExecutorService executor;
+    AsynchronousSocketChannel socketChannel;
+    AsynchronousChannelGroup asyncChannelGroup;
 
+    static class ConnectHandler implements CompletionHandler<Void, AsynchronousSocketChannel>{
+        RoundRobinFormat format;
+
+        public ConnectHandler(RoundRobinFormat format) {
+            this.format = format;
+        }
+
+
+        @Override
+        public void completed(Void result, AsynchronousSocketChannel connector) {
+            ByteBuffer byteBuffer = format.write();
+            byteBuffer.flip();
+            Future writeResult = connector.write(byteBuffer);
+            try {
+                writeResult.get(30, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch (TimeoutException e) {
+                e.printStackTrace();
+            }
+            ByteBuffer readBuffer = ByteBuffer.allocate(1024);
+            Future readResult = connector.read(readBuffer);
+            try {
+                readResult.get(30, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch (TimeoutException e) {
+                e.printStackTrace();
+            }
+            readBuffer.flip();
+            System.out.println(new String(readBuffer.array()).trim());
+        }
+
+        @Override
+        public void failed(Throwable exc, AsynchronousSocketChannel connector) {
+            exc.printStackTrace();
+        }
+    }
     public AioRoundRobinConnector(String address, int port) throws IOException {
         this.address = address;
         this.port = port;
-        this.socket = new Socket(address, port);
+        this.executor = Executors.newCachedThreadPool();
+        this.asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(executor);
+
     }
 
     @Override
@@ -37,25 +87,15 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
 
     @Override
     public RoundRobinConnector write(RoundRobinView view, int time, MergeType mergeType) throws IOException {
-        RoundRobinFormat format = new RoundRobinFormatNetworkV1(mergeType, time, view);
-        ByteBuffer buffer = format.write();
-        buffer.flip();
-        System.out.println(buffer.remaining());
-        System.out.println(HexUtils.toDisplayString(buffer.array()));
-        //按照接受的服务器读取的缓存量进行写操作
-        while (buffer.hasRemaining()){
-            socket.getChannel().write(buffer);
+        AsynchronousSocketChannel socketChannel = null;
+        if (socketChannel == null || !socketChannel.isOpen()) {
+            socketChannel = AsynchronousSocketChannel.open(asyncChannelGroup);
+            socketChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+            socketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+            socketChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
         }
-        return this;
-    }
-
-    @Override
-    public RoundRobinConnector start() {
-        return this;
-    }
-
-    @Override
-    public RoundRobinConnector close() {
+        RoundRobinFormat format = new RoundRobinFormatNetworkV1(mergeType, time, view);
+        socketChannel.connect(new InetSocketAddress(address, port), socketChannel, new ConnectHandler(format));
         return this;
     }
 }

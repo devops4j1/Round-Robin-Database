@@ -7,6 +7,7 @@ import org.wing4j.rrd.RoundRobinFormat;
 import org.wing4j.rrd.RoundRobinRuntimeException;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
+import org.wing4j.rrd.utils.HexUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -113,6 +114,9 @@ public class RoundRobinFormatNetworkV1 implements RoundRobinFormat{
         buffer.put(byteBuffer);
         //将报文总长度回填到第一个字节
         buffer.putInt(0,buffer.position() - 4);
+        if(DEBUG){
+            System.out.println(HexUtils.toDisplayString(buffer.array()));
+        }
         return buffer;
     }
 }

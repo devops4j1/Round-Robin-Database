@@ -35,6 +35,4 @@ public interface RoundRobinConnector {
      * @param view
      */
     RoundRobinConnector write(RoundRobinView view, int time, MergeType mergeType) throws IOException;
-    RoundRobinConnector start();
-    RoundRobinConnector close();
 }

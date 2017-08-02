@@ -58,13 +58,4 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
         return this;
     }
 
-    @Override
-    public RoundRobinConnector start() {
-        return this;
-    }
-
-    @Override
-    public RoundRobinConnector close() {
-        return this;
-    }
 }

@@ -1,4 +1,4 @@
-package org.wing4j.rrd.server.impl;
+package org.wing4j.rrd.server.aio;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -12,7 +12,7 @@ import java.util.logging.Logger;
  * 环形数据库监听到客户端接入
  */
 public class RoundRobinAcceptHandler implements CompletionHandler<AsynchronousSocketChannel, AsynchronousServerSocketChannel> {
-    static Logger LOGGER = Logger.getLogger(DefaultRoundRobinServer.class.getName());
+    static Logger LOGGER = Logger.getLogger(AioRoundRobinServer.class.getName());
 
     @Override
     public void completed(AsynchronousSocketChannel channel, AsynchronousServerSocketChannel attachment) {
