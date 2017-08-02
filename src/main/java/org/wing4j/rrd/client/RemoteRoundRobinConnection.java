@@ -4,6 +4,9 @@ import lombok.Data;
 import lombok.ToString;
 import org.wing4j.rrd.*;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
+import org.wing4j.rrd.net.connector.impl.AioRoundRobinConnector;
+import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
+import org.wing4j.rrd.net.connector.impl.NioRoundRobinConnector;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,10 +22,22 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection{
     volatile RoundRobinConnector connector;
     RoundRobinConfig config;
 
-    public RemoteRoundRobinConnection(RoundRobinDatabase database, RoundRobinConnector connector, RoundRobinConfig config) {
+    public RemoteRoundRobinConnection(RoundRobinDatabase database, String address, int port, RoundRobinConfig config) {
         this.database = database;
-        this.connector = connector;
         this.config = config;
+        try {
+            if(this.config.getConnectorType() == ConnectorType.BIO){
+                this.connector = new BioRoundRobinConnector(address, port);
+            }else if(this.config.getConnectorType() == ConnectorType.NIO){
+                this.connector = new NioRoundRobinConnector(address, port);
+            }else if(this.config.getConnectorType() == ConnectorType.AIO){
+                this.connector = new AioRoundRobinConnector(address, port);
+            }else{
+                throw new RoundRobinRuntimeException("不支持的连接器类型");
+            }
+        } catch (IOException e) {
+           //TODO
+        }
     }
 
     @Override

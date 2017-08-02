@@ -1,5 +1,6 @@
 package org.wing4j.rrd.server.aio;
 
+import org.wing4j.rrd.server.RoundRobinServer;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
 
 import java.io.IOException;
@@ -15,16 +16,16 @@ import java.util.logging.Logger;
  */
 public class RoundRobinListener implements Runnable {
     static Logger LOGGER = Logger.getLogger(RoundRobinListener.class.getName());
-    RoundRobinServerConfig config;
+    RoundRobinServer server;
 
-
-    public RoundRobinListener(RoundRobinServerConfig config) {
+    public RoundRobinListener(RoundRobinServer server) {
         LOGGER.info("builder listener...");
-        this.config = config;
+        this.server = server;
     }
 
     @Override
     public void run() {
+        RoundRobinServerConfig config = server.getConfig();
         LOGGER.info("open " + config.getListenPort() + " port.");
         ExecutorService executor = Executors.newCachedThreadPool();
         //异步通道组
@@ -43,7 +44,7 @@ public class RoundRobinListener implements Runnable {
         } catch (IOException e) {
             LOGGER.warning("listen port " + config.getListenPort() + " already use!");
         }
-        listener.accept(listener, new RoundRobinAcceptHandler());
+        listener.accept(listener, new RoundRobinAcceptHandler(server));
         LOGGER.info("Round Robin Database startup finish...");
     }
 }

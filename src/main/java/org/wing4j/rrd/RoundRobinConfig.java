@@ -18,4 +18,8 @@ public class RoundRobinConfig {
      * 是否异步持久化
      */
     boolean asyncPersistent = false;
+    /**
+     * 连接器类型
+     */
+    ConnectorType connectorType = ConnectorType.AIO;
 }

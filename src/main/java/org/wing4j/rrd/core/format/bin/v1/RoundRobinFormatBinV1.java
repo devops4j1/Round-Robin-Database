@@ -67,7 +67,6 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
 
     @Override
     public void read(ByteBuffer buffer) {
-        buffer.flip();
         int version0 = buffer.getInt();
         if (DEBUG) {
             System.out.println("version:" + version0);
@@ -192,17 +191,18 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
         ByteBuffer buffer = ByteBuffer.allocate(5 * 1024 * 1024);
         try {
             channel.read(buffer);
-            if (DEBUG) {
-                buffer.flip();
-                byte[] data11 = new byte[buffer.limit()];
-                buffer.get(data11);
-                System.out.println(HexUtils.toDisplayString(data11));
-            }
+//            if (DEBUG) {
+//                buffer.flip();
+//                byte[] data11 = new byte[buffer.limit()];
+//                buffer.get(data11);
+//                System.out.println(HexUtils.toDisplayString(data11));
+//            }
         } finally {
             if (channel != null) {
                 channel.close();
             }
         }
+        buffer.flip();
         read(buffer);
     }
 

@@ -1,5 +1,7 @@
 package org.wing4j.rrd.server;
 
+import org.wing4j.rrd.RoundRobinDatabase;
+
 /**
  * Created by wing4j on 2017/7/31.
  * 服务器接口
@@ -11,12 +13,7 @@ public interface RoundRobinServer {
      */
     RoundRobinServerConfig getConfig();
 
-    /**
-     * 重新配置数据库
-     * @param config 配置对象
-     * @return 服务器对象
-     */
-    void setConfig(RoundRobinServerConfig config);
+    RoundRobinDatabase getDatabase();
 
     /**
      * 启动数据库，开始监听

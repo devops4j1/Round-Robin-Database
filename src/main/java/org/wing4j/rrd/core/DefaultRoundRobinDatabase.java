@@ -6,8 +6,6 @@ import org.wing4j.rrd.RoundRobinDatabase;
 import org.wing4j.rrd.RoundRobinFormat;
 import org.wing4j.rrd.client.RemoteRoundRobinConnection;
 import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
-import org.wing4j.rrd.net.connector.RoundRobinConnector;
-import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -46,8 +44,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
 
     @Override
     public RoundRobinConnection open(String address, int port) throws IOException {
-        RoundRobinConnector connector = new BioRoundRobinConnector(address, port);
-        RoundRobinConnection connection = new RemoteRoundRobinConnection(this, connector, config);
+        RoundRobinConnection connection = new RemoteRoundRobinConnection(this, address, port, config);
         connections.add(connection);
         return connection;
     }

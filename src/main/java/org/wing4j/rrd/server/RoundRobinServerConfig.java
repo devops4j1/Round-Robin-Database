@@ -2,6 +2,7 @@ package org.wing4j.rrd.server;
 
 import lombok.Data;
 import lombok.ToString;
+import org.wing4j.rrd.RoundRobinConfig;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -11,7 +12,7 @@ import java.util.Set;
  */
 @Data
 @ToString
-public class RoundRobinServerConfig {
+public class RoundRobinServerConfig extends RoundRobinConfig{
     /**
      * 管理端口
      */

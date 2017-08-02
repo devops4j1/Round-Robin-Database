@@ -26,6 +26,9 @@ public class RoundRobinFormatNetworkV1 implements RoundRobinFormat{
         this.current = current;
         format = new RoundRobinFormatBinV1(view.getHeader(), view.getData(), view.getTime());
     }
+    public RoundRobinFormatNetworkV1() {
+
+    }
     public RoundRobinFormatNetworkV1(MergeType mergeType, int current, String[] header, long[][] data) {
         this.mergeType = mergeType;
         this.current = current;
@@ -84,7 +87,11 @@ public class RoundRobinFormatNetworkV1 implements RoundRobinFormat{
 
     @Override
     public void read(ByteBuffer buffer) {
-
+        int type = buffer.getInt();
+        this.mergeType = MergeType.values()[type];
+        this.current = buffer.getInt();
+        format = new RoundRobinFormatBinV1();
+        format.read(buffer);
     }
 
     @Override
@@ -118,5 +125,9 @@ public class RoundRobinFormatNetworkV1 implements RoundRobinFormat{
             System.out.println(HexUtils.toDisplayString(buffer.array()));
         }
         return buffer;
+    }
+
+    public MergeType getMergeType() {
+        return mergeType;
     }
 }

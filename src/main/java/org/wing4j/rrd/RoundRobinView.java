@@ -27,6 +27,15 @@ public class RoundRobinView {
      * 数据节点
      */
     long[][] data;
+    public RoundRobinView(RoundRobinFormat format){
+        this.header = format.getHeader();
+        this.data = format.getData();
+        this.time = format.getCurrent();
+        this.timeline = new int[data.length];
+        for (int i = 0; i < data.length; i++) {
+            this.timeline[i] = time - data.length;
+        }
+    }
 
     public RoundRobinView(String[] header, int[] timeline, long[][] data, int time) {
         this.header = header;

@@ -10,6 +10,14 @@ import java.io.IOException;
  * Created by wing4j on 2017/8/2.
  */
 public class NioRoundRobinConnector implements RoundRobinConnector {
+    String address;
+    int port;
+
+    public NioRoundRobinConnector(String address, int port) {
+        this.address = address;
+        this.port = port;
+    }
+
     @Override
     public String getAddress() {
         return null;
