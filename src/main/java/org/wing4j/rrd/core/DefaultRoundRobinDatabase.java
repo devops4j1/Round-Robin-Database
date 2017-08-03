@@ -9,24 +9,25 @@ import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by wing4j on 2017/7/28.
  */
 public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
-    Set<RoundRobinConnection> connections = new HashSet<>();
+    Map<String, RoundRobinConnection> connections = new ConcurrentHashMap<>();
     static RoundRobinDatabase database;
     RoundRobinConfig config;
+
     private DefaultRoundRobinDatabase(RoundRobinConfig config) {
         this.config = config;
     }
 
-    public static RoundRobinDatabase init(RoundRobinConfig config){
-        if(database == null){
-            synchronized (RoundRobinDatabase.class){
-                if(database == null){
+    public static RoundRobinDatabase init(RoundRobinConfig config) {
+        if (database == null) {
+            synchronized (RoundRobinDatabase.class) {
+                if (database == null) {
                     database = new DefaultRoundRobinDatabase(config);
                 }
             }
@@ -46,9 +47,9 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     @Override
     public RoundRobinConnection create(String fileName) throws IOException {
         File databaseFile = new File(fileName);
-        if(databaseFile.exists()){
+        if (databaseFile.exists()) {
             return open(fileName);
-        }else{
+        } else {
             return open(fileName, new String[0]);
         }
     }
@@ -56,7 +57,8 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     @Override
     public RoundRobinConnection open(String address, int port) throws IOException {
         RoundRobinConnection connection = new RemoteRoundRobinConnection(this, address, port, config);
-        connections.add(connection);
+        String key = "rrd://" + address + ":" + port;
+        connections.put(key, connection);
         return connection;
     }
 
@@ -65,9 +67,9 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
         int size = 1 * RoundRobinConnection.DAY_SECOND;
         long[][] data = new long[size][names.length];
         for (int i = 0; i < size; i++) {
-            if(names.length == 0){
+            if (names.length == 0) {
                 data[i] = new long[0];
-            }else{
+            } else {
                 long[] col = new long[names.length];
                 for (int j = 0; j < names.length; j++) {
                     col[j] = 0L;
@@ -76,9 +78,11 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
             }
         }
         RoundRobinConnection connection = new DefaultRoundRobinConnection(this, names, data, fileName);
-        connections.add(connection);
+        String key = "file://" + fileName;
+        connections.put(key, connection);
         return connection;
     }
+
     @Override
     public RoundRobinConnection open(String fileName) throws IOException {
         //创建一个二进制文件
@@ -86,7 +90,8 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
         format.read(fileName);
         //创建一个计时器，进行数据的异步写入
         RoundRobinConnection connection = new DefaultRoundRobinConnection(this, format.getHeader(), format.getData(), fileName);
-        connections.add(connection);
+        String key = "file://" + fileName;
+        connections.put(key, connection);
         return connection;
     }
 
@@ -97,7 +102,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
 
     @Override
     public void close() throws IOException {
-        for (RoundRobinConnection connection : connections){
+        for (RoundRobinConnection connection : connections.values()) {
             connection.close();
             connections.remove(connection);
         }

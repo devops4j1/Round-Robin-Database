@@ -1,6 +1,5 @@
 package org.wing4j.rrd.server.aio;
 
-import org.wing4j.rrd.FormatType;
 import org.wing4j.rrd.RoundRobinConnection;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.net.format.RoundRobinFormatNetworkV1;
@@ -51,45 +50,38 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
             e.printStackTrace();
         }
         attachment.flip();
+        if (attachment.remaining() < size) {
+            System.out.println("无效报文");
+            return;
+        }
+        //读取到数据流，构建格式对象
         RoundRobinFormatNetworkV1 format = new RoundRobinFormatNetworkV1();
         format.read(attachment);
+        //通过格式对象，构建视图切片对象
         RoundRobinView view = new RoundRobinView(format);
+        RoundRobinConnection connection = null;
         try {
-            RoundRobinConnection connection = server.getDatabase().create(server.getConfig().getDatabaseFilePath() + "/database.rrd");
+            //使用数据库本地数据库打开连接
+            connection = server.getDatabase().create(server.getConfig().getDatabaseFilePath() + "/database.rrd");
+            //进行数据库加锁
+            connection.lock();
+            //进行合并视图操作
             connection.merge(view, format.getMergeType());
-            connection.close();
-//            connection.persistent(FormatType.CSV, 1);
+            //进行数据库解锁
+            connection.unlock();
         } catch (IOException e) {
             e.printStackTrace();
+        }finally {
+            if(connection != null){
+                try {
+                    connection.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-//            if(attachment.remaining() < size){
-////                System.out.println("无效报文");
-////                byte[] da = new byte[attachment.remaining()];
-////                attachment.get(da);
-////                System.out.println(new String(da));
-////                return;
-//                attachment.clear();
-//                try {
-//                    channel.read(attachment).get(1,TimeUnit.MINUTES);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                } catch (ExecutionException e) {
-//                    e.printStackTrace();
-//                } catch (TimeoutException e) {
-//                    e.printStackTrace();
-//                }
-//                System.out.println(HexUtils.toDisplayString(attachment.array()));
-//            }
-//            byte[] data = new byte[size];
-//            attachment.get(data);
-//            System.out.println(Thread.currentThread().getName() + " " +HexUtils.toDisplayString(data));
-
-//        attachment.flip();
-//        //TODO 进行接受的数据处理
-//        attachment.compact();
         //TODO 模拟返回结果
         String resultMessage = "save data finish";
-
         //写应答数据
         ByteBuffer resultBuffer = ByteBuffer.wrap(resultMessage.getBytes());
         resultBuffer.flip();
