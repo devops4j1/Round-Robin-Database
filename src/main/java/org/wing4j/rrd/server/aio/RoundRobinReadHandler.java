@@ -1,5 +1,6 @@
 package org.wing4j.rrd.server.aio;
 
+import org.wing4j.rrd.FormatType;
 import org.wing4j.rrd.RoundRobinConnection;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.net.format.RoundRobinFormatNetworkV1;
@@ -54,9 +55,10 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
         format.read(attachment);
         RoundRobinView view = new RoundRobinView(format);
         try {
-            RoundRobinConnection connection = server.getDatabase().open("./database.rrd");
+            RoundRobinConnection connection = server.getDatabase().create(server.getConfig().getDatabaseFilePath() + "/database.rrd");
             connection.merge(view, format.getMergeType());
-            connection.persistent();
+            connection.close();
+//            connection.persistent(FormatType.CSV, 1);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -22,6 +22,10 @@ public class RoundRobinServerConfig extends RoundRobinConfig{
      */
     int listenPort = 8099;
     /**
+     * 数据库文件保存位置
+     */
+    String databaseFilePath = "D:/";
+    /**
      * 从节点
      */
     Set<String> slaves = new HashSet<>();

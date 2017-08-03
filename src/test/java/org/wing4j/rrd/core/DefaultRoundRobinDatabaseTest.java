@@ -50,7 +50,7 @@ public class DefaultRoundRobinDatabaseTest {
         for (Thread thrad : threads) {
             thrad.start();
         }
-        Thread.sleep(10 * 1000);
+        Thread.sleep(2 * 1000);
         connection.persistent();
         connection.close();
     }
@@ -58,46 +58,53 @@ public class DefaultRoundRobinDatabaseTest {
     @Test
     public void testRead() throws Exception {
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(new RoundRobinConfig());
-        RoundRobinConnection connection = database.open("D:/2.rrd");
-        RoundRobinResultSet resultSet = connection.read(connection.getHeader());
-        long[] data = resultSet.getData("mo9.request");
-        String json = new Gson().toJson(data);
-        System.out.println(json);
+        RoundRobinConnection connection = database.open("D:/database.rrd");
+//        connection.persistent(FormatType.CSV, 1);
+//        RoundRobinView view = connection.slice(5 * 60, "mo.request");
+//        view.setHeader(new String[]{"mo2.request"});
+//        connection.merge(view, MergeType.ADD);
         connection.persistent(FormatType.CSV, 1);
-        RoundRobinView view = connection.slice(5 * 60, "mo9.request");
-        RoundRobinResultSet resultSet1 = view.read();
-        json = new Gson().toJson(resultSet1.getData("mo9.request"));
-        System.out.println(json);
-        Thread.sleep(2 * 1000);
 
-        connection.lock();
-        connection.addTrigger(new RoundRobinTrigger() {
-            @Override
-            public String getName() {
-                return "mo9.request";
-            }
-
-            @Override
-            public boolean accept(int time, long data) {
-                return true;
-            }
-
-            @Override
-            public void trigger(int time, long data) {
-                System.out.println("触发");
-            }
-        });
-        connection.merge(view, MergeType.ADD);
-        connection.merge(view, MergeType.ADD);
-        connection.merge(view, MergeType.ADD);
-        connection.merge(view, MergeType.ADD);
-        connection.merge(view, (int) (System.currentTimeMillis() % (24 * 60 * 60)), MergeType.ADD);
-        connection.merge(view, (int) (System.currentTimeMillis() % (24 * 60 * 60)), MergeType.ADD);
-        connection.merge(view, (int) (System.currentTimeMillis() % (24 * 60 * 60)), MergeType.ADD);
-        connection.unlock();
-        json = new Gson().toJson(connection.slice(24 * 60 * 60, "mo9.request").read("mo9.request"));
-        System.out.println(json);
-        connection.close();
+//        connection.persistent(FormatType.CSV, 1);
+//        RoundRobinResultSet resultSet = connection.read(connection.getHeader());
+//        long[] data = resultSet.getData("mo9.request");
+//        String json = new Gson().toJson(data);
+//        System.out.println(json);
+//        connection.persistent(FormatType.CSV, 1);
+//        RoundRobinView view = connection.slice(5 * 60, "mo9.request");
+//        RoundRobinResultSet resultSet1 = view.read();
+//        json = new Gson().toJson(resultSet1.getData("mo9.request"));
+//        System.out.println(json);
+//        Thread.sleep(2 * 1000);
+//
+//        connection.lock();
+//        connection.addTrigger(new RoundRobinTrigger() {
+//            @Override
+//            public String getName() {
+//                return "mo9.request";
+//            }
+//
+//            @Override
+//            public boolean accept(int time, long data) {
+//                return true;
+//            }
+//
+//            @Override
+//            public void trigger(int time, long data) {
+//                System.out.println("触发");
+//            }
+//        });
+//        connection.merge(view, MergeType.ADD);
+//        connection.merge(view, MergeType.ADD);
+//        connection.merge(view, MergeType.ADD);
+//        connection.merge(view, MergeType.ADD);
+//        connection.merge(view, (int) (System.currentTimeMillis() % (24 * 60 * 60)), MergeType.ADD);
+//        connection.merge(view, (int) (System.currentTimeMillis() % (24 * 60 * 60)), MergeType.ADD);
+//        connection.merge(view, (int) (System.currentTimeMillis() % (24 * 60 * 60)), MergeType.ADD);
+//        connection.unlock();
+//        json = new Gson().toJson(connection.slice(24 * 60 * 60, "mo9.request").read("mo9.request"));
+//        System.out.println(json);
+//        connection.close();
     }
 
     @Test

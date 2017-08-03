@@ -19,7 +19,8 @@ public class RemoteRoundRobinConnectionTest {
         RoundRobinConfig config = new RoundRobinConfig();
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
         RoundRobinConnection connection = database.open("D:/2.rrd");
-        RoundRobinView view = connection.slice(1 * 60, connection.getHeader());
+        RoundRobinView view = connection.slice(1 * 60, "mo9.request");
+        view.setHeader(new String[]{"mo8.request"});
         RoundRobinFormat format = new RoundRobinFormatCsvV1(view);
         format.write("D:/22.csv");
         RoundRobinConnection remoteConnection =  database.open("127.0.0.1", 8099);

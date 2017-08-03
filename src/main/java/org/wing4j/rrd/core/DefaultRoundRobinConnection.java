@@ -109,15 +109,24 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
     }
 
     int getIndex(String name, String[] names) {
-        int idx = 0;
+        int idx = -1;
+        boolean found = false;
         for (String name0 : names) {
-            if (name.equals(name0)) {
-                return idx;
-            } else {
+            if (!found) {
                 idx++;
             }
+            if (name.equals(name0)) {
+                if (found) {
+                    throw new RoundRobinRuntimeException("存在重复的字段，系统错误");
+                }
+                found = true;
+            }
         }
-        throw new RuntimeException("未找到" + name);
+        if (found) {
+            return idx;
+        } else {
+            return -1;
+        }
     }
 
     @Override
@@ -135,6 +144,9 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
     @Override
     public RoundRobinConnection increase(final int sec, String name, int i) {
         final int idx = getIndex(name, header);
+        if (idx < 0) {
+            throw new RoundRobinRuntimeException("不存在" + name);
+        }
         synchronized (this.header[idx]) {
             this.data[sec][idx] = this.data[sec][idx] + i;
         }
@@ -159,7 +171,11 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
         int[] timeline0 = new int[second];
         int[] indexes = new int[name.length];
         for (int i = 0; i < name.length; i++) {
-            indexes[i] = getIndex(name[i], header);
+            int idx = getIndex(name[i], header);
+            if (idx < 0) {
+                throw new RoundRobinRuntimeException("不存在" + name[i]);
+            }
+            indexes[i] = idx;
         }
         int pos = getCurrent();
         pos = pos - second;
@@ -186,17 +202,63 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
         return merge(view, view.getTime(), mergeType);
     }
 
+    /**
+     * 进行字段扩容
+     *
+     * @param header0
+     */
+    void expand(String... header0) {
+        int notExistCount = 0;
+        for (int i = 0; i < header0.length; i++) {
+            int idx1 = getIndex(header0[i], this.header);
+            if (idx1 == -1) {
+                notExistCount++;
+            } else {
+
+            }
+        }
+        String[] notExistHeader = new String[notExistCount];
+        int notExistIndex = 0;
+        for (int i = 0; i < header0.length; i++) {
+            String name = header0[i];
+            int idx1 = getIndex(name, header);
+            if (idx1 == -1) {
+                notExistHeader[notExistIndex] = name;
+                notExistIndex++;
+            }
+        }
+        if (notExistCount != 0) {
+            //扩容需要锁定数据库
+            synchronized (this) {
+                String[] header1 = new String[header.length + notExistCount];
+                System.arraycopy(header, 0, header1, 0, header.length);
+                System.arraycopy(notExistHeader, 0, header1, header.length, notExistHeader.length);
+                this.header = header1;
+                for (int i = 0; i < data.length; i++) {
+                    long[] oldData = data[i];
+                    long[] newData0 = new long[header1.length];
+                    System.arraycopy(oldData, 0, newData0, 0, oldData.length);
+                    for (int j = oldData.length; j < newData0.length; j++) {
+                        newData0[j] = 0L;
+                    }
+                    data[i] = newData0;
+                }
+            }
+        }
+    }
+
     @Override
     public RoundRobinConnection merge(RoundRobinView view, int time, MergeType mergeType) {
         if (status != Status.FREEZEN) {
             throw new RuntimeException("数据库未进行冻结");
         }
         long[][] data = null;
-        String[] header = null;
         time = time - view.getData().length;
         data = view.getData();
-        header = view.getHeader();
-        for (String name : header) {
+        //进行扩容
+        expand(view.getHeader());
+        //扩容后一定包含字段
+        for (String name : view.getHeader()) {
             int idx0 = getIndex(name, view.getHeader());
             int idx1 = getIndex(name, header);
             for (int i = 0; i < data.length; i++) {
@@ -216,15 +278,15 @@ public class DefaultRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public RoundRobinConnection persistent(FormatType formatType, int version) throws IOException {
-        String fileName = this.fileName;
+        String fileName = this.fileName.trim().toLowerCase();
         if (formatType == FormatType.BIN && version == 1) {
-            if(!fileName.trim().toLowerCase().endsWith(".rrd")){
+            if (!fileName.endsWith("\\.rrd")) {
                 fileName = fileName.substring(0, fileName.length() - 4);
             }
             RoundRobinFormat format = new RoundRobinFormatBinV1(header, data, getCurrent());
             format.write(fileName + ".rrd");
         } else if (formatType == FormatType.CSV && version == 1) {
-            if(!fileName.trim().toLowerCase().endsWith(".csv")){
+            if (!fileName.endsWith("\\.csv")) {
                 fileName = fileName.substring(0, fileName.length() - 4);
             }
             RoundRobinFormat format = new RoundRobinFormatCsvV1(header, data, getCurrent());

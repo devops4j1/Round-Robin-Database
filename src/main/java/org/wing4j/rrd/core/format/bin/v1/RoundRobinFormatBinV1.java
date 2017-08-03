@@ -102,9 +102,8 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
         if (DEBUG) {
             System.out.println("data size:" + dataSize0);
         }
-        long[][] data0 = new long[dataSize0][dataLen0 + 1];
+        long[][] data0 = new long[dataSize0][dataLen0];
         for (int i = 0; i < data0.length; i++) {
-            data0[i][0] = i;
             for (int j = 0; j < header0.length; j++) {
                 data0[i][j] = buffer.getLong();
             }

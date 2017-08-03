@@ -7,6 +7,13 @@ import java.io.IOException;
  */
 public interface RoundRobinDatabase {
     /**
+     * 创建数据库文件
+     * @param fileName 持久化
+     * @return
+     * @throws IOException
+     */
+    RoundRobinConnection create(String fileName) throws IOException;
+    /**
      * 打开远程数据库
      * @param address 服务器地址
      * @param port 端口
