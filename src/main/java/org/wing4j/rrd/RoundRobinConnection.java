@@ -59,7 +59,7 @@ public interface RoundRobinConnection {
      * @param columns   字段数组
      * @return 视图切片
      */
-    RoundRobinView slice(String tableName, int size, String... columns);
+    RoundRobinView slice(String tableName, int pos, long size, String... columns);
 
     /**
      * 数据切片,获取距今size秒之前的切片数据

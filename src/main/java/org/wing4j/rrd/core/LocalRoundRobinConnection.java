@@ -49,7 +49,7 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
             }
         });
         for (File tableFile : tableFiles) {
-            database.createTable(tableFile);
+            database.openTable(tableFile);
         }
     }
 

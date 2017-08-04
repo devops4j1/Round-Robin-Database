@@ -14,14 +14,14 @@ import java.nio.ByteBuffer;
  */
 @Data
 public class RoundRobinMergeProtocolV1 implements RoundRobinProtocol {
+    int version = 1;
+    ProtocolType protocolType = ProtocolType.MERGE;
+    static final boolean DEBUG = false;
     String[] columns = null;
     long[][] data = null;
     MergeType mergeType;
     String tableName;
-    int version = 1;
     int current = 0;
-    ProtocolType protocolType = ProtocolType.MERGE;
-    static final boolean DEBUG = false;
 
     String fill(String in, boolean rightFillStyle, char fillChar, int len) {
         String str = in;

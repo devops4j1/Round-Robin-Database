@@ -37,7 +37,14 @@ public interface RoundRobinDatabase {
      * @return
      */
     RoundRobinDatabase createTable(String tableName, String... columns) throws IOException;
-    RoundRobinDatabase createTable(File file) throws IOException;
+
+    /**
+     * 从文件打开表
+     * @param file 文件
+     * @return 数据库对象
+     * @throws IOException
+     */
+    RoundRobinDatabase openTable(File file) throws IOException;
 
     /**
      * 删除表

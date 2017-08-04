@@ -71,7 +71,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     }
 
     @Override
-    public RoundRobinDatabase createTable(File file) throws IOException {
+    public RoundRobinDatabase openTable(File file) throws IOException {
         Table table = new PersistentTable(file);
         tables.put(table.getMetadata().getName(), table);
         return this;

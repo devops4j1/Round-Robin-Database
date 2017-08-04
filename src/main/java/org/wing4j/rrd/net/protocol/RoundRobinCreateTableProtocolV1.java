@@ -8,17 +8,14 @@ import java.nio.ByteBuffer;
 
 /**
  * Created by wing4j on 2017/8/4.
- * 字段自增协议
+ * 创建表协议
  */
 @Data
-public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
+public class RoundRobinCreateTableProtocolV1 extends BaseRoundRobinProtocol {
     int version = 1;
-    ProtocolType protocolType = ProtocolType.SLICE;
+    ProtocolType protocolType = ProtocolType.CREATE_TABLE;
     String tableName;
-    String[] columns = new String[0];
-    int pos;
-    long size;
-    long[][] data = new long[0][0];
+    String[] columns;
 
     @Override
     public ByteBuffer convert() {
@@ -30,16 +27,16 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
         //命令
         buffer.putInt(protocolType.getCode());
         if (DebugConfig.DEBUG) {
-            System.out.println("protocol Type:" + this.protocolType);
+            System.out.println("protocol Type:" + protocolType);
         }
         //版本号
-        buffer = put(buffer, this.version);
+        buffer.putInt(version);
         if (DebugConfig.DEBUG) {
-            System.out.println("version:" + this.version);
+            System.out.println("version:" + version);
         }
         //表名长度
         //表名
-        buffer = put(buffer, this.tableName);
+        buffer = put(buffer, tableName);
         ///字段数
         buffer = put(buffer, this.columns.length);
         if (DebugConfig.DEBUG) {
@@ -49,16 +46,6 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
         for (int i = 0; i < this.columns.length; i++) {
             String column = this.columns[i];
             buffer = put(buffer, column);
-        }
-        //偏移地址
-        buffer = put(buffer, this.pos);
-        //记录条数
-        buffer = put(buffer, this.size);
-        //数据
-        for (int i = 0; i < this.size; i++) {
-            for (int j = 0; j < this.columns.length; j++) {
-                buffer = put(buffer, this.data[i][j]);
-            }
         }
         //结束
         //回填,将报文总长度回填到第一个字节
@@ -88,16 +75,5 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
         for (int i = 0; i < columnNum; i++) {
             columns[i] = get(buffer);
         }
-        //偏移地址
-        this.pos = buffer.getInt();
-        //记录条数
-        this.size = buffer.getLong();
-        //数据
-        for (int i = 0; i < this.size; i++) {
-            for (int j = 0; j < this.columns.length; j++) {
-                this.data[i][j] = buffer.getLong();
-            }
-        }
-
     }
 }
