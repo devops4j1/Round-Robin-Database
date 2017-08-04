@@ -82,7 +82,12 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
         for (String tableName : tableNames) {
             existTable(tableName, true);
             Table table = tables.get(tableName);
-            table.drop();
+            try {
+                table.drop();
+                tables.remove(tableName);
+            }catch (Exception e){
+                //TODO 处理删表错误
+            }
         }
         return this;
     }

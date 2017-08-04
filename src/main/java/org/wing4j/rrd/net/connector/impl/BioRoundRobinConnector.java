@@ -5,6 +5,7 @@ import lombok.ToString;
 import org.wing4j.rrd.MergeType;
 import org.wing4j.rrd.RoundRobinFormat;
 import org.wing4j.rrd.RoundRobinView;
+import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
 import org.wing4j.rrd.core.format.net.RoundRobinFormatNetworkV1;
 import org.wing4j.rrd.utils.HexUtils;
@@ -31,12 +32,32 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
-    public RoundRobinView read(int time, int size, String tableName, String... names) {
+    public TableMetadata getTableMetadata(String tableName) throws IOException {
         return null;
     }
 
     @Override
-    public RoundRobinConnector write(String tableName, int time, RoundRobinView view, MergeType mergeType) throws IOException {
+    public int getDataSize(String tableName) throws IOException {
+        return 0;
+    }
+
+    @Override
+    public long increase(String tableName, String column, int i) throws IOException {
+        return 0;
+    }
+
+    @Override
+    public RoundRobinView read(int size, String tableName, String... columns) throws IOException {
+        return null;
+    }
+
+    @Override
+    public RoundRobinView read(int pos, int size, String tableName, String... columns) throws IOException {
+        return null;
+    }
+
+    @Override
+    public RoundRobinConnector merge(String tableName, int time, RoundRobinView view, MergeType mergeType) throws IOException {
         RoundRobinFormat format = new RoundRobinFormatNetworkV1(mergeType, time, tableName, view);
         ByteBuffer buffer = format.write();
         byte[] data = new byte[buffer.position()];
@@ -51,6 +72,26 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
         System.out.println(new String(data11));
         socket.close();
         return this;
+    }
+
+    @Override
+    public RoundRobinConnector merge(String tableName, RoundRobinView view, MergeType mergeType) throws IOException {
+        return null;
+    }
+
+    @Override
+    public RoundRobinConnector expand(String tableName, String... columns) throws IOException {
+        return null;
+    }
+
+    @Override
+    public RoundRobinConnector createTable(String tableName, String... columns) throws IOException {
+        return null;
+    }
+
+    @Override
+    public RoundRobinConnector dropTable(String... tableNames) throws IOException {
+        return null;
     }
 
 }

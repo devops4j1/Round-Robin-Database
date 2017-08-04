@@ -90,17 +90,15 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public RoundRobinConnection increase(String tableName, String column) {
+    public long increase(String tableName, String column) {
         Table table = database.getTable(tableName);
-        table.increase(column);
-        return this;
+        return table.increase(column);
     }
 
     @Override
-    public RoundRobinConnection increase(String tableName, String column, int i) {
+    public long increase(String tableName, String column, int i) {
         Table table = database.getTable(tableName);
-        table.increase(column, i);
-        return this;
+        return table.increase(column, i);
     }
 
     @Override

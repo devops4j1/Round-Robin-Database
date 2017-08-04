@@ -6,8 +6,6 @@ import org.wing4j.rrd.core.DefaultRoundRobinDatabase;
 import org.wing4j.rrd.core.format.csv.v1.RoundRobinFormatCsvV1;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
 
-import static org.junit.Assert.*;
-
 /**
  * Created by wing4j on 2017/8/2.
  */
@@ -23,7 +21,7 @@ public class AioRoundRobinConnectorTest {
         format.write("D:/22.csv");
         for (int i = 0; i < 1; i++) {
             RoundRobinConnector connector = new AioRoundRobinConnector("127.0.0.1", 8099);
-            connector.write("mo9", 0, view, MergeType.ADD);
+            connector.merge("mo9", 0, view, MergeType.ADD);
         }
         Thread.sleep(10000);
     }

@@ -35,7 +35,7 @@ public interface Table {
      * @param column
      * @return
      */
-    Table increase(String column);
+    long increase(String column);
 
     /**
      * 自增
@@ -44,14 +44,14 @@ public interface Table {
      * @param val
      * @return
      */
-    Table increase(String column, int val);
+    long increase(String column, int val);
 
     /**
      * 获取记录行数
      *
      * @return
      */
-    long getSize();
+    int getSize();
 
     /**
      * 设置数据
@@ -60,7 +60,7 @@ public interface Table {
      * @param val
      * @return
      */
-    Table set(int time, String column, long val);
+    long set(int time, String column, long val);
 
     /**
      * 获取数据

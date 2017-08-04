@@ -14,6 +14,7 @@ import java.io.IOException;
 @Data
 @ToString
 public class TableMetadata {
+    TableStatus status = TableStatus.NORMAL;
     String fileName;
     File dataFile;
     FormatType formatType;

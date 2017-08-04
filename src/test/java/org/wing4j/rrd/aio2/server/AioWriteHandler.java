@@ -19,7 +19,7 @@ public class AioWriteHandler implements CompletionHandler<Integer, ByteBuffer>{
     public void completed(Integer result, ByteBuffer attachment) {
         try {
             System.out.println("position:" + attachment.position() + " limit: " + attachment.limit());
-            System.out.println(Thread.currentThread().getName() + "write finish");
+            System.out.println(Thread.currentThread().getName() + "merge finish");
             channel.close();
         } catch (IOException e) {
             e.printStackTrace();

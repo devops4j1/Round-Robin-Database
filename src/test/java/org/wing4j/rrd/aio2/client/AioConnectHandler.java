@@ -17,7 +17,7 @@ public class AioConnectHandler implements CompletionHandler<Void, AsynchronousSo
         connector.write(buffer1, buffer1, new CompletionHandler<Integer, ByteBuffer>() {
             @Override
             public void completed(Integer result, ByteBuffer attachment) {
-                System.out.println(Thread.currentThread().getName() + " write finish");
+                System.out.println(Thread.currentThread().getName() + " merge finish");
                 ByteBuffer clientBuffer = ByteBuffer.allocate(1024);
                 connector.read(clientBuffer, clientBuffer, new AioReadHandler(connector));
             }

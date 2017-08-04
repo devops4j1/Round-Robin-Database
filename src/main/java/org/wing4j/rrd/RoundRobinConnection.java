@@ -38,7 +38,7 @@ public interface RoundRobinConnection {
      * @param column 字段名
      * @return 连接上下文
      */
-    RoundRobinConnection increase(String tableName, String column);
+    long increase(String tableName, String column);
 
     /**
      * 对应表头数据自增1
@@ -49,7 +49,7 @@ public interface RoundRobinConnection {
      *
      * @return 连接上下文
      */
-    RoundRobinConnection increase(String tableName, String column, int i);
+    long increase(String tableName, String column, int i);
 
     /**
      * 数据切片,获取距今size秒之前的切片数据

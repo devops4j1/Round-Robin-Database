@@ -3,6 +3,7 @@ package org.wing4j.rrd.core.engine;
 import org.wing4j.rrd.*;
 import org.wing4j.rrd.core.Table;
 import org.wing4j.rrd.core.TableMetadata;
+import org.wing4j.rrd.core.TableStatus;
 import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
 import org.wing4j.rrd.core.format.csv.v1.RoundRobinFormatCsvV1;
 
@@ -46,38 +47,38 @@ public class PersistentTable implements Table {
         return this;
     }
 
-    public Table increase(String column) {
+    public long increase(String column) {
         return increase(column, 1);
     }
 
-    public Table increase(String column, int i) {
+    public long increase(String column, int i) {
         int idx = metadata.columnIndex(column);
         int time = getCurrent();
         return increase(time, idx, i);
     }
 
-    Table increase(int time, int idx, int i) {
+    long increase(int time, int idx, int i) {
         this.data[time][idx] += i;
-        return this;
+        return this.data[time][idx];
     }
 
     public long[][] getData() {
         return data;
     }
 
-    public long getSize() {
+    public int getSize() {
         return data.length;
     }
 
     @Override
-    public Table set(int time, String column, long val) {
+    public long set(int time, String column, long val) {
         int idx = metadata.columnIndex(column);
         return set(time, idx, val);
     }
 
-    Table set(int time, int idx, long val){
+    long set(int time, int idx, long val) {
         this.data[time][idx] = val;
-        return this;
+        return this.data[time][idx];
     }
 
     @Override
@@ -145,7 +146,7 @@ public class PersistentTable implements Table {
     }
 
     public PersistentTable merge(RoundRobinView view, int mergePos, MergeType mergeType) {
-        if(DEBUG){
+        if (DEBUG) {
             System.out.println("table:" + metadata.getName());
             System.out.println("mergeType:" + mergeType);
             System.out.println("table column:" + Arrays.asList(metadata.getColumns()));
@@ -209,7 +210,10 @@ public class PersistentTable implements Table {
 
     @Override
     public void drop() throws IOException {
-
+        if (metadata.getDataFile().exists()) {
+            metadata.getDataFile().delete();
+        }
+        metadata.setStatus(TableStatus.DELETE);
     }
 
     @Override
