@@ -3,12 +3,11 @@ package org.wing4j.rrd.net.connector.impl;
 import lombok.Data;
 import lombok.ToString;
 import org.wing4j.rrd.MergeType;
-import org.wing4j.rrd.RoundRobinFormat;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
-import org.wing4j.rrd.net.protocol.RoundRobinDataSizeProtocolV1;
 import org.wing4j.rrd.net.protocol.RoundRobinMergeProtocolV1;
+import org.wing4j.rrd.net.protocol.RoundRobinTableMetadataProtocolV1;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -82,11 +81,6 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
 
     @Override
     public TableMetadata getTableMetadata(String tableName) throws IOException {
-        return null;
-    }
-
-    @Override
-    public int getDataSize(String tableName) throws IOException {
         AsynchronousSocketChannel socketChannel = null;
         if (socketChannel == null || !socketChannel.isOpen()) {
             socketChannel = AsynchronousSocketChannel.open(asyncChannelGroup);
@@ -94,25 +88,19 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
             socketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             socketChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
         }
-        RoundRobinDataSizeProtocolV1 protocol = new RoundRobinDataSizeProtocolV1();
+        RoundRobinTableMetadataProtocolV1 protocol = new RoundRobinTableMetadataProtocolV1();
         protocol.setTableName(tableName);
         ByteBuffer buffer = protocol.convert();
         socketChannel.connect(new InetSocketAddress(address, port), socketChannel, new ConnectHandler(buffer, this));
-        return 0;
+        return null;
     }
 
     @Override
     public long increase(String tableName, String column, int i) throws IOException {
         return 0;
     }
-
     @Override
-    public RoundRobinView read(int size, String tableName, String... columns) throws IOException {
-        return null;
-    }
-
-    @Override
-    public RoundRobinView read(int pos, int size, String tableName, String... columns) throws IOException {
+    public RoundRobinView slice(int pos, int size, String tableName, String... columns) throws IOException {
         return null;
     }
 

@@ -24,7 +24,7 @@ public class AioReadHandler implements CompletionHandler<Integer, ByteBuffer> {
                 System.out.println(buf);
                 buf.flip();
                 buf.compact();
-                System.out.println(Thread.currentThread().getName() + " read finish" + "收到" + channel.getRemoteAddress().toString() + "的消息:" + decoder.decode(buf));
+                System.out.println(Thread.currentThread().getName() + " slice finish" + "收到" + channel.getRemoteAddress().toString() + "的消息:" + decoder.decode(buf));
             } catch (CharacterCodingException e) {
                 e.printStackTrace();
             } catch (IOException e) {

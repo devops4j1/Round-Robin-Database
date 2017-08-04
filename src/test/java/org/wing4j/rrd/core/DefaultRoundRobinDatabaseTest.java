@@ -65,13 +65,13 @@ public class DefaultRoundRobinDatabaseTest {
         connection.persistent(FormatType.CSV, 1);
 
 //        connection.persistent(FormatType.CSV, 1);
-//        RoundRobinResultSet resultSet = connection.read(connection.getColumns());
+//        RoundRobinResultSet resultSet = connection.slice(connection.getColumns());
 //        long[] data = resultSet.getData("mo9.request");
 //        String json = new Gson().toJson(data);
 //        System.out.println(json);
 //        connection.persistent(FormatType.CSV, 1);
 //        RoundRobinView view = connection.slice(5 * 60, "mo9.request");
-//        RoundRobinResultSet resultSet1 = view.read();
+//        RoundRobinResultSet resultSet1 = view.slice();
 //        json = new Gson().toJson(resultSet1.getData("mo9.request"));
 //        System.out.println(json);
 //        Thread.sleep(2 * 1000);
@@ -101,7 +101,7 @@ public class DefaultRoundRobinDatabaseTest {
 //        connection.merge(view, (int) (System.currentTimeMillis() % (24 * 60 * 60)), MergeType.ADD);
 //        connection.merge(view, (int) (System.currentTimeMillis() % (24 * 60 * 60)), MergeType.ADD);
 //        connection.unlock();
-//        json = new Gson().toJson(connection.slice(24 * 60 * 60, "mo9.request").read("mo9.request"));
+//        json = new Gson().toJson(connection.slice(24 * 60 * 60, "mo9.request").slice("mo9.request"));
 //        System.out.println(json);
 //        connection.close();
     }

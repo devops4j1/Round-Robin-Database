@@ -12,7 +12,7 @@ import org.wing4j.rrd.net.connector.RoundRobinConnector;
 public class BioRoundRobinConnectorTest {
 
     @Test
-    public void testWrite() throws Exception {
+    public void testMerge() throws Exception {
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(new RoundRobinConfig());
         RoundRobinConnection connection = database.open();
         connection.createTable("mo9", "request", "response");
@@ -26,7 +26,8 @@ public class BioRoundRobinConnectorTest {
     }
 
     @Test
-    public void testStart() throws Exception {
-
+    public void testGetTableMetadata() throws Exception {
+        RoundRobinConnector connector = new BioRoundRobinConnector("127.0.0.1", 8099);
+        connector.getTableMetadata("mo9");
     }
 }

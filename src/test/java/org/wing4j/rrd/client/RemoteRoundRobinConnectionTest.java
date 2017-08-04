@@ -15,11 +15,20 @@ public class RemoteRoundRobinConnectionTest {
         RoundRobinConfig config = new RoundRobinConfig();
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
         RoundRobinConnection connection = database.open();
-        RoundRobinView view = connection.slice("mo9", 60, "request");
+        RoundRobinView view = connection.slice("mo9", 1, "request");
         view.set(0, "request", 1024);
         view.setTime(80);
         RoundRobinConnection remoteConnection =  database.open("127.0.0.1", 8099);
         remoteConnection.merge("ssss", MergeType.ADD, view);
+        Thread.sleep(1000);
+    }
+
+    @Test
+    public void testGetColumns() throws Exception {
+        RoundRobinConfig config = new RoundRobinConfig();
+        RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
+        RoundRobinConnection remoteConnection =  database.open("127.0.0.1", 8099);
+        remoteConnection.getColumns("ssss");
         Thread.sleep(1000);
     }
 }

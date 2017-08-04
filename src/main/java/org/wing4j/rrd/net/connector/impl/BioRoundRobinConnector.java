@@ -7,8 +7,8 @@ import org.wing4j.rrd.MergeType;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
-import org.wing4j.rrd.net.protocol.RoundRobinDataSizeProtocolV1;
 import org.wing4j.rrd.net.protocol.RoundRobinMergeProtocolV1;
+import org.wing4j.rrd.net.protocol.RoundRobinTableMetadataProtocolV1;
 import org.wing4j.rrd.utils.HexUtils;
 
 import java.io.IOException;
@@ -34,12 +34,7 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
 
     @Override
     public TableMetadata getTableMetadata(String tableName) throws IOException {
-        return null;
-    }
-
-    @Override
-    public int getDataSize(String tableName) throws IOException {
-        RoundRobinDataSizeProtocolV1 protocol = new RoundRobinDataSizeProtocolV1();
+        RoundRobinTableMetadataProtocolV1 protocol = new RoundRobinTableMetadataProtocolV1();
         protocol.setTableName(tableName);
         ByteBuffer buffer = protocol.convert();
         buffer.flip();
@@ -55,21 +50,16 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
         is.read(data11);
         System.out.println(new String(data11));
         socket.close();
-        return 0;
+        //TODO 构建表元信息对象
+        return null;
     }
 
     @Override
     public long increase(String tableName, String column, int i) throws IOException {
         return 0;
     }
-
     @Override
-    public RoundRobinView read(int size, String tableName, String... columns) throws IOException {
-        return null;
-    }
-
-    @Override
-    public RoundRobinView read(int pos, int size, String tableName, String... columns) throws IOException {
+    public RoundRobinView slice(int pos, int size, String tableName, String... columns) throws IOException {
         return null;
     }
 

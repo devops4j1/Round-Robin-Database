@@ -35,22 +35,12 @@ public class NioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
-    public int getDataSize(String tableName) throws IOException {
-        return 0;
-    }
-
-    @Override
     public long increase(String tableName, String column, int i) throws IOException {
         return 0;
     }
 
     @Override
-    public RoundRobinView read(int size, String tableName, String... columns) throws IOException {
-        return null;
-    }
-
-    @Override
-    public RoundRobinView read(int pos, int size, String tableName, String... columns) throws IOException {
+    public RoundRobinView slice(int pos, int size, String tableName, String... columns) throws IOException {
         return null;
     }
 

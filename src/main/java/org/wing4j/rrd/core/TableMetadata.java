@@ -20,6 +20,7 @@ public class TableMetadata {
     FormatType formatType;
     String name;
     String[] columns;
+    int dataSize;
 
     public TableMetadata(String fileName, FormatType formatType, String name, String[] columns) throws IOException {
         this.fileName = fileName;

@@ -6,8 +6,8 @@ import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.core.Table;
 import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.net.protocol.ProtocolType;
-import org.wing4j.rrd.net.protocol.RoundRobinDataSizeProtocolV1;
 import org.wing4j.rrd.net.protocol.RoundRobinMergeProtocolV1;
+import org.wing4j.rrd.net.protocol.RoundRobinTableMetadataProtocolV1;
 import org.wing4j.rrd.server.RoundRobinServer;
 
 import java.io.IOException;
@@ -74,14 +74,17 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
         if(DebugConfig.DEBUG){
             System.out.println("命令:" + protocolType.getDesc() + "." + version);
         }
-       if(protocolType == ProtocolType.GET_DATA_SIZE && version == 1){//获取数据数量
+       if(protocolType == ProtocolType.TABLE_METADATA && version == 1){//获取数据数量
            //读取到数据流
-           RoundRobinDataSizeProtocolV1 protocol = new RoundRobinDataSizeProtocolV1();
+           RoundRobinTableMetadataProtocolV1 protocol = new RoundRobinTableMetadataProtocolV1();
            protocol.convert(attachment);
            try {
                //进行合并视图操作
                Table table = server.getDatabase().getTable(protocol.getTableName());
+               protocol.setTableName(table.getMetadata().getName());
                protocol.setDataSize(table.getSize());
+               protocol.setStatus(table.getMetadata().getStatus().ordinal());
+               protocol.setColumns(table.getMetadata().getColumns());
            }finally {
                if(connection != null){
                    try {

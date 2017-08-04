@@ -35,14 +35,6 @@ public interface RoundRobinConnector {
     TableMetadata getTableMetadata(String tableName) throws IOException;
 
     /**
-     * 获取环状表数据条数
-     * @param tableName 表名
-     * @return 记录条数
-     * @throws IOException
-     */
-    int getDataSize(String tableName) throws IOException;
-
-    /**
      * 自增
      *
      * @param tableName 表名
@@ -52,17 +44,6 @@ public interface RoundRobinConnector {
      * @throws IOException
      */
     long increase(String tableName, String column, int i) throws IOException;
-
-    /**
-     * 读取数据
-     * @param size 读取数据长度
-     * @param tableName  表名
-     * @param columns 字段名
-     * @return 视图切片
-     * @throws IOException
-     */
-    RoundRobinView read(int size, String tableName, String... columns) throws IOException;
-
     /**
      * 读取数据
      * @param pos 读取结束的偏移位置
@@ -72,7 +53,7 @@ public interface RoundRobinConnector {
      * @return 视图切片
      * @throws IOException
      */
-    RoundRobinView read(int pos, int size, String tableName, String... columns) throws IOException;
+    RoundRobinView slice(int pos, int size, String tableName, String... columns) throws IOException;
 
     /**
      * 写入数据

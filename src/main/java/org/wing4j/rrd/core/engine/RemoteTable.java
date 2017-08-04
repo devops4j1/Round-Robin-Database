@@ -59,7 +59,7 @@ public class RemoteTable implements Table {
     @Override
     public int getSize() {
         try {
-            return connector.getDataSize(tableName);
+            return getMetadata().getDataSize();
         } catch (Exception e) {
             throw new RoundRobinRuntimeException("", e);
         }
@@ -78,7 +78,7 @@ public class RemoteTable implements Table {
     @Override
     public RoundRobinView slice(int size, String... columns) {
         try {
-            return connector.read(size, tableName, columns);
+            return connector.slice(-1, size, tableName, columns);
         } catch (Exception e) {
             throw new RoundRobinRuntimeException("", e);
         }
@@ -87,7 +87,7 @@ public class RemoteTable implements Table {
     @Override
     public RoundRobinView slice(int size, int time, String... columns) {
         try {
-            return connector.read(time % getSize(), size, tableName, columns);
+            return connector.slice(time, size, tableName, columns);
         } catch (Exception e) {
             throw new RoundRobinRuntimeException("", e);
         }
