@@ -9,7 +9,7 @@ import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
 import org.wing4j.rrd.net.connector.impl.NioRoundRobinConnector;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.Map;
 
 /**
  * Created by wing4j on 2017/7/31.
@@ -39,66 +39,45 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection{
            //TODO
         }
     }
-
     @Override
-    public RoundRobinConnection lock() {
-        return null;
-    }
-
-    @Override
-    public RoundRobinConnection unlock() {
-        return null;
-    }
-
-    @Override
-    public String[] getHeader() {
+    public String[] getColumns(String tableName) {
         return new String[0];
     }
 
     @Override
-    public RoundRobinResultSet read(String... name) {
-        return null;
-    }
-
-    @Override
-    public boolean contain(String name) {
+    public boolean contain(String tableName, String column) {
         return false;
     }
 
     @Override
-    public RoundRobinConnection increase(int sec, String name) {
+    public RoundRobinConnection increase(String tableName, String column) {
         return null;
     }
 
     @Override
-    public RoundRobinConnection increase(String name) {
+    public RoundRobinConnection increase(String tableName, String column, int i) {
         return null;
     }
 
     @Override
-    public RoundRobinConnection increase(String name, int i) {
+    public RoundRobinView slice(String tableName, int size, String... columns) {
         return null;
     }
 
     @Override
-    public RoundRobinConnection increase(int sec, String name, int i) {
+    public RoundRobinView slice(int size, String... fullNames) {
         return null;
     }
 
     @Override
-    public RoundRobinView slice(int second, String... name) {
+    public RoundRobinConnection registerTrigger(String tableName, RoundRobinTrigger trigger) {
         return null;
     }
 
     @Override
-    public RoundRobinConnection addTrigger(RoundRobinTrigger trigger) {
-        return this;
-    }
-
-    @Override
-    public RoundRobinConnection merge(RoundRobinView view, MergeType mergeType) {
+    public RoundRobinConnection merge(String tableName, MergeType mergeType, RoundRobinView view) {
         try {
-            this.connector.write(view, view.getTime(), mergeType);
+            this.connector.write(tableName, view.getTime(), view, mergeType);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -106,22 +85,37 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection{
     }
 
     @Override
-    public RoundRobinConnection merge(RoundRobinView view, int time, MergeType mergeType) {
-        try {
-            this.connector.write(view, view.getTime(), mergeType);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return this;
+    public RoundRobinConnection merge(String tableName, MergeType mergeType, RoundRobinView view, Map<String, String> mappings) {
+        return null;
     }
 
     @Override
-    public RoundRobinConnection persistent(FormatType formatType, int version) throws IOException {
-        return this;
+    public RoundRobinConnection merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view) {
+        return null;
     }
 
     @Override
-    public RoundRobinConnection persistent() throws IOException {
+    public RoundRobinConnection merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view, Map<String, String> mappings) {
+        return null;
+    }
+
+    @Override
+    public RoundRobinConnection persistent(FormatType formatType, int version, String... tableNames) throws IOException {
+        return null;
+    }
+
+    @Override
+    public RoundRobinConnection persistent(String... tableNames) throws IOException {
+        return null;
+    }
+
+    @Override
+    public RoundRobinConnection createTable(String tableName, String... columns) throws IOException {
+        return null;
+    }
+
+    @Override
+    public RoundRobinConnection dropTable(String... tableNames) throws IOException {
         return null;
     }
 

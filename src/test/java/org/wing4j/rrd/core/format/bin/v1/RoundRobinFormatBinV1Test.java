@@ -19,7 +19,7 @@ public class RoundRobinFormatBinV1Test {
         data[1022][1] = Long.MIN_VALUE;
         data[1021][1] = Long.MAX_VALUE / 2;
         String[] header = {"request", "response"};
-        RoundRobinFormat format = new RoundRobinFormatBinV1(header, data, (int) (System.currentTimeMillis() / 1000));
+        RoundRobinFormat format = new RoundRobinFormatBinV1("", header, data, (int) (System.currentTimeMillis() / 1000));
         format.write("D:/1.rrd");
     }
 
@@ -30,7 +30,7 @@ public class RoundRobinFormatBinV1Test {
         data[1022][1] = Long.MIN_VALUE;
         data[1021][1] = Long.MAX_VALUE / 2;
         String[] header = {"request", "response"};
-        RoundRobinFormat format = new RoundRobinFormatBinV1(header, data, (int) (System.currentTimeMillis() / 1000));
+        RoundRobinFormat format = new RoundRobinFormatBinV1("", header, data, (int) (System.currentTimeMillis() / 1000));
         ByteBuffer buffer = null;
         buffer = format.write(buffer);
         buffer.flip();

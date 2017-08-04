@@ -4,10 +4,6 @@ import org.junit.Test;
 import org.wing4j.rrd.*;
 import org.wing4j.rrd.core.DefaultRoundRobinDatabase;
 import org.wing4j.rrd.core.format.csv.v1.RoundRobinFormatCsvV1;
-import org.wing4j.rrd.net.connector.RoundRobinConnector;
-import org.wing4j.rrd.net.connector.impl.AioRoundRobinConnector;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by wing4j on 2017/8/2.
@@ -18,13 +14,12 @@ public class RemoteRoundRobinConnectionTest {
     public void testMerge() throws Exception {
         RoundRobinConfig config = new RoundRobinConfig();
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
-        RoundRobinConnection connection = database.open("D:/2.rrd");
-        RoundRobinView view = connection.slice(1 * 60, "mo9.request");
-        view.setHeader(new String[]{"sdasd.request"});
-        RoundRobinFormat format = new RoundRobinFormatCsvV1(view);
-        format.write("D:/22.csv");
+        RoundRobinConnection connection = database.open();
+        RoundRobinView view = connection.slice("mo9", 60, "request");
+        view.set(0, "request", 1024);
+        view.setTime(80);
         RoundRobinConnection remoteConnection =  database.open("127.0.0.1", 8099);
-        remoteConnection.merge(view, MergeType.ADD);
+        remoteConnection.merge("ssss", MergeType.ADD, view);
         Thread.sleep(1000);
     }
 }

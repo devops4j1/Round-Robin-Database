@@ -5,12 +5,12 @@ import org.wing4j.rrd.RoundRobinFormat;
 import org.wing4j.rrd.RoundRobinRuntimeException;
 import org.wing4j.rrd.RoundRobinView;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
 /**
@@ -18,23 +18,30 @@ import java.nio.channels.WritableByteChannel;
  */
 @Data
 public class RoundRobinFormatCsvV1 implements RoundRobinFormat {
+    String tableName;
     int version = 1;
     int current = 0;
-    String[] header = null;
+    String[] columns = null;
     long[][] data = null;
     static final boolean DEBUG = false;
 
     public RoundRobinFormatCsvV1() {
     }
 
-    public RoundRobinFormatCsvV1(RoundRobinView view){
-        this(view.getHeader(), view.getData(), view.getTime());
+    public RoundRobinFormatCsvV1(String tableName, RoundRobinView view){
+        this(tableName, view.getMetadata().getColumns(), view.getData(), view.getTime());
     }
 
-    public RoundRobinFormatCsvV1(String[] header, long[][] data, int current) {
-        this.header = header;
+    public RoundRobinFormatCsvV1(String tableName, String[] columns, long[][] data, int current) {
+        this.tableName = tableName;
+        this.columns = columns;
         this.data = data;
         this.current = current;
+    }
+
+    @Override
+    public void read(File file) throws IOException {
+        throw new RoundRobinRuntimeException("未实现");
     }
 
     public void read(String fileName) throws IOException {
@@ -70,12 +77,12 @@ public class RoundRobinFormatCsvV1 implements RoundRobinFormat {
     @Override
     public ByteBuffer write(ByteBuffer buffer) {
         StringBuilder stringBuilder = new StringBuilder();
-        for (String name : header) {
-            stringBuilder.append(name).append(",");
+        for (String column : columns) {
+            stringBuilder.append(column).append(",");
         }
         stringBuilder.append("\n");
         for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < header.length; j++) {
+            for (int j = 0; j < columns.length; j++) {
                 stringBuilder.append(String.valueOf(data[i][j])).append(",");
             }
             stringBuilder.append("\n");

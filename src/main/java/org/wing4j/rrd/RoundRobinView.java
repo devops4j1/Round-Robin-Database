@@ -2,11 +2,11 @@ package org.wing4j.rrd;
 
 import lombok.Data;
 import lombok.ToString;
+import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.WritableByteChannel;
 
 /**
  * Created by wing4j on 2017/7/30.
@@ -14,11 +14,8 @@ import java.nio.channels.WritableByteChannel;
 @Data
 @ToString
 public class RoundRobinView {
+    TableMetadata metadata;
     int time;
-    /**
-     *
-     */
-    String[] header;
     /**
      * 时间线
      */
@@ -28,7 +25,11 @@ public class RoundRobinView {
      */
     long[][] data;
     public RoundRobinView(RoundRobinFormat format){
-        this.header = format.getHeader();
+        try {
+            this.metadata = new TableMetadata(null, FormatType.CSV, "view", format.getColumns());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         this.data = format.getData();
         this.time = format.getCurrent();
         this.timeline = new int[data.length];
@@ -37,26 +38,35 @@ public class RoundRobinView {
         }
     }
 
-    public RoundRobinView(String[] header, int[] timeline, long[][] data, int time) {
-        this.header = header;
-        this.timeline = timeline;
-        this.data = data;
-        this.time = time;
-    }
-    int getIndex(String name) {
-        int idx = 0;
-        for (String name0 : header) {
-            if (name.equals(name0)) {
-                return idx;
-            } else {
-                idx++;
-            }
+    public RoundRobinView(String[] columns, int[] timeline, long[][] data) {
+        try {
+            this.metadata = new TableMetadata(null, FormatType.CSV, "view", columns);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        throw new RuntimeException("未找到" + name);
+        this.data = data;
+        this.time = timeline[timeline.length - 1];
+        this.timeline = timeline;
     }
 
+    public RoundRobinView set(int time, String column, long val) {
+        int idx = metadata.columnIndex(column);
+        return set(time, idx, val);
+    }
+
+    RoundRobinView set(int time, int idx, long val){
+        this.data[time][idx] = val;
+        return this;
+    }
+    long get(int time, String column){
+        int idx = metadata.columnIndex(column);
+        return get(time, idx);
+    }
+    public long get(int time, int idx){
+        return data[time][idx];
+    }
     public RoundRobinResultSet read() {
-        return read(header);
+        return read(metadata.getColumns());
     }
     public RoundRobinResultSet read(String... name) {
         long[][] data0 = new long[name.length][data.length];
@@ -69,7 +79,7 @@ public class RoundRobinView {
 
     long[] read(String name) {
         long[] data0 = new long[data.length];
-        int idx = getIndex(name);
+        int idx = metadata.columnIndex(name);
         for (int i = 0; i < data0.length; i++) {
             data0[i] = data[i][idx];
         }
@@ -81,7 +91,7 @@ public class RoundRobinView {
      * @throws IOException IO异常
      */
     public ByteBuffer write() throws IOException {
-        RoundRobinFormat format = new RoundRobinFormatBinV1(header, data, time);
+        RoundRobinFormat format = new RoundRobinFormatBinV1("view", metadata.getColumns(), data, time);
         ByteBuffer buffer = format.write();
         return buffer;
     }

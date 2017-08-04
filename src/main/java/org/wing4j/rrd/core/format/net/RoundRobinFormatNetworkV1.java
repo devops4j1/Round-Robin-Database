@@ -1,116 +1,110 @@
-package org.wing4j.rrd.core.format.bin.v1;
+package org.wing4j.rrd.core.format.net;
 
 import lombok.Data;
+import org.wing4j.rrd.MergeType;
 import org.wing4j.rrd.RoundRobinFormat;
+import org.wing4j.rrd.RoundRobinRuntimeException;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.utils.HexUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
 
 /**
- * Created by wing4j on 2017/7/29.
- * 循环结构文件格式
+ * Created by wing4j on 2017/8/2.
  */
 @Data
-public class RoundRobinFormatBinV1 implements RoundRobinFormat {
-    int version = 1;
-    int current = 0;
-    String tableName;
+public class RoundRobinFormatNetworkV1 implements RoundRobinFormat {
     String[] columns = null;
     long[][] data = null;
+    MergeType mergeType;
+    String tableName;
+    int version = 1;
+    int current = 0;
     static final boolean DEBUG = false;
 
-    public RoundRobinFormatBinV1() {
-    }
-    public RoundRobinFormatBinV1(String tableName,RoundRobinView view){
-        this(tableName, view.getMetadata().getColumns(), view.getData(), view.getTime());
-    }
-    public RoundRobinFormatBinV1(String tableName, String[] columns, long[][] data, int current) {
+    public RoundRobinFormatNetworkV1(MergeType mergeType, int current, String tableName, RoundRobinView view) {
         this.tableName = tableName;
+        this.mergeType = mergeType;
+        this.current = current;
+        this.columns = view.getMetadata().getColumns();
+        this.data = view.getData();
+    }
+
+    public RoundRobinFormatNetworkV1(ByteBuffer buffer) {
+        read(buffer);
+    }
+
+    public RoundRobinFormatNetworkV1(MergeType mergeType, int current, String tableName, String[] columns, long[][] data) {
+        this.tableName = tableName;
+        this.mergeType = mergeType;
+        this.current = current;
         this.columns = columns;
         this.data = data;
-        this.current = current;
     }
 
     @Override
     public void read(File file) throws IOException {
-        FileInputStream fis = new FileInputStream(file);
-        FileChannel fileChannel = fis.getChannel();
-        try {
-            read(fileChannel);
-        } finally {
-            if (fileChannel != null) {
-                fileChannel.close();
-            }
-            if (fis != null) {
-                fis.close();
-            }
-        }
+        throw new RoundRobinRuntimeException("未实现");
     }
 
+    @Override
     public void read(String fileName) throws IOException {
-        FileInputStream fis = new FileInputStream(fileName);
-        FileChannel fileChannel = fis.getChannel();
-        try {
-            read(fileChannel);
-        } finally {
-            if (fileChannel != null) {
-                fileChannel.close();
-            }
-            if (fis != null) {
-                fis.close();
-            }
-        }
+        throw new RoundRobinRuntimeException("未实现");
     }
 
+    @Override
     public void write(String fileName) throws IOException {
-        FileOutputStream fos = new FileOutputStream(fileName);
-        FileChannel channel = null;
-        try {
-            channel = fos.getChannel();
-            write(channel);
-        } finally {
-            if (channel != null) {
-                channel.close();
-            }
-            if (fos != null) {
-                fos.close();
-            }
-        }
+        throw new RoundRobinRuntimeException("未实现");
     }
 
     @Override
     public void read(ByteBuffer buffer) {
+        if (DEBUG) {
+            System.out.println(HexUtils.toDisplayString(buffer.array()));
+        }
+        //网络传输协议
+        //报文长度
+        //版本号
         int version0 = buffer.getInt();
         if (DEBUG) {
             System.out.println("version:" + version0);
         }
+        //表名长度
         int tableNameLen = buffer.getInt();
         if (DEBUG) {
             System.out.println("tableNameLength:" + tableNameLen);
         }
+        //表名
         byte[] tableNameBytes = new byte[tableNameLen];
         buffer.get(tableNameBytes);
         String tableName = new String(tableNameBytes);
         if (DEBUG) {
             System.out.println("tableName:" + tableName);
         }
+        //合并模式
+        int type = buffer.getInt();
+        this.mergeType = MergeType.values()[type];
+
+        //文件时间指针
         int current0 = buffer.getInt();
         if (DEBUG) {
             System.out.println("current:" + current0);
         }
+
+        //字段数量
         int headerLen = buffer.getInt();
         if (DEBUG) {
             System.out.println("head size:" + headerLen);
         }
+        //字段长度
         int headerMaxLen = buffer.getInt();
         if (DEBUG) {
             System.out.println("head length:" + headerMaxLen);
         }
+        //字段定义
         String[] columns0 = new String[headerLen];
         for (int i = 0; i < columns0.length; i++) {
             char[] chars = new char[headerMaxLen];
@@ -122,6 +116,7 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
                 System.out.println("columns:" + columns0[i]);
             }
         }
+        //数据区
         int dataLen0 = buffer.getInt();
         if (DEBUG) {
             System.out.println("head size:" + dataLen0);
@@ -145,7 +140,7 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
 
     @Override
     public ByteBuffer write() {
-        return write((ByteBuffer)null);
+        return write(ByteBuffer.allocate(5 * 1024));
     }
 
     @Override
@@ -166,23 +161,39 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
             }
         }
         int fileSize = 0;
+        //网络传输协议
+        fileSize += 4;//报文长度
         fileSize += 4;//文件版本号
         fileSize += 4;//表名长度
         fileSize += tableNameLen;//表名
+        fileSize += 4;//合并模式
         fileSize += 4;//文件时间指针
-        fileSize += 4;//头数量
-        fileSize += 4;//头长度
-        fileSize += headerMaxLen * columns0.length * 4;//文件头
+        fileSize += 4;//字段数量
+        fileSize += 4;//字段长度
+        fileSize += headerMaxLen * columns0.length * 4;//字段定义
         fileSize += columns0.length * data.length * 8;//数据区
-        if(buffer == null){
-            buffer = ByteBuffer.allocate(fileSize);
+        if (buffer.remaining() < fileSize) {
+            //扩容
+            ByteBuffer buffer1 = ByteBuffer.allocate(buffer.limit() + fileSize);
+            buffer.flip();
+            buffer1.put(buffer);
+            buffer = buffer1;
         }
+        int lengthPos = buffer.position();
+        //int 整个报文长度
+        buffer.putInt(0);
+        //版本号
         buffer.putInt(version);
         if (DEBUG) {
             System.out.println("version:" + version);
         }
+        //int 表名长度
         buffer.putInt(tableNameLen);
+        //String 表名
         buffer.put(tableNameBytes);
+        //int 合并模式
+        buffer.putInt(mergeType.ordinal());
+        //int 合并到的截至时间点
         buffer.putInt(current);
         if (DEBUG) {
             System.out.println("current:" + current);
@@ -224,32 +235,12 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
             buffer.get(data11);
             System.out.println(HexUtils.toDisplayString(data11));
         }
-        return buffer;
-    }
-
-    void read(ReadableByteChannel channel) throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(5 * 1024 * 1024);
-        try {
-            channel.read(buffer);
-//            if (DEBUG) {
-//                buffer.flip();
-//                byte[] data11 = new byte[buffer.limit()];
-//                buffer.get(data11);
-//                System.out.println(HexUtils.toDisplayString(data11));
-//            }
-        } finally {
-            if (channel != null) {
-                channel.close();
-            }
+        //将报文总长度回填到第一个字节
+        buffer.putInt(lengthPos, buffer.position() - 4);
+        if (DEBUG) {
+            System.out.println(HexUtils.toDisplayString(buffer.array()));
         }
-        buffer.flip();
-        read(buffer);
-    }
-
-    void write(WritableByteChannel channel) throws IOException {
-        ByteBuffer buffer = write();
-        buffer.flip();
-        channel.write(buffer);
+        return buffer;
     }
 
     String fill(String in, boolean rightFillStyle, char fillChar, int len) {

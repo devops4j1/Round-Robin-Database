@@ -28,11 +28,11 @@ public interface RoundRobinConnector {
      * @param names
      * @return
      */
-    RoundRobinView read(int time, int size, String... names);
+    RoundRobinView read(int time, int size, String tableName, String... names);
 
     /**
      * 写入数据
      * @param view
      */
-    RoundRobinConnector write(RoundRobinView view, int time, MergeType mergeType) throws IOException;
+    RoundRobinConnector write(String tableName, int pos,RoundRobinView view, MergeType mergeType) throws IOException;
 }

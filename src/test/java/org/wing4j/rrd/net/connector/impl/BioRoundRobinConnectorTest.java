@@ -16,19 +16,15 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testWrite() throws Exception {
-//        String[] header = {"req", "rsp"};
-//        int[] timeline = {1, 2};
-//        long[][] data = {{1L, 2L}, {3L, 4L}};
-//        RoundRobinView view = new RoundRobinView(header, timeline, data, 1);
-
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(new RoundRobinConfig());
-        RoundRobinConnection connection = database.open("D:/2.rrd");
-        RoundRobinView view = connection.slice(60 * 60, connection.getHeader());
-        RoundRobinFormat format = new RoundRobinFormatCsvV1(view);
+        RoundRobinConnection connection = database.open();
+        connection.createTable("mo9", "request", "response");
+        RoundRobinView view = connection.slice("mo9", 60 * 60, connection.getColumns("mo9"));
+        RoundRobinFormat format = new RoundRobinFormatCsvV1("view", view);
         format.write("D:/22.csv");
         for (int i = 0; i < 1; i++) {
             RoundRobinConnector connector = new BioRoundRobinConnector("127.0.0.1", 8099);
-            connector.write(view, 0, MergeType.ADD);
+            connector.write("mo9", 0, view, MergeType.ADD);
         }
     }
 

@@ -1,5 +1,6 @@
 package org.wing4j.rrd;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
@@ -13,10 +14,10 @@ public interface RoundRobinFormat {
     long[][] getData();
 
     void setData(long[][] data);
+    String getTableName();
+    String[] getColumns();
 
-    String[] getHeader();
-
-    void setHeader(String[] header);
+    void setColumns(String[] columns);
 
     int getCurrent();
 
@@ -26,6 +27,7 @@ public interface RoundRobinFormat {
 
     void setVersion(int version);
 
+    void read(File file) throws IOException;
     void read(String fileName) throws IOException;
 
     void write(String fileName) throws IOException;

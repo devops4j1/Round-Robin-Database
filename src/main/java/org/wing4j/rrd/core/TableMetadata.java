@@ -5,6 +5,9 @@ import lombok.ToString;
 import org.wing4j.rrd.FormatType;
 import org.wing4j.rrd.RoundRobinRuntimeException;
 
+import java.io.File;
+import java.io.IOException;
+
 /**
  * Created by wing4j on 2017/8/3.
  */
@@ -12,10 +15,25 @@ import org.wing4j.rrd.RoundRobinRuntimeException;
 @ToString
 public class TableMetadata {
     String fileName;
+    File dataFile;
     FormatType formatType;
     String name;
     String[] columns;
-    public String[] expand(String... columns){
+
+    public TableMetadata(String fileName, FormatType formatType, String name, String[] columns) throws IOException {
+        this.fileName = fileName;
+        this.formatType = formatType;
+        this.name = name;
+        this.columns = columns;
+        if (fileName != null) {
+            this.dataFile = new File(fileName);
+            if (!this.dataFile.exists()) {
+                this.dataFile.createNewFile();
+            }
+        }
+    }
+
+    public String[] expand(String... columns) {
         int notExistCount = 0;
         for (int i = 0; i < columns.length; i++) {
             int idx1 = columnIndex(columns[i], this.columns);
@@ -29,9 +47,9 @@ public class TableMetadata {
         int notExistIndex = 0;
         for (int i = 0; i < columns.length; i++) {
             String column = columns[i];
-            int idx1 = columnIndex(name, this.columns);
+            int idx1 = columnIndex(column);
             if (idx1 == -1) {
-                notExistHeader[notExistIndex] = name;
+                notExistHeader[notExistIndex] = column;
                 notExistIndex++;
             }
         }
@@ -46,10 +64,12 @@ public class TableMetadata {
         }
         return this.columns;
     }
+
     public boolean contain(String column) {
         return columnIndex(column) != -1;
     }
-    int columnIndex(String column, String[] columns){
+
+    public int columnIndex(String column, String[] columns) {
         int idx = -1;
         boolean found = false;
         for (String column0 : columns) {
@@ -69,7 +89,8 @@ public class TableMetadata {
             return -1;
         }
     }
-    public int columnIndex(String column){
+
+    public int columnIndex(String column) {
         return columnIndex(column, columns);
     }
 }

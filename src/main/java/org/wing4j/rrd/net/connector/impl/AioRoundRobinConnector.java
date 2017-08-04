@@ -6,8 +6,7 @@ import org.wing4j.rrd.MergeType;
 import org.wing4j.rrd.RoundRobinFormat;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
-import org.wing4j.rrd.net.format.RoundRobinFormatNetworkV1;
-import org.wing4j.rrd.utils.HexUtils;
+import org.wing4j.rrd.core.format.net.RoundRobinFormatNetworkV1;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -81,12 +80,12 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
-    public RoundRobinView read(int time, int size, String... names) {
+    public RoundRobinView read(int time, int size, String tableName, String... names) {
         return null;
     }
 
     @Override
-    public RoundRobinConnector write(RoundRobinView view, int time, MergeType mergeType) throws IOException {
+    public RoundRobinConnector write(String tableName, int time,RoundRobinView view, MergeType mergeType) throws IOException {
         AsynchronousSocketChannel socketChannel = null;
         if (socketChannel == null || !socketChannel.isOpen()) {
             socketChannel = AsynchronousSocketChannel.open(asyncChannelGroup);
@@ -94,7 +93,7 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
             socketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             socketChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
         }
-        RoundRobinFormat format = new RoundRobinFormatNetworkV1(mergeType, time, view);
+        RoundRobinFormat format = new RoundRobinFormatNetworkV1(mergeType, time, tableName, view);
         socketChannel.connect(new InetSocketAddress(address, port), socketChannel, new ConnectHandler(format));
         return this;
     }

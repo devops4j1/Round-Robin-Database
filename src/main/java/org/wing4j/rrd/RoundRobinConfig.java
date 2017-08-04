@@ -19,6 +19,10 @@ public class RoundRobinConfig {
      */
     boolean asyncPersistent = false;
     /**
+     * 工作路径
+     */
+    String workPath = "./target";
+    /**
      * 连接器类型
      */
     ConnectorType connectorType = ConnectorType.AIO;

@@ -6,18 +6,13 @@ import org.wing4j.rrd.MergeType;
 import org.wing4j.rrd.RoundRobinFormat;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
-import org.wing4j.rrd.net.format.RoundRobinFormatNetworkV1;
+import org.wing4j.rrd.core.format.net.RoundRobinFormatNetworkV1;
 import org.wing4j.rrd.utils.HexUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 
 /**
  * Created by wing4j on 2017/7/31.
@@ -36,13 +31,13 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
-    public RoundRobinView read(int time, int size, String... names) {
+    public RoundRobinView read(int time, int size, String tableName, String... names) {
         return null;
     }
 
     @Override
-    public RoundRobinConnector write(RoundRobinView view, int time, MergeType mergeType) throws IOException {
-        RoundRobinFormat format = new RoundRobinFormatNetworkV1(mergeType, time, view);
+    public RoundRobinConnector write(String tableName, int time, RoundRobinView view, MergeType mergeType) throws IOException {
+        RoundRobinFormat format = new RoundRobinFormatNetworkV1(mergeType, time, tableName, view);
         ByteBuffer buffer = format.write();
         byte[] data = new byte[buffer.position()];
         buffer.flip();

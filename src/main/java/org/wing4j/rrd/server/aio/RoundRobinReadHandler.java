@@ -1,8 +1,9 @@
 package org.wing4j.rrd.server.aio;
 
+import org.wing4j.rrd.FormatType;
 import org.wing4j.rrd.RoundRobinConnection;
 import org.wing4j.rrd.RoundRobinView;
-import org.wing4j.rrd.net.format.RoundRobinFormatNetworkV1;
+import org.wing4j.rrd.core.format.net.RoundRobinFormatNetworkV1;
 import org.wing4j.rrd.server.RoundRobinServer;
 
 import java.io.IOException;
@@ -55,20 +56,16 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
             return;
         }
         //读取到数据流，构建格式对象
-        RoundRobinFormatNetworkV1 format = new RoundRobinFormatNetworkV1();
-        format.read(attachment);
+        RoundRobinFormatNetworkV1 format = new RoundRobinFormatNetworkV1(attachment);
         //通过格式对象，构建视图切片对象
         RoundRobinView view = new RoundRobinView(format);
         RoundRobinConnection connection = null;
         try {
             //使用数据库本地数据库打开连接
-            connection = server.getDatabase().create(server.getConfig().getDatabaseFilePath() + "/database.rrd");
-            //进行数据库加锁
-            connection.lock();
+            connection = server.getDatabase().open();
             //进行合并视图操作
-            connection.merge(view, format.getMergeType());
-            //进行数据库解锁
-            connection.unlock();
+            connection.merge(format.getTableName(), format.getMergeType(), view);
+            connection.persistent(FormatType.CSV, 1);
         } catch (IOException e) {
             e.printStackTrace();
         }finally {

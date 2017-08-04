@@ -1,9 +1,6 @@
 package org.wing4j.rrd.core;
 
-import org.wing4j.rrd.FormatType;
-import org.wing4j.rrd.MergeType;
-import org.wing4j.rrd.RoundRobinResultSet;
-import org.wing4j.rrd.RoundRobinView;
+import org.wing4j.rrd.*;
 
 import java.io.IOException;
 
@@ -13,24 +10,28 @@ import java.io.IOException;
 public interface Table {
     /**
      * 获取表元信息
+     *
      * @return
      */
     TableMetadata getMetadata();
 
     /**
      * 加锁
+     *
      * @return
      */
     Table lock();
 
     /**
      * 解锁
+     *
      * @return
      */
     Table unlock();
 
     /**
      * 自增
+     *
      * @param column
      * @return
      */
@@ -38,41 +39,50 @@ public interface Table {
 
     /**
      * 自增
+     *
      * @param column
-     * @param i
+     * @param val
      * @return
      */
-    Table increase(String column, int i);
-
-    /**
-     * 获取表所有数据
-     * @return
-     */
-    long[][] getData();
+    Table increase(String column, int val);
 
     /**
      * 获取记录行数
+     *
      * @return
      */
     long getSize();
 
     /**
+     * 设置数据
+     * @param time
+     * @param column
+     * @param val
+     * @return
+     */
+    Table set(int time, String column, long val);
+
+    /**
+     * 获取数据
+     * @param time
+     * @param column
+     * @return
+     */
+    long get(int time, String column);
+    /**
      * 对表进行切片
-     * @param size 切片长度
+     *
+     * @param size    切片长度
      * @param columns 切片的字段
      * @return 视图切片
      */
     RoundRobinView slice(int size, String... columns);
 
-    /**
-     * 读取数据
-     * @param columns 字段
-     * @return 结果集
-     */
-    RoundRobinResultSet read(String... columns);
+    RoundRobinView slice(int size, int time, String... columns);
 
     /**
      * 增加字段，扩容
+     *
      * @param columns
      * @return
      */
@@ -80,15 +90,18 @@ public interface Table {
 
     /**
      * 合并视图切片
+     *
      * @param view
-     * @param time
+     * @param mergePos
      * @param mergeType
      * @return
      */
-    Table merge(RoundRobinView view, int time, MergeType mergeType);
+    Table merge(RoundRobinView view, int mergePos, MergeType mergeType);
+    Table merge(RoundRobinView view, MergeType mergeType);
 
     /**
      * 持久化
+     *
      * @param formatType
      * @param version
      * @return
@@ -98,8 +111,22 @@ public interface Table {
 
     /**
      * 持久化
+     *
      * @return
      * @throws IOException
      */
     Table persistent() throws IOException;
+
+    /**
+     * 删除表
+     * @throws IOException
+     */
+    void drop() throws IOException;
+
+    /**
+     * 增加触发器
+     * @param trigger
+     * @return
+     */
+    Table registerTrigger(RoundRobinTrigger trigger);
 }

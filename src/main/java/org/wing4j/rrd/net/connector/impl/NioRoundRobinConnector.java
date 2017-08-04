@@ -29,12 +29,12 @@ public class NioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
-    public RoundRobinView read(int time, int size, String... names) {
+    public RoundRobinView read(int time, int size, String tableName, String... names) {
         return null;
     }
 
     @Override
-    public RoundRobinConnector write(RoundRobinView view, int time, MergeType mergeType) throws IOException {
+    public RoundRobinConnector write(String tableName, int time,RoundRobinView view, MergeType mergeType) throws IOException {
         return null;
     }
 }
