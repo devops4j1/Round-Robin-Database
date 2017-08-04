@@ -3,6 +3,7 @@ package org.wing4j.rrd.core.format.bin.v1;
 import lombok.Data;
 import org.wing4j.rrd.RoundRobinFormat;
 import org.wing4j.rrd.RoundRobinView;
+import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.utils.HexUtils;
 
 import java.io.*;
@@ -22,7 +23,6 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
     String tableName;
     String[] columns = null;
     long[][] data = null;
-    static final boolean DEBUG = false;
 
     public RoundRobinFormatBinV1() {
     }
@@ -86,29 +86,29 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
     @Override
     public void read(ByteBuffer buffer) {
         int version0 = buffer.getInt();
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("version:" + version0);
         }
         int tableNameLen = buffer.getInt();
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("tableNameLength:" + tableNameLen);
         }
         byte[] tableNameBytes = new byte[tableNameLen];
         buffer.get(tableNameBytes);
         String tableName = new String(tableNameBytes);
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("tableName:" + tableName);
         }
         int current0 = buffer.getInt();
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("current:" + current0);
         }
         int headerLen = buffer.getInt();
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("head size:" + headerLen);
         }
         int headerMaxLen = buffer.getInt();
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("head length:" + headerMaxLen);
         }
         String[] columns0 = new String[headerLen];
@@ -118,16 +118,16 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
                 chars[j] = buffer.getChar();
             }
             columns0[i] = new String(chars).trim();
-            if (DEBUG) {
+            if (DebugConfig.DEBUG) {
                 System.out.println("columns:" + columns0[i]);
             }
         }
         int dataLen0 = buffer.getInt();
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("head size:" + dataLen0);
         }
         int dataSize0 = buffer.getInt();
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("data size:" + dataSize0);
         }
         long[][] data0 = new long[dataSize0][dataLen0];
@@ -178,21 +178,21 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
             buffer = ByteBuffer.allocate(fileSize);
         }
         buffer.putInt(version);
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("version:" + version);
         }
         buffer.putInt(tableNameLen);
         buffer.put(tableNameBytes);
         buffer.putInt(current);
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("current:" + current);
         }
         buffer.putInt(columns0.length);
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("head size:" + columns0.length);
         }
         buffer.putInt(headerMaxLen);
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("head length:" + headerMaxLen);
         }
         for (int i = 0; i < columns0.length; i++) {
@@ -201,16 +201,16 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
             for (char c : chars) {
                 buffer.putChar(c);
             }
-            if (DEBUG) {
+            if (DebugConfig.DEBUG) {
                 System.out.println("columns:" + columns0[i]);
             }
         }
         buffer.putInt(columns0.length);
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("head size:" + columns0.length);
         }
         buffer.putInt(data.length);
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("data size:" + data.length);
         }
         for (int i = 0; i < data.length; i++) {
@@ -218,7 +218,7 @@ public class RoundRobinFormatBinV1 implements RoundRobinFormat {
                 buffer.putLong(data[i][j]);
             }
         }
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             buffer.flip();
             byte[] data11 = new byte[buffer.limit()];
             buffer.get(data11);

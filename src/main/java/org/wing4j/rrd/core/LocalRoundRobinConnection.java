@@ -2,7 +2,7 @@ package org.wing4j.rrd.core;
 
 
 import org.wing4j.rrd.*;
-import org.wing4j.rrd.core.engine.PersistentTable;
+import org.wing4j.rrd.debug.DebugConfig;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -16,7 +16,6 @@ import java.util.concurrent.ScheduledExecutorService;
  * Created by wing4j on 2017/7/29.
  */
 public class LocalRoundRobinConnection implements RoundRobinConnection {
-    public static final boolean DEBUG = true;
     /**
      * 状态
      */
@@ -134,7 +133,7 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public RoundRobinConnection merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view) {
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("table:" + tableName);
             System.out.println("mergeType:" + mergeType);
             System.out.println("view:" + Arrays.asList(view.getMetadata().getColumns()));

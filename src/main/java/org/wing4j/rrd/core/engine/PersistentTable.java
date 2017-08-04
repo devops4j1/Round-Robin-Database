@@ -6,6 +6,7 @@ import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.core.TableStatus;
 import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
 import org.wing4j.rrd.core.format.csv.v1.RoundRobinFormatCsvV1;
+import org.wing4j.rrd.debug.DebugConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +18,6 @@ import java.util.List;
  * 持久化表
  */
 public class PersistentTable implements Table {
-    public static final boolean DEBUG = true;
     TableMetadata metadata;
     long[][] data;
     volatile List<RoundRobinTrigger>[] triggers;
@@ -146,7 +146,7 @@ public class PersistentTable implements Table {
     }
 
     public PersistentTable merge(RoundRobinView view, int mergePos, MergeType mergeType) {
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println("table:" + metadata.getName());
             System.out.println("mergeType:" + mergeType);
             System.out.println("table column:" + Arrays.asList(metadata.getColumns()));

@@ -23,7 +23,6 @@ public class RoundRobinFormatCsvV1 implements RoundRobinFormat {
     int current = 0;
     String[] columns = null;
     long[][] data = null;
-    static final boolean DEBUG = false;
 
     public RoundRobinFormatCsvV1() {
     }

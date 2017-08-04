@@ -5,11 +5,10 @@ import lombok.ToString;
 import org.wing4j.rrd.MergeType;
 import org.wing4j.rrd.RoundRobinFormat;
 import org.wing4j.rrd.RoundRobinView;
-import org.wing4j.rrd.core.Table;
 import org.wing4j.rrd.core.TableMetadata;
-import org.wing4j.rrd.core.engine.RemoteTable;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
-import org.wing4j.rrd.core.format.net.RoundRobinFormatNetworkV1;
+import org.wing4j.rrd.net.protocol.RoundRobinDataSizeProtocolV1;
+import org.wing4j.rrd.net.protocol.RoundRobinMergeProtocolV1;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -33,18 +32,18 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
     AsynchronousChannelGroup asyncChannelGroup;
 
     static class ConnectHandler implements CompletionHandler<Void, AsynchronousSocketChannel>{
-        RoundRobinFormat format;
+        ByteBuffer buffer;
+        RoundRobinConnector connector;
 
-        public ConnectHandler(RoundRobinFormat format) {
-            this.format = format;
+        public ConnectHandler(ByteBuffer buffer, RoundRobinConnector connector) {
+            this.buffer = buffer;
+            this.connector = connector;
         }
-
 
         @Override
         public void completed(Void result, AsynchronousSocketChannel connector) {
-            ByteBuffer byteBuffer = format.write();
-            byteBuffer.flip();
-            Future writeResult = connector.write(byteBuffer);
+            buffer.flip();
+            Future writeResult = connector.write(buffer);
             try {
                 writeResult.get(30, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
@@ -88,6 +87,17 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
 
     @Override
     public int getDataSize(String tableName) throws IOException {
+        AsynchronousSocketChannel socketChannel = null;
+        if (socketChannel == null || !socketChannel.isOpen()) {
+            socketChannel = AsynchronousSocketChannel.open(asyncChannelGroup);
+            socketChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+            socketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+            socketChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+        }
+        RoundRobinDataSizeProtocolV1 protocol = new RoundRobinDataSizeProtocolV1();
+        protocol.setTableName(tableName);
+        ByteBuffer buffer = protocol.convert();
+        socketChannel.connect(new InetSocketAddress(address, port), socketChannel, new ConnectHandler(buffer, this));
         return 0;
     }
 
@@ -115,14 +125,35 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
             socketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             socketChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
         }
-        RoundRobinFormat format = new RoundRobinFormatNetworkV1(mergeType, time, tableName, view);
-        socketChannel.connect(new InetSocketAddress(address, port), socketChannel, new ConnectHandler(format));
+        RoundRobinMergeProtocolV1 protocol = new RoundRobinMergeProtocolV1();
+        protocol.setData(view.getData());
+        protocol.setColumns(view.getMetadata().getColumns());
+        protocol.setCurrent(time);
+        protocol.setMergeType(mergeType);
+        protocol.setTableName(tableName);
+        ByteBuffer buffer = protocol.convert();
+        socketChannel.connect(new InetSocketAddress(address, port), socketChannel, new ConnectHandler(buffer, this));
         return this;
     }
 
     @Override
     public RoundRobinConnector merge(String tableName, RoundRobinView view, MergeType mergeType) throws IOException {
-        return null;
+        AsynchronousSocketChannel socketChannel = null;
+        if (socketChannel == null || !socketChannel.isOpen()) {
+            socketChannel = AsynchronousSocketChannel.open(asyncChannelGroup);
+            socketChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+            socketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+            socketChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+        }
+        RoundRobinMergeProtocolV1 protocol = new RoundRobinMergeProtocolV1();
+        protocol.setData(view.getData());
+        protocol.setColumns(view.getMetadata().getColumns());
+        protocol.setCurrent(view.getTime());
+        protocol.setMergeType(mergeType);
+        protocol.setTableName(tableName);
+        ByteBuffer buffer = protocol.convert();
+        socketChannel.connect(new InetSocketAddress(address, port), socketChannel, new ConnectHandler(buffer, this));
+        return this;
     }
 
     @Override

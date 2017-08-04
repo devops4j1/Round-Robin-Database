@@ -2,12 +2,13 @@ package org.wing4j.rrd.net.connector.impl;
 
 import lombok.Data;
 import lombok.ToString;
+import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.MergeType;
-import org.wing4j.rrd.RoundRobinFormat;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
-import org.wing4j.rrd.core.format.net.RoundRobinFormatNetworkV1;
+import org.wing4j.rrd.net.protocol.RoundRobinDataSizeProtocolV1;
+import org.wing4j.rrd.net.protocol.RoundRobinMergeProtocolV1;
 import org.wing4j.rrd.utils.HexUtils;
 
 import java.io.IOException;
@@ -38,6 +39,22 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
 
     @Override
     public int getDataSize(String tableName) throws IOException {
+        RoundRobinDataSizeProtocolV1 protocol = new RoundRobinDataSizeProtocolV1();
+        protocol.setTableName(tableName);
+        ByteBuffer buffer = protocol.convert();
+        buffer.flip();
+        byte[] data = new byte[buffer.remaining()];
+        buffer.get(data);
+        if(DebugConfig.DEBUG){
+            System.out.println(data.length);
+            System.out.println(HexUtils.toDisplayString(data));
+        }
+        socket.getOutputStream().write(data);
+        InputStream is = socket.getInputStream();
+        byte[] data11 = new byte[is.available()];
+        is.read(data11);
+        System.out.println(new String(data11));
+        socket.close();
         return 0;
     }
 
@@ -58,13 +75,20 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
 
     @Override
     public RoundRobinConnector merge(String tableName, int time, RoundRobinView view, MergeType mergeType) throws IOException {
-        RoundRobinFormat format = new RoundRobinFormatNetworkV1(mergeType, time, tableName, view);
-        ByteBuffer buffer = format.write();
-        byte[] data = new byte[buffer.position()];
+        RoundRobinMergeProtocolV1 protocol = new RoundRobinMergeProtocolV1();
+        protocol.setData(view.getData());
+        protocol.setColumns(view.getMetadata().getColumns());
+        protocol.setCurrent(time);
+        protocol.setMergeType(mergeType);
+        protocol.setTableName(tableName);
+        ByteBuffer buffer = protocol.convert();
         buffer.flip();
+        byte[] data = new byte[buffer.remaining()];
         buffer.get(data);
-        System.out.println(data.length);
-        System.out.println(HexUtils.toDisplayString(data));
+        if(DebugConfig.DEBUG){
+            System.out.println(data.length);
+            System.out.println(HexUtils.toDisplayString(data));
+        }
         socket.getOutputStream().write(data);
         InputStream is = socket.getInputStream();
         byte[] data11 = new byte[is.available()];
@@ -76,7 +100,27 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
 
     @Override
     public RoundRobinConnector merge(String tableName, RoundRobinView view, MergeType mergeType) throws IOException {
-        return null;
+        RoundRobinMergeProtocolV1 protocol = new RoundRobinMergeProtocolV1();
+        protocol.setData(view.getData());
+        protocol.setColumns(view.getMetadata().getColumns());
+        protocol.setCurrent(view.getTime());
+        protocol.setMergeType(mergeType);
+        protocol.setTableName(tableName);
+        ByteBuffer buffer = protocol.convert();
+        buffer.flip();
+        byte[] data = new byte[buffer.remaining()];
+        buffer.get(data);
+        if(DebugConfig.DEBUG){
+            System.out.println(data.length);
+            System.out.println(HexUtils.toDisplayString(data));
+        }
+        socket.getOutputStream().write(data);
+        InputStream is = socket.getInputStream();
+        byte[] data11 = new byte[is.available()];
+        is.read(data11);
+        System.out.println(new String(data11));
+        socket.close();
+        return this;
     }
 
     @Override

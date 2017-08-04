@@ -37,7 +37,19 @@ public class RoundRobinView {
             this.timeline[i] = time - data.length;
         }
     }
-
+    public RoundRobinView(String[] columns, int pos, long[][] data) {
+        try {
+            this.metadata = new TableMetadata(null, FormatType.CSV, "view", columns);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.time = pos;
+        this.data = data;
+        this.timeline = new int[data.length];
+        for (int i = 0; i < data.length; i++) {
+            this.timeline[i] = time - data.length;
+        }
+    }
     public RoundRobinView(String[] columns, int[] timeline, long[][] data) {
         try {
             this.metadata = new TableMetadata(null, FormatType.CSV, "view", columns);

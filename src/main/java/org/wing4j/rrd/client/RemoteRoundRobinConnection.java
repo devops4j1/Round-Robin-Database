@@ -5,6 +5,7 @@ import lombok.ToString;
 import org.wing4j.rrd.*;
 import org.wing4j.rrd.core.Table;
 import org.wing4j.rrd.core.TableMetadata;
+import org.wing4j.rrd.core.engine.RemoteTable;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
 import org.wing4j.rrd.net.connector.impl.AioRoundRobinConnector;
 import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
@@ -44,33 +45,33 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public String[] getColumns(String tableName) {
-        Table table = this.database.getTable(tableName);
+        Table table = new RemoteTable(tableName, connector);
         TableMetadata metadata = table.getMetadata();
         return metadata.getColumns();
     }
 
     @Override
     public boolean contain(String tableName, String column) {
-        Table table = this.database.getTable(tableName);
+        Table table = new RemoteTable(tableName, connector);
         TableMetadata metadata = table.getMetadata();
         return metadata.contain(column);
     }
 
     @Override
     public long increase(String tableName, String column) {
-        Table table = this.database.getTable(tableName);
+        Table table = new RemoteTable(tableName, connector);
         return table.increase(column);
     }
 
     @Override
     public long increase(String tableName, String column, int i) {
-        Table table = this.database.getTable(tableName);
+        Table table = new RemoteTable(tableName, connector);
         return table.increase(column, i);
     }
 
     @Override
     public RoundRobinView slice(String tableName, int size, String... columns) {
-        Table table = this.database.getTable(tableName);
+        Table table = new RemoteTable(tableName, connector);
         return table.slice(size, columns);
     }
 
@@ -86,7 +87,7 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public RoundRobinConnection merge(String tableName, MergeType mergeType, RoundRobinView view) {
-        Table table = this.database.getTable(tableName);
+        Table table = new RemoteTable(tableName, connector);
         table.merge(view, mergeType);
         return this;
     }
@@ -98,7 +99,7 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public RoundRobinConnection merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view) {
-        Table table = this.database.getTable(tableName);
+        Table table = new RemoteTable(tableName, connector);
         table.merge(view, mergePos, mergeType);
         return this;
     }
@@ -127,7 +128,7 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
     @Override
     public RoundRobinConnection dropTable(String... tableNames) throws IOException {
         for (String tableName : tableNames) {
-            Table table = this.database.getTable(tableName);
+            Table table = new RemoteTable(tableName, connector);
             table.drop();
         }
         return this;
