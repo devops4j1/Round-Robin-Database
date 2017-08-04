@@ -19,7 +19,7 @@ public class RoundRobinMergeProtocolV1Test {
         RoundRobinConfig config = new RoundRobinConfig();
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
         RoundRobinConnection connection = database.open();
-        RoundRobinView view = connection.slice("mo9", 1 * 60, "request");
+        RoundRobinView view = connection.slice("mo9", 1* 60 ,1 * 60, "request");
         RoundRobinMergeProtocolV1 format = new RoundRobinMergeProtocolV1();
         format.setData(view.getData());
         format.setColumns(new String[]{"request"});
@@ -41,7 +41,7 @@ public class RoundRobinMergeProtocolV1Test {
         RoundRobinConfig config = new RoundRobinConfig();
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
         RoundRobinConnection connection = database.open();
-        RoundRobinView view = connection.slice("mo9", 1 * 60, "request");
+        RoundRobinView view = connection.slice("mo9", 1* 60 , 1 * 60, "request");
         RoundRobinProtocol format = new RoundRobinMergeProtocolV1();
         ByteBuffer buffer = format.convert();
         System.out.println(HexUtils.toDisplayString(buffer.array()));

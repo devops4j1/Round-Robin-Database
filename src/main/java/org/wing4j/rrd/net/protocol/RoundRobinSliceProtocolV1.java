@@ -17,7 +17,8 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
     String tableName;
     String[] columns = new String[0];
     int pos;
-    long size;
+    int size;
+    int resultSize;
     long[][] data = new long[0][0];
 
     @Override
@@ -54,8 +55,10 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
         buffer = put(buffer, this.pos);
         //记录条数
         buffer = put(buffer, this.size);
+        //结果记录条数
+        buffer = put(buffer, this.resultSize);
         //数据
-        for (int i = 0; i < this.size; i++) {
+        for (int i = 0; i < this.resultSize; i++) {
             for (int j = 0; j < this.columns.length; j++) {
                 buffer = put(buffer, this.data[i][j]);
             }
@@ -91,9 +94,11 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
         //偏移地址
         this.pos = buffer.getInt();
         //记录条数
-        this.size = buffer.getLong();
+        this.size = buffer.getInt();
+        //结果记录条数
+        this.resultSize = buffer.getInt();
         //数据
-        for (int i = 0; i < this.size; i++) {
+        for (int i = 0; i < this.resultSize; i++) {
             for (int j = 0; j < this.columns.length; j++) {
                 this.data[i][j] = buffer.getLong();
             }

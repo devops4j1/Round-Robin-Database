@@ -101,9 +101,9 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public RoundRobinView slice(String tableName, int size, String... columns) {
+    public RoundRobinView slice(String tableName, int pos, int size, String... columns) {
         Table table = database.getTable(tableName);
-        return table.slice(size, columns);
+        return table.slice(pos, size, columns);
     }
 
     @Override

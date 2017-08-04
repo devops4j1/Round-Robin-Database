@@ -70,9 +70,9 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public RoundRobinView slice(String tableName, int size, String... columns) {
+    public RoundRobinView slice(String tableName, int pos,  int size, String... columns) {
         Table table = new RemoteTable(tableName, connector);
-        return table.slice(size, columns);
+        return table.slice(pos, size, columns);
     }
 
     @Override

@@ -16,7 +16,7 @@ public class BioRoundRobinConnectorTest {
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(new RoundRobinConfig());
         RoundRobinConnection connection = database.open();
         connection.createTable("mo9", "request", "response");
-        RoundRobinView view = connection.slice("mo9", 60 * 60, connection.getColumns("mo9"));
+        RoundRobinView view = connection.slice("mo9", 60 * 60 , 60 * 60, connection.getColumns("mo9"));
         RoundRobinFormat format = new RoundRobinFormatCsvV1("view", view);
         format.write("D:/22.csv");
         for (int i = 0; i < 1; i++) {
