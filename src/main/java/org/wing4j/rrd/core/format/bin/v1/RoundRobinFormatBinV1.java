@@ -24,6 +24,7 @@ import java.nio.channels.WritableByteChannel;
 public class RoundRobinFormatBinV1 extends BaseRoundRobinFormat {
     int version = 1;
     int current = 0;
+    String instance;
     String tableName;
     String[] columns = null;
     long[][] data = null;
@@ -33,14 +34,20 @@ public class RoundRobinFormatBinV1 extends BaseRoundRobinFormat {
     public RoundRobinFormatBinV1(ByteBuffer buffer) {
         read(buffer);
     }
-    public RoundRobinFormatBinV1(String tableName,RoundRobinView view){
-        this(tableName, view.getMetadata().getColumns(), view.getData(), view.getTime());
+    public RoundRobinFormatBinV1(String instance, String tableName,RoundRobinView view){
+        this(instance, tableName, view.getMetadata().getColumns(), view.getData(), view.getTime());
     }
-    public RoundRobinFormatBinV1(String tableName, String[] columns, long[][] data, int current) {
+    public RoundRobinFormatBinV1(String instance, String tableName, String[] columns, long[][] data, int current) {
+        this.instance = instance;
         this.tableName = tableName;
         this.columns = columns;
         this.data = data;
         this.current = current;
+    }
+
+    @Override
+    public String getInstance() {
+        return instance;
     }
 
     @Override

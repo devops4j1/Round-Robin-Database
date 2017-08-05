@@ -14,6 +14,7 @@ public interface RoundRobinFormat {
     long[][] getData();
 
     void setData(long[][] data);
+    String getInstance();
     String getTableName();
     String[] getColumns();
 

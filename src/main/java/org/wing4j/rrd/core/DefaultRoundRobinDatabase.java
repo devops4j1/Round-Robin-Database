@@ -1,9 +1,12 @@
 package org.wing4j.rrd.core;
 
-import org.wing4j.rrd.*;
+import org.wing4j.rrd.RoundRobinConfig;
+import org.wing4j.rrd.RoundRobinConnection;
+import org.wing4j.rrd.RoundRobinDatabase;
+import org.wing4j.rrd.RoundRobinRuntimeException;
 import org.wing4j.rrd.client.RemoteRoundRobinConnection;
 import org.wing4j.rrd.core.engine.PersistentTable;
-import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
+import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -12,31 +15,30 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
+import java.util.logging.Logger;
 
 /**
  * Created by wing4j on 2017/7/28.
  */
 public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
-    Map<RoundRobinConnection, RoundRobinConnection> connections = new ConcurrentHashMap();
+    static Logger LOGGER = Logger.getLogger(DefaultRoundRobinDatabase.class.getName());
+    //实例名
+    String instance;
+    ScheduledExecutorService scheduledService = null;
+
+    Map<String, RoundRobinConnection> connections = new ConcurrentHashMap();
+
     static RoundRobinDatabase database;
     RoundRobinConfig config;
 
     final Map<String, Table> tables = new HashMap<>();
 
-    private DefaultRoundRobinDatabase(RoundRobinConfig config) {
+    private DefaultRoundRobinDatabase(String instance, RoundRobinConfig config) throws IOException {
+        this.instance = instance;
         this.config = config;
-    }
-
-    public static RoundRobinDatabase init(RoundRobinConfig config) throws IOException {
-        if (database == null) {
-            synchronized (RoundRobinDatabase.class) {
-                if (database == null) {
-                    database = new DefaultRoundRobinDatabase(config);
-                }
-            }
-        }
-        String workPath = database.getConfig().getWorkPath();
+        this.scheduledService = Executors.newSingleThreadScheduledExecutor();
+        String workPath = config.getWorkPath() + File.separator + instance;
         File workPathDir = new File(workPath);
         if (!workPathDir.exists()) {
             workPathDir.mkdirs();
@@ -57,16 +59,66 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
             }
         });
         for (File tableFile : tableFiles) {
-            database.openTable(tableFile);
+            openTable(tableFile);
+        }
+    }
+
+    /**
+     * 注册表
+     *
+     * @param table
+     */
+    void register(final Table table) {
+        LOGGER.info("load table " + instance + "." + table.getMetadata().getName());
+        Future future = this.scheduledService.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    table.persistent();
+                } catch (IOException e) {
+                    LOGGER.info("schedule persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
+                }
+            }
+        }, 1, 1, TimeUnit.MINUTES);
+        table.setScheduledFuture(future);
+        //注册后绑定触发器
+        tables.put(table.getMetadata().getName(), table);
+    }
+
+    public static RoundRobinDatabase init(RoundRobinConfig config) throws IOException {
+        return init("default", config);
+    }
+
+    public static RoundRobinDatabase init(String instance, RoundRobinConfig config) throws IOException {
+        if (database == null) {
+            synchronized (RoundRobinDatabase.class) {
+                if (database == null) {
+                    database = new DefaultRoundRobinDatabase(instance, config);
+                }
+            }
         }
         return database;
     }
 
 
     @Override
-    public RoundRobinConnection open(String address, int port) throws IOException {
-        RoundRobinConnection connection = new RemoteRoundRobinConnection(this, address, port, config);
-        connections.put(connection, connection);
+    public Map<String, RoundRobinConnection> getConnections() {
+        return connections;
+    }
+
+    @Override
+    public RoundRobinConnection getConnection(String sessionId) {
+        RoundRobinConnection connection = connections.get(sessionId);
+        if (connection == null) {
+            throw new RoundRobinRuntimeException("sessionId [" + sessionId + "] is illegal!");
+        }
+        return connection;
+    }
+
+    @Override
+    public RoundRobinConnection open(String address, int port, String username, String password) throws IOException {
+        RoundRobinConnection connection = new RemoteRoundRobinConnection(this, new BioRoundRobinConnector(this, config, address, port), username, password);
+        connections.put(connection.getSessionId(), connection);
         return connection;
     }
 
@@ -74,7 +126,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     public RoundRobinConnection open() throws IOException {
         //TODO 创建一个计时器，进行数据的异步写入
         RoundRobinConnection connection = new LocalRoundRobinConnection(this);
-        connections.put(connection, connection);
+        connections.put(connection.getSessionId(), connection);
         return connection;
     }
 
@@ -89,15 +141,15 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
         if (existTable(tableName, false)) {
             throw new RoundRobinRuntimeException(tableName + " is exist!");
         }
-        Table table = new PersistentTable(config.getWorkPath(), tableName, DAY_SECOND, columns);
-        tables.put(tableName, table);
+        Table table = new PersistentTable(config.getWorkPath(), instance, tableName, DAY_SECOND, columns);
+        register(table);
         return this;
     }
 
     @Override
     public RoundRobinDatabase openTable(File file) throws IOException {
         Table table = new PersistentTable(file);
-        tables.put(table.getMetadata().getName(), table);
+        register(table);
         return this;
     }
 
@@ -108,8 +160,9 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
             Table table = tables.get(tableName);
             try {
                 table.drop();
+                table.getScheduledFuture().cancel(false);
                 tables.remove(tableName);
-            }catch (Exception e){
+            } catch (Exception e) {
                 //TODO 处理删表错误
             }
         }

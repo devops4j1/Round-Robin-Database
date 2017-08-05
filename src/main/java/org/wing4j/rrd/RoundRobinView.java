@@ -27,7 +27,7 @@ public class RoundRobinView {
     long[][] data;
     public RoundRobinView(RoundRobinFormat format){
         try {
-            this.metadata = new TableMetadata(null, FormatType.CSV, "view", format.getColumns(), data.length, TableStatus.UNKNOWN);
+            this.metadata = new TableMetadata(null, FormatType.CSV, format.getInstance(), "view", format.getColumns(), data.length, TableStatus.UNKNOWN);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -40,7 +40,7 @@ public class RoundRobinView {
     }
     public RoundRobinView(String[] columns, int pos, long[][] data) {
         try {
-            this.metadata = new TableMetadata(null, FormatType.CSV, "view", columns, data.length, TableStatus.UNKNOWN);
+            this.metadata = new TableMetadata(null, FormatType.CSV,"default",  "view", columns, data.length, TableStatus.UNKNOWN);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -53,7 +53,7 @@ public class RoundRobinView {
     }
     public RoundRobinView(String[] columns, int[] timeline, long[][] data) {
         try {
-            this.metadata = new TableMetadata(null, FormatType.CSV, "view", columns, data.length, TableStatus.UNKNOWN);
+            this.metadata = new TableMetadata(null, FormatType.CSV,"default", "view", columns, data.length, TableStatus.UNKNOWN);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -104,7 +104,7 @@ public class RoundRobinView {
      * @throws IOException IO异常
      */
     public ByteBuffer write() throws IOException {
-        RoundRobinFormat format = new RoundRobinFormatBinV1("view", metadata.getColumns(), data, time);
+        RoundRobinFormat format = new RoundRobinFormatBinV1("default","view", metadata.getColumns(), data, time);
         ByteBuffer buffer = format.write();
         return buffer;
     }

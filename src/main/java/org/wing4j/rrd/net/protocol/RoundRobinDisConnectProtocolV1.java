@@ -8,19 +8,13 @@ import java.nio.ByteBuffer;
 
 /**
  * Created by wing4j on 2017/8/4.
- * 字段自增协议
+ * 断开连接协议
  */
 @Data
-public class RoundRobinIncreaseProtocolV1 extends BaseRoundRobinProtocol {
+public class RoundRobinDisConnectProtocolV1 extends BaseRoundRobinProtocol {
     int version = 1;
-    ProtocolType protocolType = ProtocolType.INCREASE;
+    ProtocolType protocolType = ProtocolType.DIS_CONNECT;
     MessageType messageType = MessageType.REQUEST;
-    String instance;
-    String tableName;
-    String column;
-    int pos;
-    int value;
-    long newValue;
 
     @Override
     public ByteBuffer convert() {
@@ -50,27 +44,6 @@ public class RoundRobinIncreaseProtocolV1 extends BaseRoundRobinProtocol {
         buffer = put(buffer, desc);
         //会话ID
         buffer = put(buffer, sessionId);
-        //实例名长度
-        //实例名
-        buffer = put(buffer, instance);
-        //表名长度
-        //表名
-        buffer = put(buffer, tableName);
-        //自增字段名长度
-        //自增字段名
-        buffer = put(buffer, column);
-        //偏移地址
-        buffer = put(buffer, pos);
-        //自增量
-        buffer = put(buffer, value);
-        if (DebugConfig.DEBUG) {
-            System.out.println("value:" + value);
-        }
-        //自增后新值
-        buffer = put(buffer, newValue);
-        if (DebugConfig.DEBUG) {
-            System.out.println("newValue:" + newValue);
-        }
         //结束
         //回填,将报文总长度回填到第一个字节
         buffer.putInt(lengthPos, buffer.position() - 4);
@@ -96,26 +69,5 @@ public class RoundRobinIncreaseProtocolV1 extends BaseRoundRobinProtocol {
         this.desc = get(buffer);
         //会话ID
         this.sessionId = get(buffer);
-        //实例长度
-        //实例
-        this.instance = get(buffer);
-        //表名长度
-        //表名
-        this.tableName = get(buffer);
-        //自增字段名长度
-        //自增字段名
-        this.column = get(buffer);
-        //偏移地址
-        this.pos = buffer.getInt();
-        //自增量
-        this.value = buffer.getInt();
-        if (DebugConfig.DEBUG) {
-            System.out.println("value:" + value);
-        }
-        //自增后新值
-        this.newValue = buffer.getLong();
-        if (DebugConfig.DEBUG) {
-            System.out.println("newValue:" + newValue);
-        }
     }
 }

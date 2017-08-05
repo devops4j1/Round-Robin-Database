@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
  */
 @Data
 public abstract class BaseRoundRobinProtocol implements RoundRobinProtocol {
+    protected String sessionId;
     protected int code = RspCode.SUCCESS.getCode();
     protected String desc = RspCode.SUCCESS.getDesc();
 
@@ -39,7 +40,7 @@ public abstract class BaseRoundRobinProtocol implements RoundRobinProtocol {
     }
 
     protected ByteBuffer put(ByteBuffer buffer, long data) {
-        if (buffer.remaining() < 8) {
+        if (buffer.remaining() < 12) {
             buffer.flip();
             //扩容
             ByteBuffer buffer1 = ByteBuffer.allocate(buffer.position() + 1024);
@@ -61,7 +62,7 @@ public abstract class BaseRoundRobinProtocol implements RoundRobinProtocol {
             throw new RoundRobinRuntimeException("", e);
         }
         int len = bytes.length;
-        if (buffer.remaining() < len) {
+        if (buffer.remaining() < len + 8) {
             buffer.flip();
             //扩容
             ByteBuffer buffer1 = ByteBuffer.allocate(buffer.position() + 1024);

@@ -17,11 +17,11 @@ public class AioRoundRobinConnectorTest {
         RoundRobinConnection connection = database.open();
         connection.createTable("mo9", "request", "response");
         RoundRobinView view = connection.slice("mo9", 60 * 60, 60 * 60, connection.getTableMetadata("mo9").getColumns());
-        RoundRobinFormat format = new RoundRobinFormatCsvV1("", view);
+        RoundRobinFormat format = new RoundRobinFormatCsvV1("default","", view);
         format.write("D:/22.csv");
         for (int i = 0; i < 1; i++) {
             RoundRobinConnector connector = new AioRoundRobinConnector("127.0.0.1", 8099, database);
-            connector.merge("mo9", 0, view, MergeType.ADD);
+            connector.merge("mo9", MergeType.ADD, view, 0);
         }
         Thread.sleep(10000);
     }

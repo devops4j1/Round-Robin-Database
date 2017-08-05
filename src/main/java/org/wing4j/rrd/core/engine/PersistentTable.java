@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 /**
@@ -21,6 +22,7 @@ import java.util.logging.Logger;
  * 持久化表
  */
 public class PersistentTable implements Table {
+    Future future;
     static Logger LOGGER = Logger.getLogger(PersistentTable.class.getName());
     TableMetadata metadata;
     long[][] data;
@@ -30,13 +32,28 @@ public class PersistentTable implements Table {
         RoundRobinFormatLoader loader = new RoundRobinFormatLoader(file);
         RoundRobinFormat format = loader.load();
         this.data = format.getData();
-        this.metadata = new TableMetadata(file.getCanonicalPath(), FormatType.BIN, format.getTableName(), format.getColumns(), format.getData().length, TableStatus.NORMAL);
+        this.metadata = new TableMetadata(file.getCanonicalPath(), FormatType.BIN, format.getInstance(), format.getTableName(), format.getColumns(), format.getData().length, TableStatus.NORMAL);
     }
 
     public PersistentTable(String savePath, String tableName, int maxSize, String... columns) throws IOException {
-        String fileName = savePath + File.separator + tableName + ".rrd";
-        this.metadata = new TableMetadata(fileName, FormatType.BIN, tableName, columns, maxSize, TableStatus.NORMAL);
+        this(savePath, "default", tableName, maxSize, columns);
+    }
+
+    public PersistentTable(String savePath, String instance, String tableName, int maxSize, String... columns) throws IOException {
+        String fileName = savePath + File.separator + instance + File.separator + tableName + ".rrd";
+        this.metadata = new TableMetadata(fileName, FormatType.BIN, instance, tableName, columns, maxSize, TableStatus.NORMAL);
         this.data = new long[maxSize][columns.length];
+    }
+
+    @Override
+    public Table setScheduledFuture(Future future) {
+        this.future = future;
+        return this;
+    }
+
+    @Override
+    public Future getScheduledFuture() {
+        return future;
     }
 
     public TableMetadata getMetadata() {
@@ -63,11 +80,11 @@ public class PersistentTable implements Table {
 
     @Override
     public long increase(int pos, String column, int val) {
-        if(pos == -1){
+        if (pos == -1) {
             pos = getCurrent();
         }
         int idx = metadata.columnIndex(column);
-        if(idx == -1){
+        if (idx == -1) {
             throw new RoundRobinRuntimeException(MessageFormatter.format("不存在{}.{}字段", metadata.getName(), column));
         }
         return increase(pos, idx, val);
@@ -88,7 +105,7 @@ public class PersistentTable implements Table {
 
     @Override
     public long set(int pos, String column, long val) {
-        if(pos == -1){
+        if (pos == -1) {
             pos = getCurrent();
         }
         int idx = metadata.columnIndex(column);
@@ -102,7 +119,7 @@ public class PersistentTable implements Table {
 
     @Override
     public long get(int pos, String column) {
-        if(pos == -1){
+        if (pos == -1) {
             pos = getCurrent();
         }
         int idx = metadata.columnIndex(column);
@@ -171,8 +188,8 @@ public class PersistentTable implements Table {
         if (DebugConfig.DEBUG) {
             LOGGER.info(MessageFormatter.format("table:{}", metadata.getName()));
             LOGGER.info(MessageFormatter.format("mergeType:{}", mergeType));
-            LOGGER.info(MessageFormatter.format("table column:{}" ,Arrays.asList(metadata.getColumns())));
-            LOGGER.info(MessageFormatter.format("view column:{}" ,Arrays.asList(view.getMetadata().getColumns())));
+            LOGGER.info(MessageFormatter.format("table column:{}", Arrays.asList(metadata.getColumns())));
+            LOGGER.info(MessageFormatter.format("view column:{}", Arrays.asList(view.getMetadata().getColumns())));
             LOGGER.info(MessageFormatter.format("pos:{}", pos));
         }
         lock();
@@ -212,18 +229,19 @@ public class PersistentTable implements Table {
     }
 
     public PersistentTable persistent(FormatType formatType, int version) throws IOException {
+        LOGGER.info(MessageFormatter.format("persistent table {}.{}", metadata.getInstance(), metadata.getName()));
         String fileName = metadata.getFileName().trim().toLowerCase();
         if (formatType == FormatType.BIN && version == 1) {
             if (!fileName.endsWith("\\.rrd")) {
                 fileName = fileName.substring(0, fileName.length() - 4);
             }
-            RoundRobinFormat format = new RoundRobinFormatBinV1(metadata.getName(), metadata.getColumns(), data, getCurrent());
+            RoundRobinFormat format = new RoundRobinFormatBinV1(metadata.getInstance(), metadata.getName(), metadata.getColumns(), data, getCurrent());
             format.write(fileName + ".rrd");
         } else if (formatType == FormatType.CSV && version == 1) {
             if (!fileName.endsWith("\\.csv")) {
                 fileName = fileName.substring(0, fileName.length() - 4);
             }
-            RoundRobinFormat format = new RoundRobinFormatCsvV1(metadata.getName(), metadata.getColumns(), data, getCurrent());
+            RoundRobinFormat format = new RoundRobinFormatCsvV1(metadata.getInstance(), metadata.getName(), metadata.getColumns(), data, getCurrent());
             format.write(fileName + ".csv");
         } else {
             throw new RoundRobinRuntimeException("不支持的文件格式和文件版本");

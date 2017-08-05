@@ -6,8 +6,10 @@ import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.utils.MessageFormatter;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Logger;
@@ -20,6 +22,7 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
      * 状态
      */
     int status = Status.NORMAL;
+    String sessionId;
     static Logger LOGGER = Logger.getLogger(LocalRoundRobinConnection.class.getName());
     volatile RoundRobinDatabase database;
     /**
@@ -29,25 +32,13 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
 
     LocalRoundRobinConnection(RoundRobinDatabase database) throws IOException {
         this.database = database;
+        this.sessionId = UUID.randomUUID().toString().replaceAll("-", "");
     }
 
-//    @Override
-//    public RoundRobinConnection lock() {
-//        if (status != Status.NORMAL) {
-//            throw new RuntimeException("数据库未进行冻结");
-//        }
-//        status = Status.FREEZEN;
-//        return this;
-//    }
-//
-//    @Override
-//    public RoundRobinConnection unlock() {
-//        if (status != Status.FREEZEN) {
-//            throw new RuntimeException("数据库未进行冻结");
-//        }
-//        status = Status.NORMAL;
-//        return this;
-//    }
+    @Override
+    public String getSessionId() {
+        return sessionId;
+    }
 
     @Override
     public RoundRobinDatabase getDatabase() {
@@ -171,6 +162,16 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     public RoundRobinConnection dropTable(String... tableNames) throws IOException {
         database.dropTable(tableNames);
         return this;
+    }
+
+    @Override
+    public int execute(String sql) throws SQLException{
+        return 0;
+    }
+
+    @Override
+    public RoundRobinView executeQuery(String sql) throws SQLException {
+        return null;
     }
 
     @Override

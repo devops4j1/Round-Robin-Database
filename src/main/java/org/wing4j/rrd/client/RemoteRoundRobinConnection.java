@@ -12,7 +12,9 @@ import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
 import org.wing4j.rrd.server.RoundRobinServer;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by wing4j on 2017/7/31.
@@ -23,24 +25,12 @@ import java.util.Map;
 public class RemoteRoundRobinConnection implements RoundRobinConnection {
     volatile RoundRobinDatabase database;
     volatile RoundRobinConnector connector;
-    RoundRobinConfig config;
+    String sessionId;
 
-    public RemoteRoundRobinConnection(RoundRobinDatabase database, String address, int port, RoundRobinConfig config) {
+    public RemoteRoundRobinConnection(RoundRobinDatabase database, RoundRobinConnector connector, String username, String password) throws IOException {
         this.database = database;
-        this.config = config;
-        try {
-            if (this.config.getConnectorType() == ConnectorType.BIO) {
-                this.connector = new BioRoundRobinConnector(address, port);
-            } else if (this.config.getConnectorType() == ConnectorType.NIO) {
-//                this.connector = new NioRoundRobinConnector(address, port);
-            } else if (this.config.getConnectorType() == ConnectorType.AIO) {
-                this.connector = new AioRoundRobinConnector(address, port, database);
-            } else {
-                throw new RoundRobinRuntimeException("不支持的连接器类型");
-            }
-        } catch (IOException e) {
-            //TODO
-        }
+        this.connector = connector;
+        this.sessionId = connector.connect(username, password);
     }
 
     @Override
@@ -143,7 +133,18 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
+    public int execute(String sql) throws SQLException {
+        return 0;
+    }
+
+    @Override
+    public RoundRobinView executeQuery(String sql) throws SQLException {
+        return null;
+    }
+
+    @Override
     public void close() throws IOException {
+        connector.disConnect(sessionId);
         database.close(this);
     }
 }

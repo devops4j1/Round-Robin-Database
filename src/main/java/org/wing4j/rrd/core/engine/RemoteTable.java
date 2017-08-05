@@ -6,17 +6,30 @@ import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
 
 import java.io.IOException;
+import java.util.concurrent.Future;
 
 /**
  * Created by wing4j on 2017/8/4.
  */
 public class RemoteTable implements Table {
+    Future future;
     String tableName;
     RoundRobinConnector connector;
 
     public RemoteTable(String tableName, RoundRobinConnector connector) {
         this.tableName = tableName;
         this.connector = connector;
+    }
+
+    @Override
+    public Table setScheduledFuture(Future future) {
+        this.future = future;
+        return this;
+    }
+
+    @Override
+    public Future getScheduledFuture() {
+        return future;
     }
 
     @Override
@@ -88,7 +101,7 @@ public class RemoteTable implements Table {
     @Override
     public RoundRobinView slice(int size, String... columns) {
         try {
-            return connector.slice(-1, size, tableName, columns);
+            return connector.slice(tableName, -1, size, columns);
         } catch (Exception e) {
             throw new RoundRobinRuntimeException("", e);
         }
@@ -97,7 +110,7 @@ public class RemoteTable implements Table {
     @Override
     public RoundRobinView slice(int size, int time, String... columns) {
         try {
-            return connector.slice(time, size, tableName, columns);
+            return connector.slice(tableName, time, size, columns);
         } catch (Exception e) {
             throw new RoundRobinRuntimeException("", e);
         }
@@ -116,7 +129,7 @@ public class RemoteTable implements Table {
     @Override
     public RoundRobinView merge(RoundRobinView view, int time, MergeType mergeType) {
         try {
-            return connector.merge(tableName, time, view, mergeType);
+            return connector.merge(tableName, mergeType, view, time);
         } catch (Exception e) {
             throw new RoundRobinRuntimeException("xxx");
         }

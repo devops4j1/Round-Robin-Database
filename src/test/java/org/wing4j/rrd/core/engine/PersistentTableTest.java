@@ -4,7 +4,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.wing4j.rrd.FormatType;
 import org.wing4j.rrd.MergeType;
-import org.wing4j.rrd.RoundRobinResultSet;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.core.Table;
 
@@ -46,7 +45,7 @@ public class PersistentTableTest {
 
     @Test
     public void testIncrease() throws Exception {
-        PersistentTable table = new PersistentTable("./target", "mo9", 2, "request", "response");
+        PersistentTable table = new PersistentTable("./target", "mo9", 24 * 60 * 60, "request", "response");
         table.set(0, "request", 1);
         table.set(1, "request", 2);
         table.set(0, "response", 3);
@@ -59,6 +58,10 @@ public class PersistentTableTest {
         table.increase(1, 1, 2);
         Assert.assertEquals(3, table.get(1, "request"));
         Assert.assertEquals(6, table.get(1, "response"));
+        for (int i = 0; i < 1000; i++) {
+            table.increase(1, 1, 2);
+        }
+        table.persistent();
     }
 
     @Test

@@ -3,53 +3,119 @@ package org.wing4j.rrd.client;
 import org.junit.Test;
 import org.wing4j.rrd.*;
 import org.wing4j.rrd.core.DefaultRoundRobinDatabase;
+import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.core.format.csv.v1.RoundRobinFormatCsvV1;
+import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
 
 /**
  * Created by wing4j on 2017/8/2.
  */
 public class RemoteRoundRobinConnectionTest {
-
     @Test
-    public void testMerge() throws Exception {
-        RoundRobinConfig config = new RoundRobinConfig();
-        RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
-        RoundRobinConnection connection = database.open();
-        RoundRobinView view = connection.slice("mo9", 1, 1, "request");
-        view.set(0, "request", 1024);
-        view.setTime(80);
-        RoundRobinConnection remoteConnection =  database.open("127.0.0.1", 8099);
-        remoteConnection.merge("ssss", MergeType.ADD, view);
-        Thread.sleep(10*1000);
+    public void testGetTableMetadata() throws Exception {
+
+        RoundRobinConnection connection = new RemoteRoundRobinConnection(null, new BioRoundRobinConnector(null,  null, "127.0.0.1", 8099), "admin", "password");
+//        connection.createTable("test1", "request");
+        TableMetadata tableMetadata = connection.getTableMetadata("test1");
+        System.out.println(tableMetadata);
+        for (int i = 0; i < 10000; i++) {
+            long val = connection.increase("test1", "request", 0, 1);
+            System.out.println(val);
+        }
     }
 
     @Test
-    public void testMerge1() throws Exception {
-        RoundRobinConfig config = new RoundRobinConfig();
-        RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
-        RoundRobinConnection connection = database.open();
-        RoundRobinView view = connection.slice("mo9", 1, 1, "request");
-        view.set(0, "request", 1024);
-        view.setTime(80);
-        RoundRobinConnection remoteConnection =  database.open("127.0.0.1", 8099);
-        remoteConnection.merge("ssss", MergeType.ADD, view);
-        Thread.sleep(10*1000);
+    public void testContain() throws Exception {
+
+    }
+
+    @Test
+    public void testIncrease() throws Exception {
+
+    }
+
+    @Test
+    public void testIncrease1() throws Exception {
+
+    }
+
+    @Test
+    public void testIncrease2() throws Exception {
+
     }
 
     @Test
     public void testSlice() throws Exception {
-        RoundRobinConfig config = new RoundRobinConfig();
-        RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
-        RoundRobinConnection remoteConnection =  database.open("127.0.0.1", 8099);
-        RoundRobinView view =  remoteConnection.slice("ssss", 60, 60, "request");
-        Thread.sleep(1000);
+
     }
+
     @Test
-    public void testGetColumns() throws Exception {
-        RoundRobinConfig config = new RoundRobinConfig();
-        RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
-        RoundRobinConnection remoteConnection =  database.open("127.0.0.1", 8099);
-        remoteConnection.getTableMetadata("ssss");
-        Thread.sleep(1000);
+    public void testSlice1() throws Exception {
+
+    }
+
+    @Test
+    public void testRegisterTrigger() throws Exception {
+
+    }
+
+    @Test
+    public void testMerge() throws Exception {
+
+    }
+
+    @Test
+    public void testMerge1() throws Exception {
+
+    }
+
+    @Test
+    public void testMerge2() throws Exception {
+
+    }
+
+    @Test
+    public void testMerge3() throws Exception {
+
+    }
+
+    @Test
+    public void testPersistent() throws Exception {
+
+    }
+
+    @Test
+    public void testPersistent1() throws Exception {
+
+    }
+
+    @Test
+    public void testExpand() throws Exception {
+
+    }
+
+    @Test
+    public void testCreateTable() throws Exception {
+
+    }
+
+    @Test
+    public void testDropTable() throws Exception {
+
+    }
+
+    @Test
+    public void testExecute() throws Exception {
+
+    }
+
+    @Test
+    public void testExecuteQuery() throws Exception {
+
+    }
+
+    @Test
+    public void testClose() throws Exception {
+
     }
 }

@@ -18,13 +18,15 @@ public class TableMetadata {
     String fileName;
     File dataFile;
     FormatType formatType;
+    String instance;
     String name;
     String[] columns;
     int dataSize;
 
-    public TableMetadata(String fileName, FormatType formatType, String name, String[] columns, int dataSize, TableStatus status) throws IOException {
+    public TableMetadata(String fileName, FormatType formatType, String instance, String name, String[] columns, int dataSize, TableStatus status) throws IOException {
         this.fileName = fileName;
         this.formatType = formatType;
+        this.instance = instance;
         this.name = name;
         this.columns = columns;
         this.dataSize = dataSize;

@@ -16,6 +16,7 @@ public class RoundRobinTableMetadataProtocolV1 extends BaseRoundRobinProtocol {
     int version = 1;
     ProtocolType protocolType = ProtocolType.TABLE_METADATA;
     MessageType messageType = MessageType.REQUEST;
+    String instance = "default";
     String tableName;
     String fileName;
     String[] columns = new String[0];
@@ -48,6 +49,11 @@ public class RoundRobinTableMetadataProtocolV1 extends BaseRoundRobinProtocol {
         buffer = put(buffer, code);
         //应答描述
         buffer = put(buffer, desc);
+        //会话ID
+        buffer = put(buffer, sessionId);
+        //实例名长度
+        //实例名
+        buffer = put(buffer, instance);
         //表名长度
         //表名
         buffer = put(buffer, tableName);
@@ -97,6 +103,11 @@ public class RoundRobinTableMetadataProtocolV1 extends BaseRoundRobinProtocol {
         this.code = buffer.getInt();
         //应答描述
         this.desc = get(buffer);
+        //会话ID
+        this.sessionId = get(buffer);
+        //实例长度
+        //实例
+        this.instance = get(buffer);
         //表名长度
         //表名
         this.tableName = get(buffer);

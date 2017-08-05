@@ -3,11 +3,14 @@ package org.wing4j.rrd.core;
 import org.wing4j.rrd.*;
 
 import java.io.IOException;
+import java.util.concurrent.Future;
 
 /**
  * Created by wing4j on 2017/8/3.
  */
 public interface Table {
+    Table setScheduledFuture(Future future);
+    Future getScheduledFuture();
     /**
      * 获取表元信息
      *

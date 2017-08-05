@@ -5,6 +5,7 @@ import org.wing4j.rrd.core.Table;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by wing4j on 2017/7/28.
@@ -13,13 +14,24 @@ public interface RoundRobinDatabase {
     int DAY_SECOND = 24 * 60 * 60;
 
     /**
+     *
+     * @return
+     */
+    Map<String, RoundRobinConnection> getConnections();
+    /**
+     * 根据会话ID号获取连接信息
+     * @param sessionId 会话ID号
+     * @return
+     */
+    RoundRobinConnection getConnection(String sessionId);
+    /**
      * 打开远程数据库
      *
      * @param address 服务器地址
      * @param port    端口
      * @return 连接对象
      */
-    RoundRobinConnection open(String address, int port) throws IOException;
+    RoundRobinConnection open(String address, int port, String username, String password) throws IOException;
 
     /**
      * 打开数据库

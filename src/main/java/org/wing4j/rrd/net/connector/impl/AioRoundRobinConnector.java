@@ -17,6 +17,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
+import java.sql.SQLException;
 import java.util.concurrent.*;
 
 /**
@@ -40,6 +41,17 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
         this.asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(executor);
     }
 
+
+    @Override
+    public String connect(String username, String password) throws IOException {
+        return null;
+    }
+
+    @Override
+    public void disConnect(String sessionId) throws IOException {
+
+    }
+
     @Override
     public TableMetadata getTableMetadata(String tableName) throws IOException {
         RoundRobinTableMetadataProtocolV1 protocol = new RoundRobinTableMetadataProtocolV1();
@@ -48,7 +60,7 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
         buffer = syncCall(buffer);
         buffer.flip();
         protocol.convert(buffer);
-        TableMetadata metadata = new TableMetadata(null, FormatType.BIN, protocol.getTableName(), protocol.getColumns(), protocol.getDataSize(), protocol.getStatus());
+        TableMetadata metadata = new TableMetadata(null, FormatType.BIN, protocol.getInstance(), protocol.getTableName(), protocol.getColumns(), protocol.getDataSize(), protocol.getStatus());
         return metadata;
     }
 
@@ -72,12 +84,12 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
-    public RoundRobinView slice(int pos, int size, String tableName, String... columns) throws IOException {
+    public RoundRobinView slice(String tableName, int pos, int size, String... columns) throws IOException {
         return null;
     }
 
     @Override
-    public RoundRobinView merge(String tableName, int pos, RoundRobinView view, MergeType mergeType) throws IOException {
+    public RoundRobinView merge(String tableName, MergeType mergeType, RoundRobinView view, int pos) throws IOException {
         AsynchronousSocketChannel socketChannel = null;
         if (socketChannel == null || !socketChannel.isOpen()) {
             socketChannel = AsynchronousSocketChannel.open(asyncChannelGroup);
@@ -147,6 +159,16 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
 
     @Override
     public RoundRobinConnector dropTable(String... tableNames) throws IOException {
+        return null;
+    }
+
+    @Override
+    public int execute(String sql) throws SQLException {
+        return 0;
+    }
+
+    @Override
+    public RoundRobinView executeQuery(String sql) throws SQLException {
         return null;
     }
 

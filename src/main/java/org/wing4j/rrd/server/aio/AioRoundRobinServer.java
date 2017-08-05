@@ -1,12 +1,15 @@
 package org.wing4j.rrd.server.aio;
 
 import lombok.Data;
+import org.wing4j.rrd.RoundRobinConnection;
 import org.wing4j.rrd.RoundRobinDatabase;
 import org.wing4j.rrd.core.DefaultRoundRobinDatabase;
 import org.wing4j.rrd.server.RoundRobinServer;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
+import org.wing4j.rrd.utils.MessageFormatter;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -23,7 +26,7 @@ public class AioRoundRobinServer implements RoundRobinServer{
     public AioRoundRobinServer(RoundRobinServerConfig config) {
         this.config = config;
         try {
-            LOGGER.info("ready to init database.");
+            LOGGER.info("ready to init [default] database.");
             this.database = DefaultRoundRobinDatabase.init(config);
             LOGGER.info("init database.");
         } catch (IOException e) {
@@ -39,6 +42,10 @@ public class AioRoundRobinServer implements RoundRobinServer{
         this.listenThread = new Thread(listener, "Round-Robin-Database-listener");
         this.listenThread.start();
         while (true){
+            Map<String, RoundRobinConnection> connections = database.getConnections();
+            for (String session : connections.keySet()){
+                LOGGER.info(MessageFormatter.format("SessionId:{}, Connection:{}", session, connections.get(session)));
+            }
             Thread.sleep(1000);
         }
     }

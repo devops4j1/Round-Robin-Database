@@ -106,4 +106,67 @@ public class DefaultRoundRobinDatabaseTest {
 //        connection.close();
     }
 
+    @Test
+         public void testOpen() throws Exception {
+        RoundRobinConfig config = new RoundRobinConfig();
+        config.setWorkPath("./target/x");
+        RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
+        RoundRobinConnection connection = database.open("127.0.0.1", 8099, "admin", "password");
+        connection.close();
+    }
+
+    @Test
+    public void testIncrease() throws Exception {
+        RoundRobinConfig config = new RoundRobinConfig();
+        config.setWorkPath("./target/x");
+        RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
+        RoundRobinConnection connection = database.open("127.0.0.1", 8099, "admin", "password");
+        for (int i = 0; i < 100; i++) {
+            long val = connection.increase("test1", "request", 1, 1);
+            System.out.println(val);
+        }
+    }
+
+    @Test
+    public void testOpen1() throws Exception {
+
+    }
+
+    @Test
+    public void testGetTable() throws Exception {
+
+    }
+
+    @Test
+    public void testCreateTable() throws Exception {
+        RoundRobinConfig config = new RoundRobinConfig();
+        config.setWorkPath("./target/x");
+        RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
+        RoundRobinConnection connection = database.open("127.0.0.1", 8099, "admin", "password");
+//        for (int i = 0; i < 100; i++) {
+//            long val = connection.increase("test1", "request", 0, 1);
+//            System.out.println(val);
+//        }
+        connection.createTable("test1", "request");
+    }
+
+    @Test
+    public void testOpenTable() throws Exception {
+
+    }
+
+    @Test
+    public void testDropTable() throws Exception {
+
+    }
+
+    @Test
+    public void testExistTable() throws Exception {
+
+    }
+
+    @Test
+    public void testListTable() throws Exception {
+
+    }
 }

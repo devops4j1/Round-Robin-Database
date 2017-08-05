@@ -18,6 +18,7 @@ import java.nio.channels.WritableByteChannel;
  */
 @Data
 public class RoundRobinFormatCsvV1 implements RoundRobinFormat {
+    String instance;
     String tableName;
     int version = 1;
     int current = 0;
@@ -31,11 +32,12 @@ public class RoundRobinFormatCsvV1 implements RoundRobinFormat {
         read(buffer);
     }
 
-    public RoundRobinFormatCsvV1(String tableName, RoundRobinView view){
-        this(tableName, view.getMetadata().getColumns(), view.getData(), view.getTime());
+    public RoundRobinFormatCsvV1(String instance,String tableName, RoundRobinView view){
+        this(instance, tableName, view.getMetadata().getColumns(), view.getData(), view.getTime());
     }
 
-    public RoundRobinFormatCsvV1(String tableName, String[] columns, long[][] data, int current) {
+    public RoundRobinFormatCsvV1(String instance,String tableName, String[] columns, long[][] data, int current) {
+        this.instance = instance;
         this.tableName = tableName;
         this.columns = columns;
         this.data = data;
