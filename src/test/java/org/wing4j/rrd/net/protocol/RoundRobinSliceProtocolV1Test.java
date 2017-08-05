@@ -17,6 +17,7 @@ public class RoundRobinSliceProtocolV1Test {
     public void testConvert() throws Exception {
         RoundRobinSliceProtocolV1 format = new RoundRobinSliceProtocolV1();
         format.setTableName("table1");
+        format.setMessageType(MessageType.RESPONSE);
         format.setColumns(new String[]{"request", "response"});
         format.setPos(3);
         format.setResultSize(2);
@@ -25,15 +26,19 @@ public class RoundRobinSliceProtocolV1Test {
                 {3, 4}
         };
         format.setData(data);
+        format.setCode(RspCode.FAIL.getCode());
+        format.setDesc(RspCode.FAIL.getDesc());
         ByteBuffer buffer = format.convert();
         buffer.flip();
         int size = buffer.getInt();
         int type = buffer.getInt();
         int version = buffer.getInt();
         int messageType = buffer.getInt();
-        Assert.assertEquals(MessageType.REQUEST.getCode(), messageType);
+        Assert.assertEquals(MessageType.RESPONSE.getCode(), messageType);
         RoundRobinSliceProtocolV1 format2 = new RoundRobinSliceProtocolV1();
         format2.convert(buffer);
+        Assert.assertEquals(RspCode.FAIL.getCode(), format2.getCode());
+        Assert.assertEquals(RspCode.FAIL.getDesc(), format2.getDesc());
         Assert.assertEquals("table1", format2.getTableName());
         Assert.assertEquals("request", format2.getColumns()[0]);
         Assert.assertEquals("response", format2.getColumns()[1]);

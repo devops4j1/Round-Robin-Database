@@ -30,7 +30,7 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
         int lengthPos = buffer.position();
         buffer.putInt(0);
         //命令
-        buffer.putInt(protocolType.getCode());
+        buffer = put(buffer, this.protocolType.getCode());
         if (DebugConfig.DEBUG) {
             System.out.println("protocol Type:" + this.protocolType);
         }
@@ -40,7 +40,7 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
             System.out.println("version:" + this.version);
         }
         //报文类型
-        buffer.putInt(messageType.getCode());
+        buffer = put(buffer, this.messageType.getCode());
         if (DebugConfig.DEBUG) {
             System.out.println("message Type:" + messageType);
         }
@@ -93,7 +93,7 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
         //版本号
         //报文类型
         //应答编码
-        this.code = buffer.getShort();
+        this.code = buffer.getInt();
         //应答描述
         this.desc = get(buffer);
         //表名长度

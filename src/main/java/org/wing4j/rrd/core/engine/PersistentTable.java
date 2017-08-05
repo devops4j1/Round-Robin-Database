@@ -67,6 +67,9 @@ public class PersistentTable implements Table {
             pos = getCurrent();
         }
         int idx = metadata.columnIndex(column);
+        if(idx == -1){
+            throw new RoundRobinRuntimeException(MessageFormatter.format("不存在{}.{}字段", metadata.getName(), column));
+        }
         return increase(pos, idx, val);
     }
 

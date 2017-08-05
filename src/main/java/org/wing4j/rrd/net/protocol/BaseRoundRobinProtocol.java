@@ -11,14 +11,14 @@ import java.nio.ByteBuffer;
  */
 @Data
 public abstract class BaseRoundRobinProtocol implements RoundRobinProtocol {
-    protected short code = RspCode.SUCCESS.getCode();
+    protected int code = RspCode.SUCCESS.getCode();
     protected String desc = RspCode.SUCCESS.getDesc();
 
     protected ByteBuffer put(ByteBuffer buffer, short data) {
-        if (buffer.remaining() < 4) {
-            //扩容
-            ByteBuffer buffer1 = ByteBuffer.allocate(buffer.limit() + 1024);
+        if (buffer.remaining() < 8) {
             buffer.flip();
+            //扩容
+            ByteBuffer buffer1 = ByteBuffer.allocate(buffer.position() + 1024);
             buffer1.put(buffer);
             buffer = buffer1;
         }
@@ -27,10 +27,10 @@ public abstract class BaseRoundRobinProtocol implements RoundRobinProtocol {
     }
 
     protected ByteBuffer put(ByteBuffer buffer, int data) {
-        if (buffer.remaining() < 4) {
-            //扩容
-            ByteBuffer buffer1 = ByteBuffer.allocate(buffer.limit() + 1024);
+        if (buffer.remaining() < 8) {
             buffer.flip();
+            //扩容
+            ByteBuffer buffer1 = ByteBuffer.allocate(buffer.position() + 1024);
             buffer1.put(buffer);
             buffer = buffer1;
         }
@@ -40,9 +40,9 @@ public abstract class BaseRoundRobinProtocol implements RoundRobinProtocol {
 
     protected ByteBuffer put(ByteBuffer buffer, long data) {
         if (buffer.remaining() < 8) {
-            //扩容
-            ByteBuffer buffer1 = ByteBuffer.allocate(buffer.limit() + 1024);
             buffer.flip();
+            //扩容
+            ByteBuffer buffer1 = ByteBuffer.allocate(buffer.position() + 1024);
             buffer1.put(buffer);
             buffer = buffer1;
         }
@@ -62,9 +62,9 @@ public abstract class BaseRoundRobinProtocol implements RoundRobinProtocol {
         }
         int len = bytes.length;
         if (buffer.remaining() < len) {
-            //扩容
-            ByteBuffer buffer1 = ByteBuffer.allocate(buffer.limit() + 1024);
             buffer.flip();
+            //扩容
+            ByteBuffer buffer1 = ByteBuffer.allocate(buffer.position() + 1024);
             buffer1.put(buffer);
             buffer = buffer1;
         }

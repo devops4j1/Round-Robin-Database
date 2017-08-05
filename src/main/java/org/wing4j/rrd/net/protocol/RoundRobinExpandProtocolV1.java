@@ -77,7 +77,7 @@ public class RoundRobinExpandProtocolV1 extends BaseRoundRobinProtocol {
         //版本号
         //报文类型
         //应答编码
-        this.code = buffer.getShort();
+        this.code = buffer.getInt();
         //应答描述
         this.desc = get(buffer);
         //表名长度

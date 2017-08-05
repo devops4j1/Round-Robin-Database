@@ -14,7 +14,7 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testMerge() throws Exception {
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 1; i++) {
             long[][] data = new long[][]{
                     {1, 2},
                     {3, 4}
@@ -39,7 +39,7 @@ public class BioRoundRobinConnectorTest {
     public void testIncrease() throws Exception {
         for (int i = 0; i < 1000; i++) {
             RoundRobinConnector connector = new BioRoundRobinConnector("127.0.0.1", 8099);
-            long v = connector.increase("mo9", "other1", 2, 2);
+            long v = connector.increase("mo9", "success", 2, 2);
             System.out.println(v);
         }
 
@@ -55,13 +55,16 @@ public class BioRoundRobinConnectorTest {
     @Test
     public void testCreateTable() throws Exception {
         RoundRobinConnector connector = new BioRoundRobinConnector("127.0.0.1", 8099);
-        connector.createTable("mo1", "success");
+        connector.createTable("mo9", "success");
     }
 
     @Test
     public void testSlice() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector("127.0.0.1", 8099);
-        RoundRobinView view = connector.slice(10, 11, "mo9", "other1");
-        System.out.println(view);
+        for (int i = 0; i < 1; i++) {
+            RoundRobinConnector connector = new BioRoundRobinConnector("127.0.0.1", 8099);
+            RoundRobinView view = connector.slice(100, 110, "mo9", "success");
+            System.out.println(view);
+        }
+
     }
 }

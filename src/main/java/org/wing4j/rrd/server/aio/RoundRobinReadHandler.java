@@ -5,6 +5,7 @@ import org.wing4j.rrd.core.Table;
 import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.net.protocol.*;
+import org.wing4j.rrd.utils.HexUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -88,20 +89,32 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
            //读取到数据流
            RoundRobinSliceProtocolV1 protocol = new RoundRobinSliceProtocolV1();
            protocol.convert(attachment);
+           RoundRobinConnection connection = null;
            try {
                //进行合并视图操作
-               RoundRobinConnection connection = this.database.open();
+               connection = this.database.open();
                RoundRobinView view = connection.slice(protocol.getTableName(), protocol.getPos(), protocol.getSize(), protocol.getColumns());
                protocol.setPos(view.getTime());
                protocol.setResultSize(view.getData().length);
                protocol.setData(view.getData());
                protocol.setColumns(view.getMetadata().getColumns());
-               protocol.setMessageType(MessageType.RESPONSE);
-           } catch (IOException e) {
-               e.printStackTrace();
+           } catch (RoundRobinRuntimeException e) {
+               protocol.setDesc(e.getMessage());
+               protocol.setCode(RspCode.FAIL.getCode());
+           } catch (Exception e) {
+               protocol.setDesc("试图切片操作发生异常");
+               protocol.setCode(RspCode.FAIL.getCode());
            } finally {
+               if(connection != null){
+                   try {
+                       connection.close();
+                   } catch (IOException e) {
+                       e.printStackTrace();
+                   }
+               }
            }
            //写应答数据
+           protocol.setMessageType(MessageType.RESPONSE);
            ByteBuffer resultBuffer = protocol.convert();
            resultBuffer.flip();
            //注册异步写入返回信息
@@ -119,8 +132,12 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
                long i = connection.increase(protocol.getTableName(), protocol.getColumn(), protocol.getPos(), protocol.getValue());
                connection.close();
                protocol.setNewValue(i);
-           } catch (IOException e) {
-               e.printStackTrace();
+           } catch (RoundRobinRuntimeException e) {
+               protocol.setDesc(e.getMessage());
+               protocol.setCode(RspCode.FAIL.getCode());
+           } catch (Exception e) {
+               protocol.setDesc("自增字段操作发生异常");
+               protocol.setCode(RspCode.FAIL.getCode());
            } finally {
                try {
                    connection.close();
@@ -144,7 +161,10 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
                connection = this.database.open();
                //进行合并视图操作
                connection.createTable(protocol.getTableName(), protocol.getColumns());
-           } catch (IOException e) {
+           } catch (RoundRobinRuntimeException e) {
+               protocol.setDesc(e.getMessage());
+               protocol.setCode(RspCode.FAIL.getCode());
+           } catch (Exception e) {
                protocol.setDesc("创建表结构发生错误");
                protocol.setCode(RspCode.FAIL.getCode());
            } finally {
@@ -156,8 +176,12 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
                    }
                }
            }
+           protocol.setMessageType(MessageType.RESPONSE);
            //写应答数据
            ByteBuffer resultBuffer = protocol.convert();
+           if(DebugConfig.DEBUG){
+               System.out.println(HexUtils.toDisplayString(resultBuffer.array()));
+           }
            resultBuffer.flip();
            //注册异步写入返回信息
            channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.database));

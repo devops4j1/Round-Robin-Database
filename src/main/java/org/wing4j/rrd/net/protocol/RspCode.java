@@ -4,17 +4,17 @@ package org.wing4j.rrd.net.protocol;
  * Created by wing4j on 2017/8/5.
  */
 public enum RspCode {
-    SUCCESS((short)200, "成功"),
-    FAIL((short)400, "失败");
-    short code;
+    SUCCESS(200, "成功"),
+    FAIL(400, "失败");
+    int code;
     String desc;
 
-    RspCode(short code, String desc) {
+    RspCode(int code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
-    public short getCode() {
+    public int getCode() {
         return code;
     }
 
@@ -22,7 +22,7 @@ public enum RspCode {
         return desc;
     }
 
-    public static RspCode valueOfCode(short code){
+    public static RspCode valueOfCode(int code){
         RspCode[] values = values();
         for (RspCode value : values){
             if(value.code == code){

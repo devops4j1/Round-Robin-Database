@@ -45,6 +45,7 @@ public interface Table {
      * @return
      */
     long increase(String column, int val);
+
     long increase(int pos, String column, int val);
 
     /**

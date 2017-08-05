@@ -44,8 +44,14 @@ public class RoundRobinCreateTableProtocolV1 extends BaseRoundRobinProtocol {
         }
         //应答编码
         buffer = put(buffer, code);
+        if (DebugConfig.DEBUG) {
+            System.out.println("code:" + code);
+        }
         //应答描述
         buffer = put(buffer, desc);
+        if (DebugConfig.DEBUG) {
+            System.out.println("desc:" + desc);
+        }
         //表名长度
         //表名
         buffer = put(buffer, tableName);
@@ -62,9 +68,6 @@ public class RoundRobinCreateTableProtocolV1 extends BaseRoundRobinProtocol {
         //结束
         //回填,将报文总长度回填到第一个字节
         buffer.putInt(lengthPos, buffer.position() - 4);
-        if (DebugConfig.DEBUG) {
-            System.out.println(HexUtils.toDisplayString(buffer.array()));
-        }
         return buffer;
     }
 
@@ -79,7 +82,7 @@ public class RoundRobinCreateTableProtocolV1 extends BaseRoundRobinProtocol {
         //版本号
         //报文类型
         //应答编码
-        this.code = buffer.getShort();
+        this.code = buffer.getInt();
         //应答描述
         this.desc = get(buffer);
         //表名长度
