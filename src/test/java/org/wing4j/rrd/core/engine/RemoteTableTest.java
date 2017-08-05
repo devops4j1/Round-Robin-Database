@@ -10,7 +10,7 @@ import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
 import static org.junit.Assert.*;
 
 /**
- * Created by 面试1 on 2017/8/5.
+ * Created by wing4j on 2017/8/5.
  */
 public class RemoteTableTest {
 

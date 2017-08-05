@@ -8,7 +8,7 @@ import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
 
 /**
- * Created by 面试1 on 2017/8/2.
+ * Created by wing4j on 2017/8/2.
  */
 public class BioRoundRobinConnectorTest {
 

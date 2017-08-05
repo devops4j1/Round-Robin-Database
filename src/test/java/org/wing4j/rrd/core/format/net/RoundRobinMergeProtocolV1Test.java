@@ -10,7 +10,7 @@ import org.wing4j.rrd.utils.HexUtils;
 import java.nio.ByteBuffer;
 
 /**
- * Created by 面试1 on 2017/8/4.
+ * Created by wing4j on 2017/8/4.
  */
 public class RoundRobinMergeProtocolV1Test {
 
