@@ -2,6 +2,7 @@ package org.wing4j.rrd.server.aio;
 
 import org.wing4j.rrd.*;
 import org.wing4j.rrd.core.Table;
+import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.net.protocol.*;
 
@@ -92,7 +93,7 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
                RoundRobinConnection connection = this.database.open();
                RoundRobinView view = connection.slice(protocol.getTableName(), protocol.getPos(), protocol.getSize(), protocol.getColumns());
                protocol.setPos(view.getTime());
-               protocol.setSize(view.getData().length);
+               protocol.setResultSize(view.getData().length);
                protocol.setData(view.getData());
                protocol.setColumns(view.getMetadata().getColumns());
                protocol.setMessageType(MessageType.RESPONSE);
@@ -138,14 +139,22 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
            //读取到数据流
            RoundRobinCreateTableProtocolV1 protocol = new RoundRobinCreateTableProtocolV1();
            protocol.convert(attachment);
+           RoundRobinConnection connection = null;
            try {
+               connection = this.database.open();
                //进行合并视图操作
-               RoundRobinConnection connection = this.database.open();
                connection.createTable(protocol.getTableName(), protocol.getColumns());
-               connection.close();
            } catch (IOException e) {
-               e.printStackTrace();
+               protocol.setDesc("创建表结构发生错误");
+               protocol.setCode(RspCode.FAIL.getCode());
            } finally {
+               if(connection != null){
+                   try {
+                       connection.close();
+                   } catch (IOException e) {
+                       e.printStackTrace();
+                   }
+               }
            }
            //写应答数据
            ByteBuffer resultBuffer = protocol.convert();

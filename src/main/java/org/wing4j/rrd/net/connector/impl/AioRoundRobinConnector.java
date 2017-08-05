@@ -141,7 +141,7 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
-    public RoundRobinConnector createTable(String tableName, String... columns) throws IOException {
+    public TableMetadata createTable(String tableName, String... columns) throws IOException {
         return null;
     }
 

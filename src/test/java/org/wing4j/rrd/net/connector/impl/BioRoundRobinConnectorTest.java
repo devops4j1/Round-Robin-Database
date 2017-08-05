@@ -14,19 +14,21 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testMerge() throws Exception {
-        long[][] data = new long[][]{
-                {1, 2},
-                {3, 4}
-        };
-        RoundRobinView view = new RoundRobinView(new String[]{"other1", "response"}, 2, data);
-        RoundRobinConnector connector = new BioRoundRobinConnector("127.0.0.1", 8099);
-        RoundRobinView newView = connector.merge("mo9", 2, view, MergeType.ADD);
-        System.out.println(newView);
+        for (int i = 0; i < 1000; i++) {
+            long[][] data = new long[][]{
+                    {1, 2},
+                    {3, 4}
+            };
+            RoundRobinView view = new RoundRobinView(new String[]{"other1", "response"}, 2, data);
+            RoundRobinConnector connector = new BioRoundRobinConnector("127.0.0.1", 8099);
+            RoundRobinView newView = connector.merge("mo9", i + 2, view, MergeType.ADD);
+            System.out.println(newView);
+        }
     }
 
     @Test
     public void testGetTableMetadata() throws Exception {
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 1000; i++) {
             RoundRobinConnector connector = new BioRoundRobinConnector("127.0.0.1", 8099);
             TableMetadata metadata = connector.getTableMetadata("mo9");
             System.out.println(metadata);
@@ -35,9 +37,12 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testIncrease() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector("127.0.0.1", 8099);
-        long i = connector.increase("mo9", "other1", 2, 2);
-        System.out.println(i);
+        for (int i = 0; i < 1000; i++) {
+            RoundRobinConnector connector = new BioRoundRobinConnector("127.0.0.1", 8099);
+            long v = connector.increase("mo9", "other1", 2, 2);
+            System.out.println(v);
+        }
+
     }
 
     @Test
@@ -50,7 +55,7 @@ public class BioRoundRobinConnectorTest {
     @Test
     public void testCreateTable() throws Exception {
         RoundRobinConnector connector = new BioRoundRobinConnector("127.0.0.1", 8099);
-        connector.createTable("mo9", "success");
+        connector.createTable("mo1", "success");
     }
 
     @Test

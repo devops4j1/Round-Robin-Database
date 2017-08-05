@@ -22,7 +22,7 @@ public enum RspCode {
         return desc;
     }
 
-    public static RspCode valueOfCode(int code){
+    public static RspCode valueOfCode(short code){
         RspCode[] values = values();
         for (RspCode value : values){
             if(value.code == code){

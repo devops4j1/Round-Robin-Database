@@ -19,7 +19,7 @@ public class RoundRobinSliceProtocolV1Test {
         format.setTableName("table1");
         format.setColumns(new String[]{"request", "response"});
         format.setPos(3);
-        format.setSize(2);
+        format.setResultSize(2);
         long[][] data = new long[][]{
                 {1, 2},
                 {3, 4}
@@ -38,7 +38,7 @@ public class RoundRobinSliceProtocolV1Test {
         Assert.assertEquals("request", format2.getColumns()[0]);
         Assert.assertEquals("response", format2.getColumns()[1]);
         Assert.assertEquals(3, format2.getPos());
-        Assert.assertEquals(2, format2.getSize());
+        Assert.assertEquals(2, format2.getResultSize());
         Assert.assertEquals(1, format2.getData()[0][0]);
         Assert.assertEquals(2, format2.getData()[0][1]);
         Assert.assertEquals(3, format2.getData()[1][0]);

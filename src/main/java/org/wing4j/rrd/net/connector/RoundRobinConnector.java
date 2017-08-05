@@ -82,7 +82,7 @@ public interface RoundRobinConnector {
      * @param columns   字段数组
      * @return
      */
-    RoundRobinConnector createTable(String tableName, String... columns) throws IOException;
+    TableMetadata createTable(String tableName, String... columns) throws IOException;
 
     /**
      * 删除表结构
