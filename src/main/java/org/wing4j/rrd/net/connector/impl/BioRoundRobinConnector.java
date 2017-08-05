@@ -104,6 +104,56 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
     @Override
     public void disConnect(String sessionId) throws IOException {
         ifCloseThenReopenSocket();
+        RoundRobinDisConnectProtocolV1 protocol = new RoundRobinDisConnectProtocolV1();
+        protocol.setSessionId(sessionId);
+        ByteBuffer buffer = protocol.convert();
+        buffer.flip();
+        byte[] data = new byte[buffer.remaining()];
+        buffer.get(data);
+        if (DebugConfig.DEBUG) {
+            System.out.println(data.length);
+            System.out.println(HexUtils.toDisplayString(data));
+        }
+        OutputStream os = socket.getOutputStream();
+        try {
+            os.write(data);
+        } catch (Exception e) {
+            os.close();
+            socket.close();
+            throw new RoundRobinRuntimeException("发送数据发生异常");
+        }
+        InputStream is = socket.getInputStream();
+        byte[] sizeLenBytes = new byte[4];
+        byte[] dataBytes = new byte[0];
+        try {
+            is.read(sizeLenBytes);
+            int len = MessageUtils.bytes2int(sizeLenBytes);
+            if (is.available() < len - 4) {
+                System.out.println(HexUtils.toDisplayString(sizeLenBytes));
+                throw new RoundRobinRuntimeException("无效报文");
+            }
+            dataBytes = new byte[len];
+            is.read(dataBytes);
+        } finally {
+            os.close();
+            is.close();
+            socket.close();
+        }
+        buffer = ByteBuffer.wrap(dataBytes);
+        ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
+        int version = buffer.getInt();
+        MessageType messageType = MessageType.valueOfCode(buffer.getInt());
+        if (protocolType == ProtocolType.DIS_CONNECT && version == 1 && messageType == MessageType.RESPONSE) {
+            protocol.convert(buffer);
+            if (RspCode.valueOfCode(protocol.getCode()) == RspCode.SUCCESS) {
+                //返回自增后的值
+            } else {
+                throw new RoundRobinRuntimeException(protocol.getCode() + ":" + protocol.getDesc());
+            }
+        } else {
+            System.out.println(HexUtils.toDisplayString(dataBytes));
+            throw new RoundRobinRuntimeException("无效的应答");
+        }
     }
 
     @Override

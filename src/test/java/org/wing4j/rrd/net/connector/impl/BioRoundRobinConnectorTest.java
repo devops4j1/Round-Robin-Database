@@ -82,6 +82,7 @@ public class BioRoundRobinConnectorTest {
     @Test
     public void testConnect() throws Exception {
         RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
-        connector.connect("admin", "password");
+        String sessionId = connector.connect("admin", "password");
+        connector.disConnect(sessionId);
     }
 }

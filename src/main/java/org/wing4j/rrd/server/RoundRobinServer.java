@@ -9,6 +9,8 @@ import java.io.IOException;
  * 服务器接口
  */
 public interface RoundRobinServer {
+    int RUNNING = 1;
+    int STOP = 0;
     /**
      * 获取配置对象
      * @return 配置对象

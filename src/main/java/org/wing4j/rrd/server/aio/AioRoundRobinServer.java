@@ -22,6 +22,7 @@ public class AioRoundRobinServer implements RoundRobinServer{
     RoundRobinListener listener;
     Thread listenThread;
     RoundRobinDatabase database;
+    int status = STOP;
 
     public AioRoundRobinServer(RoundRobinServerConfig config) {
         this.config = config;
@@ -41,12 +42,13 @@ public class AioRoundRobinServer implements RoundRobinServer{
         this.listener = new RoundRobinListener(this);
         this.listenThread = new Thread(listener, "Round-Robin-Database-listener");
         this.listenThread.start();
-        while (true){
+        status = RUNNING;
+        while (status == RUNNING){
             Map<String, RoundRobinConnection> connections = database.getConnections();
             for (String session : connections.keySet()){
                 LOGGER.info(MessageFormatter.format("SessionId:{}, Connection:{}", session, connections.get(session)));
             }
-            Thread.sleep(1000);
+            Thread.sleep(60 * 1000);
         }
     }
 

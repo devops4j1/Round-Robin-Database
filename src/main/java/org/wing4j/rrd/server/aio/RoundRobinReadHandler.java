@@ -111,6 +111,11 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
                     }
                 }
             }
+            protocol.setMessageType(MessageType.RESPONSE);
+            //写应答数据
+            ByteBuffer resultBuffer = protocol.convert();
+            resultBuffer.flip();
+            channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.database));
             //返回sessionId
         } else if (protocolType == ProtocolType.TABLE_METADATA && version == 1) {//获取数据数量
             //读取到数据流

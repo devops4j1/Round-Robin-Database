@@ -213,6 +213,6 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
 
     @Override
     public void close(RoundRobinConnection connection) throws IOException {
-        connections.remove(connection);
+        connections.remove(connection.getSessionId());
     }
 }
