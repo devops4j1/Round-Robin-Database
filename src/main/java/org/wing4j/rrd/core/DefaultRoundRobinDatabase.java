@@ -6,6 +6,7 @@ import org.wing4j.rrd.core.engine.PersistentTable;
 import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,13 +28,36 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
         this.config = config;
     }
 
-    public static RoundRobinDatabase init(RoundRobinConfig config) {
+    public static RoundRobinDatabase init(RoundRobinConfig config) throws IOException {
         if (database == null) {
             synchronized (RoundRobinDatabase.class) {
                 if (database == null) {
                     database = new DefaultRoundRobinDatabase(config);
                 }
             }
+        }
+        String workPath = database.getConfig().getWorkPath();
+        File workPathDir = new File(workPath);
+        if (!workPathDir.exists()) {
+            workPathDir.mkdirs();
+        }
+        if (!workPathDir.exists()) {
+            //TODO 抛出异常
+        }
+        File[] tableFiles = workPathDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                String fileName = name.toLowerCase().trim();
+                if (fileName.endsWith("rrd")) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            }
+        });
+        for (File tableFile : tableFiles) {
+            database.openTable(tableFile);
         }
         return database;
     }

@@ -4,34 +4,38 @@ import org.wing4j.rrd.*;
 import org.wing4j.rrd.core.Table;
 import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.core.TableStatus;
+import org.wing4j.rrd.core.format.RoundRobinFormatLoader;
 import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
 import org.wing4j.rrd.core.format.csv.v1.RoundRobinFormatCsvV1;
 import org.wing4j.rrd.debug.DebugConfig;
+import org.wing4j.rrd.utils.MessageFormatter;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Created by wing4j on 2017/8/3.
  * 持久化表
  */
 public class PersistentTable implements Table {
+    static Logger LOGGER = Logger.getLogger(PersistentTable.class.getName());
     TableMetadata metadata;
     long[][] data;
     volatile List<RoundRobinTrigger>[] triggers;
 
     public PersistentTable(File file) throws IOException {
-        RoundRobinFormat format = new RoundRobinFormatBinV1();
-        format.read(file);
+        RoundRobinFormatLoader loader = new RoundRobinFormatLoader(file);
+        RoundRobinFormat format = loader.load();
         this.data = format.getData();
-        this.metadata = new TableMetadata(file.getCanonicalPath(), FormatType.BIN, format.getTableName(), format.getColumns());
+        this.metadata = new TableMetadata(file.getCanonicalPath(), FormatType.BIN, format.getTableName(), format.getColumns(), format.getData().length, TableStatus.NORMAL);
     }
 
     public PersistentTable(String savePath, String tableName, int maxSize, String... columns) throws IOException {
         String fileName = savePath + File.separator + tableName + ".rrd";
-        this.metadata = new TableMetadata(fileName, FormatType.BIN, tableName, columns);
+        this.metadata = new TableMetadata(fileName, FormatType.BIN, tableName, columns, maxSize, TableStatus.NORMAL);
         this.data = new long[maxSize][columns.length];
     }
 
@@ -51,15 +55,24 @@ public class PersistentTable implements Table {
         return increase(column, 1);
     }
 
-    public long increase(String column, int i) {
+    public long increase(String column, int val) {
         int idx = metadata.columnIndex(column);
-        int time = getCurrent();
-        return increase(time, idx, i);
+        int pos = getCurrent();
+        return increase(pos, idx, val);
     }
 
-    long increase(int time, int idx, int i) {
-        this.data[time][idx] += i;
-        return this.data[time][idx];
+    @Override
+    public long increase(int pos, String column, int val) {
+        if(pos == -1){
+            pos = getCurrent();
+        }
+        int idx = metadata.columnIndex(column);
+        return increase(pos, idx, val);
+    }
+
+    long increase(int pos, int idx, int val) {
+        this.data[pos][idx] += val;
+        return this.data[pos][idx];
     }
 
     public long[][] getData() {
@@ -71,24 +84,30 @@ public class PersistentTable implements Table {
     }
 
     @Override
-    public long set(int time, String column, long val) {
+    public long set(int pos, String column, long val) {
+        if(pos == -1){
+            pos = getCurrent();
+        }
         int idx = metadata.columnIndex(column);
-        return set(time, idx, val);
+        return set(pos, idx, val);
     }
 
-    long set(int time, int idx, long val) {
-        this.data[time][idx] = val;
-        return this.data[time][idx];
+    long set(int pos, int idx, long val) {
+        this.data[pos][idx] = val;
+        return this.data[pos][idx];
     }
 
     @Override
-    public long get(int time, String column) {
+    public long get(int pos, String column) {
+        if(pos == -1){
+            pos = getCurrent();
+        }
         int idx = metadata.columnIndex(column);
-        return get(time, idx);
+        return get(pos, idx);
     }
 
-    long get(int time, int idx) {
-        return this.data[time][idx];
+    long get(int pos, int idx) {
+        return this.data[pos][idx];
     }
 
     public int getCurrent() {
@@ -145,18 +164,18 @@ public class PersistentTable implements Table {
         }
     }
 
-    public PersistentTable merge(RoundRobinView view, int mergePos, MergeType mergeType) {
+    public RoundRobinView merge(RoundRobinView view, int pos, MergeType mergeType) {
         if (DebugConfig.DEBUG) {
-            System.out.println("table:" + metadata.getName());
-            System.out.println("mergeType:" + mergeType);
-            System.out.println("table column:" + Arrays.asList(metadata.getColumns()));
-            System.out.println("view column:" + Arrays.asList(view.getMetadata().getColumns()));
-            System.out.println("time:" + view.getTime());
-            System.out.println("mergePos:" + mergePos);
+            LOGGER.info(MessageFormatter.format("table:{}", metadata.getName()));
+            LOGGER.info(MessageFormatter.format("mergeType:{}", mergeType));
+            LOGGER.info(MessageFormatter.format("table column:{}" ,Arrays.asList(metadata.getColumns())));
+            LOGGER.info(MessageFormatter.format("view column:{}" ,Arrays.asList(view.getMetadata().getColumns())));
+            LOGGER.info(MessageFormatter.format("pos:{}", pos));
         }
         lock();
         long[][] data = view.getData();
-        mergePos = mergePos - view.getData().length + 1;
+        long[][] newData = new long[view.getData().length][view.getMetadata().getColumns().length];
+        int mergePos = pos - view.getData().length + 1;
         //进行扩容
         expand(view.getMetadata().getColumns());
         //扩容后一定包含字段
@@ -166,21 +185,26 @@ public class PersistentTable implements Table {
             for (int i = 0; i < data.length; i++) {
                 if (mergeType == MergeType.REP) {
                     this.data[mergePos + i][idx1] = data[i][idx0];
+                    newData[i][idx0] = this.data[mergePos + i][idx1];
                 } else if (mergeType == MergeType.ADD) {
                     this.data[mergePos + i][idx1] = this.data[mergePos + i][idx1] + data[i][idx0];
+                    newData[i][idx0] = this.data[mergePos + i][idx1];
                 } else if (mergeType == MergeType.SUB) {
                     this.data[mergePos + i][idx1] = this.data[mergePos + i][idx1] - data[i][idx0];
+                    newData[i][idx0] = this.data[mergePos + i][idx1];
                 } else if (mergeType == MergeType.AVG) {
                     this.data[mergePos + i][idx1] = (this.data[mergePos + i][idx1] + data[i][idx0]) / 2;
+                    newData[i][idx0] = this.data[mergePos + i][idx1];
                 }
             }
         }
+
         unlock();
-        return this;
+        return new RoundRobinView(view.getMetadata().getColumns(), view.getTime(), newData);
     }
 
     @Override
-    public Table merge(RoundRobinView view, MergeType mergeType) {
+    public RoundRobinView merge(RoundRobinView view, MergeType mergeType) {
         return merge(view, getCurrent(), mergeType);
     }
 
@@ -213,7 +237,7 @@ public class PersistentTable implements Table {
         if (metadata.getDataFile().exists()) {
             metadata.getDataFile().delete();
         }
-        metadata.setStatus(TableStatus.DELETE);
+        metadata.setStatus(TableStatus.DROP);
     }
 
     @Override

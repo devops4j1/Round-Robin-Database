@@ -19,30 +19,34 @@ public class RoundRobinTableMetadataProtocolV1Test {
     @Test
     public void testConvert() throws Exception {
         RoundRobinTableMetadataProtocolV1 format = new RoundRobinTableMetadataProtocolV1();
+        format.setMessageType(MessageType.RESPONSE);
         format.setTableName("table1");
         format.setColumns(new String[]{"request", "response"});
         format.setFileName("D://table1.rrd");
         format.setDataSize(100);
-        format.setStatus(TableStatus.NORMAL.ordinal());
+        format.setStatus(TableStatus.NORMAL);
         ByteBuffer buffer = format.convert();
 //        System.out.println(HexUtils.toDisplayString(buffer.array()));
         buffer.flip();
         int size = buffer.getInt();
         int type = buffer.getInt();
         int version = buffer.getInt();
+        int messageType = buffer.getInt();
+        Assert.assertEquals(MessageType.RESPONSE.getCode(), messageType);
         RoundRobinTableMetadataProtocolV1 format2 = new RoundRobinTableMetadataProtocolV1();
         format2.convert(buffer);
         Assert.assertEquals("table1", format2.getTableName());
         Assert.assertEquals("request", format2.getColumns()[0]);
         Assert.assertEquals("response", format2.getColumns()[1]);
         Assert.assertEquals(100, format2.getDataSize());
-        Assert.assertEquals(0, format2.getStatus());
+        Assert.assertEquals(TableStatus.NORMAL, format2.getStatus());
     }
 
     @Test
     public void testConvert1() throws Exception {
         RoundRobinTableMetadataProtocolV1 format = new RoundRobinTableMetadataProtocolV1();
         format.setTableName("table1");
+        format.setMessageType(MessageType.REQUEST);
 //        format.setColumns(new String[]{"request", "response"});
 //        format.setFileName("D://table1.rrd");
 //        format.setDataSize(100);
@@ -53,6 +57,8 @@ public class RoundRobinTableMetadataProtocolV1Test {
         int size = buffer.getInt();
         int type = buffer.getInt();
         int version = buffer.getInt();
+        int messageType = buffer.getInt();
+        Assert.assertEquals(MessageType.REQUEST.getCode(), messageType);
         RoundRobinTableMetadataProtocolV1 format2 = new RoundRobinTableMetadataProtocolV1();
         format2.convert(buffer);
         Assert.assertEquals("table1", format2.getTableName());

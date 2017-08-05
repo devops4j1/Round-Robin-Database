@@ -8,8 +8,6 @@ import org.wing4j.rrd.utils.HexUtils;
 
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.*;
-
 /**
  * Created by 面试1 on 2017/8/4.
  */
@@ -21,15 +19,20 @@ public class RoundRobinMergeProtocolV1Test {
         RoundRobinConnection connection = database.open();
         RoundRobinView view = connection.slice("mo9", 1* 60 ,1 * 60, "request");
         RoundRobinMergeProtocolV1 format = new RoundRobinMergeProtocolV1();
+        format.setMessageType(MessageType.REQUEST);
         format.setData(view.getData());
         format.setColumns(new String[]{"request"});
-        format.setCurrent(view.getTime());
+        format.setPos(view.getTime());
         format.setMergeType(MergeType.ADD);
         format.setTableName("mo");
         ByteBuffer buffer = format.convert();
         System.out.println(HexUtils.toDisplayString(buffer.array()));
         buffer.flip();
         int size = buffer.getInt();
+        int type = buffer.getInt();
+        int version = buffer.getInt();
+        int messageType = buffer.getInt();
+        Assert.assertEquals(MessageType.REQUEST.getCode(), messageType);
         RoundRobinMergeProtocolV1 format2 = new RoundRobinMergeProtocolV1();
         format2.convert(buffer);
         Assert.assertEquals("mo", format2.getTableName());
@@ -38,12 +41,25 @@ public class RoundRobinMergeProtocolV1Test {
 
     @Test
     public void testWrite() throws Exception {
-        RoundRobinConfig config = new RoundRobinConfig();
-        RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
-        RoundRobinConnection connection = database.open();
-        RoundRobinView view = connection.slice("mo9", 1* 60 , 1 * 60, "request");
-        RoundRobinProtocol format = new RoundRobinMergeProtocolV1();
+        RoundRobinMergeProtocolV1 format = new RoundRobinMergeProtocolV1();
+        format.setMessageType(MessageType.RESPONSE);
+        format.setColumns(new String[]{"request", "response"});
+        format.setPos(60);
+        format.setMergeType(MergeType.ADD);
+        format.setTableName("mo");
         ByteBuffer buffer = format.convert();
         System.out.println(HexUtils.toDisplayString(buffer.array()));
+        buffer.flip();
+        int size = buffer.getInt();
+        int type = buffer.getInt();
+        int version = buffer.getInt();
+        int messageType = buffer.getInt();
+        Assert.assertEquals(MessageType.RESPONSE.getCode(), messageType);
+        RoundRobinMergeProtocolV1 format2 = new RoundRobinMergeProtocolV1();
+        format2.convert(buffer);
+        Assert.assertEquals("mo", format2.getTableName());
+        Assert.assertEquals("request", format2.getColumns()[0]);
+        Assert.assertEquals("response", format2.getColumns()[1]);
+        Assert.assertEquals(60, format2.getPos());
     }
 }

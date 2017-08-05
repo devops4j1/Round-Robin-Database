@@ -44,7 +44,7 @@ public class RoundRobinListener implements Runnable {
         } catch (IOException e) {
             LOGGER.warning("listen port " + config.getListenPort() + " already use!");
         }
-        listener.accept(listener, new RoundRobinAcceptHandler(server));
+        listener.accept(listener, new RoundRobinAcceptHandler(server.getDatabase()));
         LOGGER.info("Round Robin Database startup finish...");
     }
 }

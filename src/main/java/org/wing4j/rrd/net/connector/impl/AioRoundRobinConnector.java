@@ -2,12 +2,13 @@ package org.wing4j.rrd.net.connector.impl;
 
 import lombok.Data;
 import lombok.ToString;
-import org.wing4j.rrd.MergeType;
-import org.wing4j.rrd.RoundRobinView;
+import org.wing4j.rrd.*;
 import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
+import org.wing4j.rrd.net.protocol.RoundRobinIncreaseProtocolV1;
 import org.wing4j.rrd.net.protocol.RoundRobinMergeProtocolV1;
 import org.wing4j.rrd.net.protocol.RoundRobinTableMetadataProtocolV1;
+import org.wing4j.rrd.utils.HexUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -29,83 +30,54 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
     ExecutorService executor;
     AsynchronousSocketChannel socketChannel;
     AsynchronousChannelGroup asyncChannelGroup;
+    RoundRobinDatabase database;
 
-    static class ConnectHandler implements CompletionHandler<Void, AsynchronousSocketChannel>{
-        ByteBuffer buffer;
-        RoundRobinConnector connector;
-
-        public ConnectHandler(ByteBuffer buffer, RoundRobinConnector connector) {
-            this.buffer = buffer;
-            this.connector = connector;
-        }
-
-        @Override
-        public void completed(Void result, AsynchronousSocketChannel connector) {
-            buffer.flip();
-            Future writeResult = connector.write(buffer);
-            try {
-                writeResult.get(30, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (TimeoutException e) {
-                e.printStackTrace();
-            }
-            ByteBuffer readBuffer = ByteBuffer.allocate(1024);
-            Future readResult = connector.read(readBuffer);
-            try {
-                readResult.get(30, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (TimeoutException e) {
-                e.printStackTrace();
-            }
-            readBuffer.flip();
-            System.out.println(new String(readBuffer.array()).trim());
-        }
-
-        @Override
-        public void failed(Throwable exc, AsynchronousSocketChannel connector) {
-            exc.printStackTrace();
-        }
-    }
-    public AioRoundRobinConnector(String address, int port) throws IOException {
+    public AioRoundRobinConnector(String address, int port, RoundRobinDatabase database) throws IOException {
         this.address = address;
         this.port = port;
+        this.database = database;
         this.executor = Executors.newCachedThreadPool();
         this.asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(executor);
     }
 
     @Override
     public TableMetadata getTableMetadata(String tableName) throws IOException {
-        AsynchronousSocketChannel socketChannel = null;
+        RoundRobinTableMetadataProtocolV1 protocol = new RoundRobinTableMetadataProtocolV1();
+        protocol.setTableName(tableName);
+        ByteBuffer buffer = protocol.convert();
+        buffer = syncCall(buffer);
+        buffer.flip();
+        protocol.convert(buffer);
+        TableMetadata metadata = new TableMetadata(null, FormatType.BIN, protocol.getTableName(), protocol.getColumns(), protocol.getDataSize(), protocol.getStatus());
+        return metadata;
+    }
+
+    @Override
+    public long increase(String tableName, String column, int pos, int i) throws IOException {
         if (socketChannel == null || !socketChannel.isOpen()) {
             socketChannel = AsynchronousSocketChannel.open(asyncChannelGroup);
             socketChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
             socketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             socketChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
         }
-        RoundRobinTableMetadataProtocolV1 protocol = new RoundRobinTableMetadataProtocolV1();
+        RoundRobinIncreaseProtocolV1 protocol = new RoundRobinIncreaseProtocolV1();
         protocol.setTableName(tableName);
+        protocol.setColumn(column);
+        protocol.setValue(i);
         ByteBuffer buffer = protocol.convert();
-        socketChannel.connect(new InetSocketAddress(address, port), socketChannel, new ConnectHandler(buffer, this));
-        return null;
+        buffer = syncCall(buffer);
+        buffer.flip();
+        protocol.convert(buffer);
+        return protocol.getNewValue();
     }
 
-    @Override
-    public long increase(String tableName, String column, int i) throws IOException {
-        return 0;
-    }
     @Override
     public RoundRobinView slice(int pos, int size, String tableName, String... columns) throws IOException {
         return null;
     }
 
     @Override
-    public RoundRobinConnector merge(String tableName, int time, RoundRobinView view, MergeType mergeType) throws IOException {
+    public RoundRobinView merge(String tableName, int pos, RoundRobinView view, MergeType mergeType) throws IOException {
         AsynchronousSocketChannel socketChannel = null;
         if (socketChannel == null || !socketChannel.isOpen()) {
             socketChannel = AsynchronousSocketChannel.open(asyncChannelGroup);
@@ -115,37 +87,56 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
         }
         RoundRobinMergeProtocolV1 protocol = new RoundRobinMergeProtocolV1();
         protocol.setData(view.getData());
+        protocol.setSize(view.getData().length);
         protocol.setColumns(view.getMetadata().getColumns());
-        protocol.setCurrent(time);
+        protocol.setPos(pos);
         protocol.setMergeType(mergeType);
         protocol.setTableName(tableName);
-        ByteBuffer buffer = protocol.convert();
-        socketChannel.connect(new InetSocketAddress(address, port), socketChannel, new ConnectHandler(buffer, this));
-        return this;
+        final ByteBuffer buffer = protocol.convert();
+        socketChannel.connect(new InetSocketAddress(address, port), socketChannel, new CompletionHandler<Void, AsynchronousSocketChannel>() {
+
+            @Override
+            public void completed(Void result, AsynchronousSocketChannel connector) {
+                buffer.flip();
+                Future writeResult = connector.write(buffer);
+                try {
+                    writeResult.get(30, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("------------------------------------------------------------------------");
+                buffer.clear();
+                Future readResult = connector.read(buffer);
+                try {
+                    readResult.get(30, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
+                }
+                buffer.flip();
+                System.out.println(HexUtils.toDisplayString(buffer.array()));
+            }
+
+            @Override
+            public void failed(Throwable exc, AsynchronousSocketChannel attachment) {
+
+            }
+        });
+        protocol.convert(buffer);
+        System.out.println(protocol);
+        return null;
     }
 
-    @Override
-    public RoundRobinConnector merge(String tableName, RoundRobinView view, MergeType mergeType) throws IOException {
-        AsynchronousSocketChannel socketChannel = null;
-        if (socketChannel == null || !socketChannel.isOpen()) {
-            socketChannel = AsynchronousSocketChannel.open(asyncChannelGroup);
-            socketChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-            socketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-            socketChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-        }
-        RoundRobinMergeProtocolV1 protocol = new RoundRobinMergeProtocolV1();
-        protocol.setData(view.getData());
-        protocol.setColumns(view.getMetadata().getColumns());
-        protocol.setCurrent(view.getTime());
-        protocol.setMergeType(mergeType);
-        protocol.setTableName(tableName);
-        ByteBuffer buffer = protocol.convert();
-        socketChannel.connect(new InetSocketAddress(address, port), socketChannel, new ConnectHandler(buffer, this));
-        return this;
-    }
 
     @Override
-    public RoundRobinConnector expand(String tableName, String... columns) throws IOException {
+    public TableMetadata expand(String tableName, String... columns) throws IOException {
         return null;
     }
 
@@ -157,5 +148,41 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
     @Override
     public RoundRobinConnector dropTable(String... tableNames) throws IOException {
         return null;
+    }
+
+    /**
+     * 同步发送信息
+     * @param buffer
+     * @return
+     */
+    ByteBuffer syncCall(ByteBuffer buffer){
+        Future connectFuture = socketChannel.connect(new InetSocketAddress(address, port));
+        try {
+            connectFuture.get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        while (buffer.hasRemaining()){
+            Future writeFuture = socketChannel.write(buffer);
+            try {
+                writeFuture.get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        buffer.clear();
+        Future readFuture = socketChannel.read(buffer);
+        try {
+            readFuture.get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        return buffer;
     }
 }

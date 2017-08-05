@@ -12,10 +12,12 @@ import java.nio.ByteBuffer;
  */
 @Data
 public class RoundRobinIncreaseProtocolV1 extends BaseRoundRobinProtocol {
-    String tableName;
     int version = 1;
     ProtocolType protocolType = ProtocolType.INCREASE;
+    MessageType messageType = MessageType.REQUEST;
+    String tableName;
     String column;
+    int pos;
     int value;
     long newValue;
 
@@ -36,12 +38,23 @@ public class RoundRobinIncreaseProtocolV1 extends BaseRoundRobinProtocol {
         if (DebugConfig.DEBUG) {
             System.out.println("version:" + version);
         }
+        //报文类型
+        buffer.putInt(messageType.getCode());
+        if (DebugConfig.DEBUG) {
+            System.out.println("message Type:" + messageType);
+        }
+        //应答编码
+        buffer = put(buffer, code);
+        //应答描述
+        buffer = put(buffer, desc);
         //表名长度
         //表名
         buffer = put(buffer, tableName);
         //自增字段名长度
         //自增字段名
         buffer = put(buffer, column);
+        //偏移地址
+        buffer.putInt(pos);
         //自增量
         buffer.putInt(value);
         if (DebugConfig.DEBUG) {
@@ -70,12 +83,19 @@ public class RoundRobinIncreaseProtocolV1 extends BaseRoundRobinProtocol {
         //报文长度
         //命令
         //版本号
+        //报文类型
+        //应答编码
+        this.code = buffer.getShort();
+        //应答描述
+        this.desc = get(buffer);
         //表名长度
         //表名
         this.tableName = get(buffer);
         //自增字段名长度
         //自增字段名
         this.column = get(buffer);
+        //偏移地址
+        this.pos = buffer.getInt();
         //自增量
         this.value = buffer.getInt();
         if (DebugConfig.DEBUG) {

@@ -30,8 +30,9 @@ public class ReadHandler implements CompletionHandler<Integer, ByteBuffer> {
             try {
                 calrResult = Calculator.cal(expression).toString();
             } catch (Exception e) {
-                calrResult = "计算错误：" + e.getMessage();
+                calrResult =  "计算错误：" + e.getMessage();
             }
+            System.out.println(Thread.currentThread() + "-------------");
             //向客户端发送消息
             doWrite(calrResult);
         } catch (UnsupportedEncodingException e) {

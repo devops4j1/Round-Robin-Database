@@ -1,6 +1,7 @@
 package org.wing4j.rrd.net.protocol;
 
 import lombok.Data;
+import org.wing4j.rrd.core.TableStatus;
 import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.utils.HexUtils;
 
@@ -12,13 +13,14 @@ import java.nio.ByteBuffer;
  */
 @Data
 public class RoundRobinTableMetadataProtocolV1 extends BaseRoundRobinProtocol {
-    String tableName;
     int version = 1;
     ProtocolType protocolType = ProtocolType.TABLE_METADATA;
+    MessageType messageType = MessageType.REQUEST;
+    String tableName;
     String fileName;
     String[] columns = new String[0];
     int dataSize;
-    int status;
+    TableStatus status = TableStatus.UNKNOWN;
 
     @Override
     public ByteBuffer convert() {
@@ -37,17 +39,18 @@ public class RoundRobinTableMetadataProtocolV1 extends BaseRoundRobinProtocol {
         if (DebugConfig.DEBUG) {
             System.out.println("version:" + version);
         }
+        //报文类型
+        buffer.putInt(messageType.getCode());
+        if (DebugConfig.DEBUG) {
+            System.out.println("message Type:" + messageType);
+        }
+        //应答编码
+        buffer = put(buffer, code);
+        //应答描述
+        buffer = put(buffer, desc);
         //表名长度
         //表名
         buffer = put(buffer, tableName);
-        //持久化文件名长度
-        //持久化文件名
-        buffer = put(buffer, fileName);
-        //数据行数
-        buffer.putInt(dataSize);
-        if (DebugConfig.DEBUG) {
-            System.out.println("data size:" + dataSize);
-        }
         //字段数
         buffer.putInt(columns.length);
         if (DebugConfig.DEBUG) {
@@ -58,8 +61,16 @@ public class RoundRobinTableMetadataProtocolV1 extends BaseRoundRobinProtocol {
             String column = columns[i];
             buffer = put(buffer, column);
         }
+        //数据行数
+        buffer.putInt(dataSize);
+        if (DebugConfig.DEBUG) {
+            System.out.println("data size:" + dataSize);
+        }
+        //持久化文件名长度
+        //持久化文件名
+        buffer = put(buffer, fileName);
         //表状态
-        buffer.putInt(status);
+        buffer.putInt(status.getCode());
         if (DebugConfig.DEBUG) {
             System.out.println("status:" + status);
         }
@@ -81,17 +92,14 @@ public class RoundRobinTableMetadataProtocolV1 extends BaseRoundRobinProtocol {
         //报文长度
         //命令
         //版本号
+        //报文类型
+        //应答编码
+        this.code = buffer.getShort();
+        //应答描述
+        this.desc = get(buffer);
         //表名长度
         //表名
         this.tableName = get(buffer);
-        //持久化文件名长度
-        //持久化文件名
-        this.fileName = get(buffer);
-        //数据行数
-        this.dataSize = buffer.getInt();
-        if (DebugConfig.DEBUG) {
-            System.out.println("data size:" + dataSize);
-        }
         //字段数
         int columnNum = buffer.getInt();
         this.columns = new String[columnNum];
@@ -99,7 +107,15 @@ public class RoundRobinTableMetadataProtocolV1 extends BaseRoundRobinProtocol {
         for (int i = 0; i < columnNum; i++) {
             this.columns[i] = get(buffer);
         }
+        //数据行数
+        this.dataSize = buffer.getInt();
+        if (DebugConfig.DEBUG) {
+            System.out.println("data size:" + dataSize);
+        }
+        //持久化文件名长度
+        //持久化文件名
+        this.fileName = get(buffer);
         //表状态
-        this.status = buffer.getInt();
+        this.status = TableStatus.valueOfCode(buffer.getInt());
     }
 }

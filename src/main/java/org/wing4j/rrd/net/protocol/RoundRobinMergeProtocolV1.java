@@ -4,211 +4,167 @@ import lombok.Data;
 import org.wing4j.rrd.MergeType;
 import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.utils.HexUtils;
+import org.wing4j.rrd.utils.MessageFormatter;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.logging.Logger;
 
 /**
  * Created by wing4j on 2017/8/2.
  * 合并视图协议
  */
 @Data
-public class RoundRobinMergeProtocolV1 implements RoundRobinProtocol {
-    int version = 1;
+public class RoundRobinMergeProtocolV1 extends BaseRoundRobinProtocol {
+    static Logger LOGGER = Logger.getLogger(RoundRobinMergeProtocolV1.class.getName());
     ProtocolType protocolType = ProtocolType.MERGE;
-    static final boolean DEBUG = false;
+    int version = 1;
+    MessageType messageType = MessageType.REQUEST;
     String[] columns = null;
-    long[][] data = null;
+    long[][] data = new long[0][0];
     MergeType mergeType;
     String tableName;
-    int current = 0;
-
-    String fill(String in, boolean rightFillStyle, char fillChar, int len) {
-        String str = in;
-        while (str.length() < len) {
-            str = rightFillStyle ? str + fillChar : fillChar + str;
-        }
-        return str;
-    }
+    int pos = 0;
+    int size = 0;
 
     @Override
     public ByteBuffer convert() {
-        ByteBuffer buffer = ByteBuffer.allocate(1024);
-        byte[] tableNameBytes = new byte[0];
-        try {
-            tableNameBytes = tableName.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        int tableNameLen = tableNameBytes.length;
-        int headerMaxLen = 0;
-        String[] columns0 = new String[columns.length];
-        for (int i = 0; i < columns0.length; i++) {
-            columns0[i] = columns[i];
-            if (columns0[i].length() > headerMaxLen) {
-                headerMaxLen = columns0[i].length();
-            }
-        }
-        int fileSize = 0;
         //网络传输协议
-        fileSize += 4;//报文长度
-        fileSize += 4;//命令
-        fileSize += 4;//文件版本号
-        fileSize += 4;//表名长度
-        fileSize += tableNameLen;//表名
-        fileSize += 4;//合并模式
-        fileSize += 4;//文件时间指针
-        fileSize += 4;//字段数量
-        fileSize += 4;//字段长度
-        fileSize += headerMaxLen * columns0.length * 4;//字段定义
-        fileSize += columns0.length * data.length * 8;//数据区
-        if (buffer.remaining() < fileSize) {
-            //扩容
-            ByteBuffer buffer1 = ByteBuffer.allocate(buffer.limit() + fileSize);
-            buffer.flip();
-            buffer1.put(buffer);
-            buffer = buffer1;
-        }
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        //报文长度
         int lengthPos = buffer.position();
-        //int 整个报文长度
         buffer.putInt(0);
         //命令
         buffer.putInt(protocolType.getCode());
         if (DebugConfig.DEBUG) {
-            System.out.println("protocol Type:" + protocolType);
+            LOGGER.info(MessageFormatter.format("protocol Type:{}", protocolType));
         }
         //版本号
         buffer.putInt(version);
-        if (DEBUG) {
-            System.out.println("version:" + version);
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("version:{}", version));
         }
-        //int 表名长度
-        buffer.putInt(tableNameLen);
-        //String 表名
-        buffer.put(tableNameBytes);
-        //int 合并模式
-        buffer.putInt(mergeType.ordinal());
-        //int 合并到的截至时间点
-        buffer.putInt(current);
-        if (DEBUG) {
-            System.out.println("current:" + current);
+        //报文类型
+        buffer.putInt(messageType.getCode());
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("message Type:{}", messageType));
         }
-        buffer.putInt(columns0.length);
-        if (DEBUG) {
-            System.out.println("head size:" + columns0.length);
+        //应答编码
+        buffer = put(buffer, code);
+        //应答描述
+        buffer = put(buffer, desc);
+        //表名长度
+        //表名
+        buffer = put(buffer, this.tableName);
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("tableName:{}", this.tableName));
         }
-        buffer.putInt(headerMaxLen);
-        if (DEBUG) {
-            System.out.println("head length:" + headerMaxLen);
+        ///字段数
+        buffer = put(buffer, this.columns.length);
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("column num:{}", this.columns.length));
         }
-        for (int i = 0; i < columns0.length; i++) {
-            columns0[i] = fill(columns0[i], true, ' ', headerMaxLen);
-            char[] chars = columns0[i].toCharArray();
-            for (char c : chars) {
-                buffer.putChar(c);
+        //字段名
+        for (int i = 0; i < this.columns.length; i++) {
+            String column = this.columns[i];
+            buffer = put(buffer, column);
+        }
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("columns:{}", Arrays.toString(columns)));
+        }
+        //偏移地址
+        buffer = put(buffer, this.pos);
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("pos:{}", pos));
+        }
+        //合并类型
+        buffer = put(buffer, this.mergeType.getCode());
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("merge Type:{}", mergeType));
+        }
+        //记录条数
+        buffer = put(buffer, this.size);
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("size:{}", size));
+        }
+        //数据
+        for (int i = 0; i < this.size; i++) {
+            for (int j = 0; j < this.columns.length; j++) {
+                buffer = put(buffer, this.data[i][j]);
             }
-            if (DEBUG) {
-                System.out.println("columns:" + columns0[i]);
-            }
         }
-        buffer.putInt(columns0.length);
-        if (DEBUG) {
-            System.out.println("head size:" + columns0.length);
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("data:{}", Arrays.toString(data)));
         }
-        buffer.putInt(data.length);
-        if (DEBUG) {
-            System.out.println("data size:" + data.length);
-        }
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < columns0.length; j++) {
-                buffer.putLong(data[i][j]);
-            }
-        }
-        if (DEBUG) {
-            buffer.flip();
-            byte[] data11 = new byte[buffer.limit()];
-            buffer.get(data11);
-            System.out.println(HexUtils.toDisplayString(data11));
-        }
-        //将报文总长度回填到第一个字节
+        //结束
+        //回填,将报文总长度回填到第一个字节
         buffer.putInt(lengthPos, buffer.position() - 4);
-        if (DEBUG) {
-            System.out.println(HexUtils.toDisplayString(buffer.array()));
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("报文总长度:{}", buffer.position() - 4));
         }
         return buffer;
     }
 
     @Override
     public void convert(ByteBuffer buffer) {
-        if (DEBUG) {
+        if (DebugConfig.DEBUG) {
             System.out.println(HexUtils.toDisplayString(buffer.array()));
         }
         //网络传输协议
         //报文长度
         //命令
         //版本号
+        //报文类型
+        //应答编码
+        this.code = buffer.getShort();
+        //应答描述
+        this.desc = get(buffer);
         //表名长度
-        int tableNameLen = buffer.getInt();
-        if (DEBUG) {
-            System.out.println("tableNameLength:" + tableNameLen);
-        }
         //表名
-        byte[] tableNameBytes = new byte[tableNameLen];
-        buffer.get(tableNameBytes);
-        String tableName = new String(tableNameBytes);
-        if (DEBUG) {
-            System.out.println("tableName:" + tableName);
+        this.tableName = get(buffer);
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("tableName:{}", this.tableName));
         }
-        //合并模式
-        int type = buffer.getInt();
-        this.mergeType = MergeType.values()[type];
-
-        //文件时间指针
-        int current0 = buffer.getInt();
-        if (DEBUG) {
-            System.out.println("current:" + current0);
+        //字段数目
+        int columnNum = buffer.getInt();
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("column num:{}", columnNum));
         }
-
-        //字段数量
-        int headerLen = buffer.getInt();
-        if (DEBUG) {
-            System.out.println("head size:" + headerLen);
+        this.columns = new String[columnNum];
+        //字段
+        for (int i = 0; i < columnNum; i++) {
+            columns[i] = get(buffer);
         }
-        //字段长度
-        int headerMaxLen = buffer.getInt();
-        if (DEBUG) {
-            System.out.println("head length:" + headerMaxLen);
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("columns:{}", Arrays.toString(columns)));
         }
-        //字段定义
-        String[] columns0 = new String[headerLen];
-        for (int i = 0; i < columns0.length; i++) {
-            char[] chars = new char[headerMaxLen];
-            for (int j = 0; j < chars.length; j++) {
-                chars[j] = buffer.getChar();
-            }
-            columns0[i] = new String(chars).trim();
-            if (DEBUG) {
-                System.out.println("columns:" + columns0[i]);
-            }
+        //偏移地址
+        this.pos = buffer.getInt();
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("pos:{}", pos));
         }
-        //数据区
-        int dataLen0 = buffer.getInt();
-        if (DEBUG) {
-            System.out.println("head size:" + dataLen0);
+        //合并类型
+        this.mergeType = MergeType.valueOfCode(buffer.getInt());
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("merge Type:{}", mergeType));
         }
-        int dataSize0 = buffer.getInt();
-        if (DEBUG) {
-            System.out.println("data size:" + dataSize0);
+        //记录条数
+        this.size = buffer.getInt();
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("size:{}", size));
         }
-        long[][] data0 = new long[dataSize0][dataLen0];
-        for (int i = 0; i < data0.length; i++) {
-            for (int j = 0; j < columns0.length; j++) {
-                data0[i][j] = buffer.getLong();
+        this.data = new long[this.size][columnNum];
+        //数据
+        for (int i = 0; i < this.size; i++) {
+            for (int j = 0; j < columnNum; j++) {
+                this.data[i][j] = buffer.getLong();
             }
         }
-        this.tableName = tableName;
-        this.current = current0;
-        this.columns = columns0;
-        this.data = data0;
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("data:{}", Arrays.toString(data)));
+        }
+        if (DebugConfig.DEBUG) {
+            LOGGER.info(MessageFormatter.format("报文总长度:{}", buffer.position() - 4));
+        }
     }
 }

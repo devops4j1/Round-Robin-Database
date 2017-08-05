@@ -1,31 +1,15 @@
-package org.wing4j.rrd.net.protocol;
+package org.wing4j.rrd.core.format;
 
-import lombok.Data;
+import org.wing4j.rrd.RoundRobinFormat;
 import org.wing4j.rrd.RoundRobinRuntimeException;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 /**
- * Created by wing4j on 2017/8/4.
+ * Created by wing4j on 2017/8/5.
  */
-@Data
-public abstract class BaseRoundRobinProtocol implements RoundRobinProtocol {
-    protected short code = RspCode.SUCCESS.getCode();
-    protected String desc = RspCode.SUCCESS.getDesc();
-
-    protected ByteBuffer put(ByteBuffer buffer, short data) {
-        if (buffer.remaining() < 4) {
-            //扩容
-            ByteBuffer buffer1 = ByteBuffer.allocate(buffer.limit() + 1024);
-            buffer.flip();
-            buffer1.put(buffer);
-            buffer = buffer1;
-        }
-        buffer.putShort(data);
-        return buffer;
-    }
-
+public abstract class BaseRoundRobinFormat implements RoundRobinFormat{
     protected ByteBuffer put(ByteBuffer buffer, int data) {
         if (buffer.remaining() < 4) {
             //扩容

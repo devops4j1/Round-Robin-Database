@@ -26,6 +26,8 @@ public class RoundRobinIncreaseProtocolV1Test {
         int size = buffer.getInt();
         int type = buffer.getInt();
         int version = buffer.getInt();
+        int messageType = buffer.getInt();
+        Assert.assertEquals(MessageType.REQUEST.getCode(), messageType);
         RoundRobinIncreaseProtocolV1 format2 = new RoundRobinIncreaseProtocolV1();
         format2.convert(buffer);
         Assert.assertEquals("table1", format2.getTableName());
@@ -47,6 +49,8 @@ public class RoundRobinIncreaseProtocolV1Test {
         int size = buffer.getInt();
         int type = buffer.getInt();
         int version = buffer.getInt();
+        int messageType = buffer.getInt();
+        Assert.assertEquals(MessageType.REQUEST.getCode(), messageType);
         RoundRobinIncreaseProtocolV1 format2 = new RoundRobinIncreaseProtocolV1();
         format2.convert(buffer);
         Assert.assertEquals("table1", format2.getTableName());

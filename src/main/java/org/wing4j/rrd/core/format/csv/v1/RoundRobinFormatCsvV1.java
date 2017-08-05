@@ -27,6 +27,10 @@ public class RoundRobinFormatCsvV1 implements RoundRobinFormat {
     public RoundRobinFormatCsvV1() {
     }
 
+    public RoundRobinFormatCsvV1(ByteBuffer buffer) {
+        read(buffer);
+    }
+
     public RoundRobinFormatCsvV1(String tableName, RoundRobinView view){
         this(tableName, view.getMetadata().getColumns(), view.getData(), view.getTime());
     }

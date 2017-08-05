@@ -1,12 +1,9 @@
 package org.wing4j.rrd.server.aio;
 
-import org.wing4j.rrd.FormatType;
-import org.wing4j.rrd.RoundRobinConnection;
-import org.wing4j.rrd.RoundRobinView;
+import org.wing4j.rrd.*;
 import org.wing4j.rrd.core.Table;
 import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.net.protocol.*;
-import org.wing4j.rrd.server.RoundRobinServer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -23,19 +20,12 @@ import java.util.logging.Logger;
  */
 public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuffer> {
     static Logger LOGGER = Logger.getLogger(RoundRobinReadHandler.class.getName());
-    RoundRobinServer server;
     AsynchronousSocketChannel channel;
-    RoundRobinConnection connection = null;
+    RoundRobinDatabase database;
 
-    public RoundRobinReadHandler(RoundRobinServer server, AsynchronousSocketChannel channel) {
-        this.server = server;
+    public RoundRobinReadHandler(AsynchronousSocketChannel channel, RoundRobinDatabase database) {
         this.channel = channel;
-        try {
-            //使用数据库本地数据库打开连接
-            this.connection = server.getDatabase().open();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.database = database;
     }
 
     static final boolean DEBUG = true;
@@ -51,12 +41,10 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
         attachment = ByteBuffer.allocate(size);
         Future future = channel.read(attachment);
         try {
-            future.get(1, TimeUnit.SECONDS);
+            future.get();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
             e.printStackTrace();
         }
         attachment.flip();
@@ -72,84 +60,79 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
         if(DebugConfig.DEBUG){
             System.out.println("命令:" + protocolType.getDesc() + "." + version);
         }
+        int messageType = attachment.getInt();
+        if(DebugConfig.DEBUG){
+            System.out.println("报文类型:" + MessageType.valueOfCode(messageType));
+        }
        if(protocolType == ProtocolType.TABLE_METADATA && version == 1){//获取数据数量
            //读取到数据流
            RoundRobinTableMetadataProtocolV1 protocol = new RoundRobinTableMetadataProtocolV1();
            protocol.convert(attachment);
            try {
                //进行合并视图操作
-               Table table = server.getDatabase().getTable(protocol.getTableName());
+               Table table = this.database.getTable(protocol.getTableName());
                protocol.setTableName(table.getMetadata().getName());
                protocol.setDataSize(table.getSize());
-               protocol.setStatus(table.getMetadata().getStatus().ordinal());
+               protocol.setStatus(table.getMetadata().getStatus());
                protocol.setColumns(table.getMetadata().getColumns());
            }finally {
-               if(connection != null){
-                   try {
-                       connection.close();
-                   } catch (IOException e) {
-                       e.printStackTrace();
-                   }
-               }
            }
+           protocol.setMessageType(MessageType.RESPONSE);
            //写应答数据
            ByteBuffer resultBuffer = protocol.convert();
            resultBuffer.flip();
            //注册异步写入返回信息
-           channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(server, channel));
-           return;
+           channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.database));
        }else if(protocolType == ProtocolType.SLICE && version == 1){
            //读取到数据流
            RoundRobinSliceProtocolV1 protocol = new RoundRobinSliceProtocolV1();
            protocol.convert(attachment);
            try {
                //进行合并视图操作
-               RoundRobinConnection connection = server.getDatabase().open();
+               RoundRobinConnection connection = this.database.open();
                RoundRobinView view = connection.slice(protocol.getTableName(), protocol.getPos(), protocol.getSize(), protocol.getColumns());
+               protocol.setPos(view.getTime());
+               protocol.setSize(view.getData().length);
                protocol.setData(view.getData());
+               protocol.setColumns(view.getMetadata().getColumns());
+               protocol.setMessageType(MessageType.RESPONSE);
            } catch (IOException e) {
                e.printStackTrace();
            } finally {
-               if(connection != null){
-                   try {
-                       connection.close();
-                   } catch (IOException e) {
-                       e.printStackTrace();
-                   }
-               }
            }
            //写应答数据
            ByteBuffer resultBuffer = protocol.convert();
            resultBuffer.flip();
            //注册异步写入返回信息
-           channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(server, channel));
+           channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.database));
            return;
        }else if(protocolType == ProtocolType.QUERY_PAGE && version == 1){
        }else if(protocolType == ProtocolType.INCREASE && version == 1){
            //读取到数据流
            RoundRobinIncreaseProtocolV1 protocol = new RoundRobinIncreaseProtocolV1();
            protocol.convert(attachment);
+           RoundRobinConnection connection = null;
            try {
                //进行合并视图操作
-               RoundRobinConnection connection = server.getDatabase().open();
-               long i = connection.increase(protocol.getTableName(), protocol.getColumn());
+               connection = this.database.open();
+               long i = connection.increase(protocol.getTableName(), protocol.getColumn(), protocol.getPos(), protocol.getValue());
+               connection.close();
                protocol.setNewValue(i);
            } catch (IOException e) {
                e.printStackTrace();
            } finally {
-               if(connection != null){
-                   try {
-                       connection.close();
-                   } catch (IOException e) {
-                       e.printStackTrace();
-                   }
+               try {
+                   connection.close();
+               } catch (IOException e) {
+                   e.printStackTrace();
                }
            }
+           protocol.setMessageType(MessageType.RESPONSE);
            //写应答数据
            ByteBuffer resultBuffer = protocol.convert();
            resultBuffer.flip();
            //注册异步写入返回信息
-           channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(server, channel));
+           channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.database));
            return;
        }else if(protocolType == ProtocolType.CREATE_TABLE && version == 1){
            //读取到数据流
@@ -157,24 +140,18 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
            protocol.convert(attachment);
            try {
                //进行合并视图操作
-               RoundRobinConnection connection = server.getDatabase().open();
+               RoundRobinConnection connection = this.database.open();
                connection.createTable(protocol.getTableName(), protocol.getColumns());
+               connection.close();
            } catch (IOException e) {
                e.printStackTrace();
            } finally {
-               if(connection != null){
-                   try {
-                       connection.close();
-                   } catch (IOException e) {
-                       e.printStackTrace();
-                   }
-               }
            }
            //写应答数据
            ByteBuffer resultBuffer = protocol.convert();
            resultBuffer.flip();
            //注册异步写入返回信息
-           channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(server, channel));
+           channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.database));
            return;
        }else if(protocolType == ProtocolType.EXPAND && version == 1){
            //读取到数据流
@@ -182,54 +159,49 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
            protocol.convert(attachment);
            try {
                //进行合并视图操作
-               Table table = server.getDatabase().getTable(protocol.getTableName());
-               table.expand(protocol.getColumns());
+               RoundRobinConnection connection = this.database.open();
+               Table table = connection.expand(protocol.getTableName(), protocol.getColumns());
+               connection.close();
+               protocol.setColumns(table.getMetadata().getColumns());
+               protocol.setTableName(table.getMetadata().getName());
+           } catch (IOException e) {
+               e.printStackTrace();
            } finally {
-               if(connection != null){
-                   try {
-                       connection.close();
-                   } catch (IOException e) {
-                       e.printStackTrace();
-                   }
-               }
            }
+           protocol.setMessageType(MessageType.RESPONSE);
            //写应答数据
            ByteBuffer resultBuffer = protocol.convert();
            resultBuffer.flip();
            //注册异步写入返回信息
-           channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(server, channel));
+           channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.database));
            return;
        }else if(protocolType == ProtocolType.MERGE && version == 1){
            //读取到数据流，构建格式对象
            RoundRobinMergeProtocolV1 protocol = new RoundRobinMergeProtocolV1();
            //通过格式对象，构建视图切片对象
            protocol.convert(attachment);
-           RoundRobinView view = new RoundRobinView(protocol.getColumns(), protocol.getCurrent(), protocol.getData());
+           RoundRobinView view = new RoundRobinView(protocol.getColumns(), protocol.getPos(), protocol.getData());
            RoundRobinConnection connection = null;
            try {
                //使用数据库本地数据库打开连接
-               connection = server.getDatabase().open();
+               connection = this.database.open();
                //进行合并视图操作
-               connection.merge(protocol.getTableName(), protocol.getMergeType(), view);
+               RoundRobinView newView = connection.merge(protocol.getTableName(), protocol.getMergeType(), view);
+               protocol.setColumns(newView.getMetadata().getColumns());
+               protocol.setPos(newView.getTime());
+               protocol.setData(newView.getData());
                connection.persistent(FormatType.CSV, 1);
+               connection.close();
            } catch (IOException e) {
                e.printStackTrace();
            }finally {
-               if(connection != null){
-                   try {
-                       connection.close();
-                   } catch (IOException e) {
-                       e.printStackTrace();
-                   }
-               }
            }
-           //TODO 模拟返回结果
-           String resultMessage = "save data finish";
+           protocol.setMessageType(MessageType.RESPONSE);
            //写应答数据
-           ByteBuffer resultBuffer = ByteBuffer.wrap(resultMessage.getBytes());
+           ByteBuffer resultBuffer = protocol.convert();
            resultBuffer.flip();
            //注册异步写入返回信息
-           channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(server, channel));
+           channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.database));
        }else{
            System.out.println("未知命令");
            return;

@@ -3,6 +3,7 @@ package org.wing4j.rrd;
 import lombok.Data;
 import lombok.ToString;
 import org.wing4j.rrd.core.TableMetadata;
+import org.wing4j.rrd.core.TableStatus;
 import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
 
 import java.io.IOException;
@@ -26,7 +27,7 @@ public class RoundRobinView {
     long[][] data;
     public RoundRobinView(RoundRobinFormat format){
         try {
-            this.metadata = new TableMetadata(null, FormatType.CSV, "view", format.getColumns());
+            this.metadata = new TableMetadata(null, FormatType.CSV, "view", format.getColumns(), data.length, TableStatus.UNKNOWN);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -39,7 +40,7 @@ public class RoundRobinView {
     }
     public RoundRobinView(String[] columns, int pos, long[][] data) {
         try {
-            this.metadata = new TableMetadata(null, FormatType.CSV, "view", columns);
+            this.metadata = new TableMetadata(null, FormatType.CSV, "view", columns, data.length, TableStatus.UNKNOWN);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,7 +53,7 @@ public class RoundRobinView {
     }
     public RoundRobinView(String[] columns, int[] timeline, long[][] data) {
         try {
-            this.metadata = new TableMetadata(null, FormatType.CSV, "view", columns);
+            this.metadata = new TableMetadata(null, FormatType.CSV, "view", columns, data.length, TableStatus.UNKNOWN);
         } catch (IOException e) {
             e.printStackTrace();
         }

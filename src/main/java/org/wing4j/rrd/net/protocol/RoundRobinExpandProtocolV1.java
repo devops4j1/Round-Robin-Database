@@ -14,6 +14,7 @@ import java.nio.ByteBuffer;
 public class RoundRobinExpandProtocolV1 extends BaseRoundRobinProtocol {
     int version = 1;
     ProtocolType protocolType = ProtocolType.EXPAND;
+    MessageType messageType = MessageType.REQUEST;
     String tableName;
     String[] columns;
 
@@ -34,6 +35,15 @@ public class RoundRobinExpandProtocolV1 extends BaseRoundRobinProtocol {
         if (DebugConfig.DEBUG) {
             System.out.println("version:" + version);
         }
+        //报文类型
+        buffer.putInt(messageType.getCode());
+        if (DebugConfig.DEBUG) {
+            System.out.println("message Type:" + messageType);
+        }
+        //应答编码
+        buffer = put(buffer, code);
+        //应答描述
+        buffer = put(buffer, desc);
         //表名长度
         //表名
         buffer = put(buffer, tableName);
@@ -65,6 +75,11 @@ public class RoundRobinExpandProtocolV1 extends BaseRoundRobinProtocol {
         //报文长度
         //命令
         //版本号
+        //报文类型
+        //应答编码
+        this.code = buffer.getShort();
+        //应答描述
+        this.desc = get(buffer);
         //表名长度
         //表名
         this.tableName = get(buffer);

@@ -1,6 +1,10 @@
 package org.wing4j.rrd.aio.client;
 
 import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class Client {
     private static String DEFAULT_HOST = "127.0.0.1";
@@ -17,19 +21,19 @@ public class Client {
         clientHandle = new AsyncClientHandler(ip, port);
         new Thread(clientHandle, "Client").start();
     }
-
     //向服务器发送消息
-    public static boolean sendMsg(String msg) throws Exception {
-        if (msg.equals("q")) return false;
-        clientHandle.sendMsg(msg);
-        return true;
+    public static String sendMsg(String msg) throws Exception {
+        return clientHandle.sendMsg(msg);
     }
 
     @SuppressWarnings("resource")
     public static void main(String[] args) throws Exception {
         Client.start();
-        System.out.println("请输入请求消息：");
-        Scanner scanner = new Scanner(System.in);
-        while (Client.sendMsg(scanner.nextLine())) ;
+        Thread.sleep(1 * 1000);
+        for (int i = 0; i < 100; i++) {
+            String msg = Client.sendMsg("1+1");
+            System.out.println("msg:" + msg);
+        }
+        Thread.sleep(10 * 1000);
     }
 }

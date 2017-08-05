@@ -45,6 +45,7 @@ public interface Table {
      * @return
      */
     long increase(String column, int val);
+    long increase(int pos, String column, int val);
 
     /**
      * 获取记录行数
@@ -55,20 +56,20 @@ public interface Table {
 
     /**
      * 设置数据
-     * @param time
+     * @param pos
      * @param column
      * @param val
      * @return
      */
-    long set(int time, String column, long val);
+    long set(int pos, String column, long val);
 
     /**
      * 获取数据
-     * @param time
+     * @param pos
      * @param column
      * @return
      */
-    long get(int time, String column);
+    long get(int pos, String column);
     /**
      * 对表进行切片
      *
@@ -96,8 +97,8 @@ public interface Table {
      * @param mergeType
      * @return
      */
-    Table merge(RoundRobinView view, int mergePos, MergeType mergeType);
-    Table merge(RoundRobinView view, MergeType mergeType);
+    RoundRobinView merge(RoundRobinView view, int mergePos, MergeType mergeType);
+    RoundRobinView merge(RoundRobinView view, MergeType mergeType);
 
     /**
      * 持久化

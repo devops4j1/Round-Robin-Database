@@ -26,11 +26,12 @@ public class RoundRobinSliceProtocolV1Test {
         };
         format.setData(data);
         ByteBuffer buffer = format.convert();
-//        System.out.println(HexUtils.toDisplayString(buffer.array()));
         buffer.flip();
         int size = buffer.getInt();
         int type = buffer.getInt();
         int version = buffer.getInt();
+        int messageType = buffer.getInt();
+        Assert.assertEquals(MessageType.REQUEST.getCode(), messageType);
         RoundRobinSliceProtocolV1 format2 = new RoundRobinSliceProtocolV1();
         format2.convert(buffer);
         Assert.assertEquals("table1", format2.getTableName());
@@ -39,9 +40,9 @@ public class RoundRobinSliceProtocolV1Test {
         Assert.assertEquals(3, format2.getPos());
         Assert.assertEquals(2, format2.getSize());
         Assert.assertEquals(1, format2.getData()[0][0]);
-        Assert.assertEquals(4, format2.getData()[0][1]);
+        Assert.assertEquals(2, format2.getData()[0][1]);
         Assert.assertEquals(3, format2.getData()[1][0]);
-        Assert.assertEquals(2, format2.getData()[1][1]);
+        Assert.assertEquals(4, format2.getData()[1][1]);
     }
 
     @Test

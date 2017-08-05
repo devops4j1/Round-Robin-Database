@@ -20,7 +20,20 @@ public class RemoteRoundRobinConnectionTest {
         view.setTime(80);
         RoundRobinConnection remoteConnection =  database.open("127.0.0.1", 8099);
         remoteConnection.merge("ssss", MergeType.ADD, view);
-        Thread.sleep(1000);
+        Thread.sleep(10*1000);
+    }
+
+    @Test
+    public void testMerge1() throws Exception {
+        RoundRobinConfig config = new RoundRobinConfig();
+        RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
+        RoundRobinConnection connection = database.open();
+        RoundRobinView view = connection.slice("mo9", 1, 1, "request");
+        view.set(0, "request", 1024);
+        view.setTime(80);
+        RoundRobinConnection remoteConnection =  database.open("127.0.0.1", 8099);
+        remoteConnection.merge("ssss", MergeType.ADD, view);
+        Thread.sleep(10*1000);
     }
 
     @Test
@@ -36,7 +49,7 @@ public class RemoteRoundRobinConnectionTest {
         RoundRobinConfig config = new RoundRobinConfig();
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
         RoundRobinConnection remoteConnection =  database.open("127.0.0.1", 8099);
-        remoteConnection.getColumns("ssss");
+        remoteConnection.getTableMetadata("ssss");
         Thread.sleep(1000);
     }
 }

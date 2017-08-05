@@ -41,7 +41,7 @@ public class RemoteTable implements Table {
     @Override
     public long increase(String column) {
         try {
-            return connector.increase(tableName, column, 1);
+            return connector.increase(tableName, column, -1, 1);
         } catch (Exception e) {
             throw new RoundRobinRuntimeException("", e);
         }
@@ -50,7 +50,17 @@ public class RemoteTable implements Table {
     @Override
     public long increase(String column, int val) {
         try {
-            return connector.increase(tableName, column, val);
+            return connector.increase(tableName, column, -1, val);
+        } catch (Exception e) {
+            throw new RoundRobinRuntimeException("", e);
+        }
+    }
+
+
+    @Override
+    public long increase(int pos, String column, int val) {
+        try {
+            return connector.increase(tableName, column, pos, val);
         } catch (Exception e) {
             throw new RoundRobinRuntimeException("", e);
         }
@@ -104,23 +114,17 @@ public class RemoteTable implements Table {
     }
 
     @Override
-    public Table merge(RoundRobinView view, int time, MergeType mergeType) {
+    public RoundRobinView merge(RoundRobinView view, int time, MergeType mergeType) {
         try {
-            connector.merge(tableName, time, view, mergeType);
+            return connector.merge(tableName, time, view, mergeType);
         } catch (Exception e) {
-
+            throw new RoundRobinRuntimeException("xxx");
         }
-        return this;
     }
 
     @Override
-    public Table merge(RoundRobinView view, MergeType mergeType) {
-        try {
-            connector.merge(tableName, view, mergeType);
-        } catch (Exception e) {
-
-        }
-        return this;
+    public RoundRobinView merge(RoundRobinView view, MergeType mergeType) {
+        return merge(view, view.getTime(), mergeType);
     }
 
     @Override

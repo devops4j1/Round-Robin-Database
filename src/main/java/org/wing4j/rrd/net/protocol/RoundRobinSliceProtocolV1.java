@@ -12,13 +12,13 @@ import java.nio.ByteBuffer;
  */
 @Data
 public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
-    int version = 1;
     ProtocolType protocolType = ProtocolType.SLICE;
+    int version = 1;
+    MessageType messageType = MessageType.REQUEST;
     String tableName;
     String[] columns = new String[0];
-    int pos;
-    int size;
-    int resultSize;
+    int pos = 0;
+    int size = 0;
     long[][] data = new long[0][0];
 
     @Override
@@ -38,6 +38,15 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
         if (DebugConfig.DEBUG) {
             System.out.println("version:" + this.version);
         }
+        //报文类型
+        buffer.putInt(messageType.getCode());
+        if (DebugConfig.DEBUG) {
+            System.out.println("message Type:" + messageType);
+        }
+        //应答编码
+        buffer = put(buffer, code);
+        //应答描述
+        buffer = put(buffer, desc);
         //表名长度
         //表名
         buffer = put(buffer, this.tableName);
@@ -55,10 +64,8 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
         buffer = put(buffer, this.pos);
         //记录条数
         buffer = put(buffer, this.size);
-        //结果记录条数
-        buffer = put(buffer, this.resultSize);
         //数据
-        for (int i = 0; i < this.resultSize; i++) {
+        for (int i = 0; i < this.size; i++) {
             for (int j = 0; j < this.columns.length; j++) {
                 buffer = put(buffer, this.data[i][j]);
             }
@@ -81,6 +88,11 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
         //报文长度
         //命令
         //版本号
+        //报文类型
+        //应答编码
+        this.code = buffer.getShort();
+        //应答描述
+        this.desc = get(buffer);
         //表名长度
         //表名
         this.tableName = get(buffer);
@@ -95,14 +107,12 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
         this.pos = buffer.getInt();
         //记录条数
         this.size = buffer.getInt();
-        //结果记录条数
-        this.resultSize = buffer.getInt();
         //数据
-        for (int i = 0; i < this.resultSize; i++) {
-            for (int j = 0; j < this.columns.length; j++) {
+        this.data = new long[size][columnNum];
+        for (int i = 0; i < this.size; i++) {
+            for (int j = 0; j < columnNum; j++) {
                 this.data[i][j] = buffer.getLong();
             }
         }
-
     }
 }

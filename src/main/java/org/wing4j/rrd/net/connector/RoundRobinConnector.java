@@ -43,7 +43,7 @@ public interface RoundRobinConnector {
      * @return 自增后的值
      * @throws IOException
      */
-    long increase(String tableName, String column, int i) throws IOException;
+    long increase(String tableName, String column, int pos, int i) throws IOException;
     /**
      * 读取数据
      * @param pos 读取结束的偏移位置
@@ -64,16 +64,7 @@ public interface RoundRobinConnector {
      * @return
      * @throws IOException
      */
-    RoundRobinConnector merge(String tableName, int pos, RoundRobinView view, MergeType mergeType) throws IOException;
-    /**
-     * 写入数据
-     * @param tableName 表名
-     * @param view 视图切片
-     * @param mergeType 合并类型
-     * @return
-     * @throws IOException
-     */
-    RoundRobinConnector merge(String tableName, RoundRobinView view, MergeType mergeType) throws IOException;
+    RoundRobinView merge(String tableName, int pos, RoundRobinView view, MergeType mergeType) throws IOException;
 
     /**
      * 字段增加
@@ -82,7 +73,7 @@ public interface RoundRobinConnector {
      * @return
      * @throws IOException
      */
-    RoundRobinConnector expand(String tableName, String... columns) throws IOException;
+    TableMetadata expand(String tableName, String... columns) throws IOException;
 
     /**
      * 创建表结构

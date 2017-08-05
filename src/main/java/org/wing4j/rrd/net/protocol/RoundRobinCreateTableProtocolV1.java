@@ -1,6 +1,7 @@
 package org.wing4j.rrd.net.protocol;
 
 import lombok.Data;
+import lombok.ToString;
 import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.utils.HexUtils;
 
@@ -11,9 +12,11 @@ import java.nio.ByteBuffer;
  * 创建表协议
  */
 @Data
+@ToString
 public class RoundRobinCreateTableProtocolV1 extends BaseRoundRobinProtocol {
     int version = 1;
     ProtocolType protocolType = ProtocolType.CREATE_TABLE;
+    MessageType messageType = MessageType.REQUEST;
     String tableName;
     String[] columns;
 
@@ -25,15 +28,24 @@ public class RoundRobinCreateTableProtocolV1 extends BaseRoundRobinProtocol {
         int lengthPos = buffer.position();
         buffer.putInt(0);
         //命令
-        buffer.putInt(protocolType.getCode());
+        buffer = put(buffer, protocolType.getCode());
         if (DebugConfig.DEBUG) {
             System.out.println("protocol Type:" + protocolType);
         }
         //版本号
-        buffer.putInt(version);
+        buffer = put(buffer, version);
         if (DebugConfig.DEBUG) {
             System.out.println("version:" + version);
         }
+        //请求类型
+        buffer = put(buffer, messageType.getCode());
+        if (DebugConfig.DEBUG) {
+            System.out.println("message Type:" + messageType);
+        }
+        //应答编码
+        buffer = put(buffer, code);
+        //应答描述
+        buffer = put(buffer, desc);
         //表名长度
         //表名
         buffer = put(buffer, tableName);
@@ -65,6 +77,11 @@ public class RoundRobinCreateTableProtocolV1 extends BaseRoundRobinProtocol {
         //报文长度
         //命令
         //版本号
+        //报文类型
+        //应答编码
+        this.code = buffer.getShort();
+        //应答描述
+        this.desc = get(buffer);
         //表名长度
         //表名
         this.tableName = get(buffer);

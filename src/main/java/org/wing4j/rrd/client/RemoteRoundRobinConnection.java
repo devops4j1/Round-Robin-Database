@@ -9,7 +9,7 @@ import org.wing4j.rrd.core.engine.RemoteTable;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
 import org.wing4j.rrd.net.connector.impl.AioRoundRobinConnector;
 import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
-import org.wing4j.rrd.net.connector.impl.NioRoundRobinConnector;
+import org.wing4j.rrd.server.RoundRobinServer;
 
 import java.io.IOException;
 import java.util.Map;
@@ -32,9 +32,9 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
             if (this.config.getConnectorType() == ConnectorType.BIO) {
                 this.connector = new BioRoundRobinConnector(address, port);
             } else if (this.config.getConnectorType() == ConnectorType.NIO) {
-                this.connector = new NioRoundRobinConnector(address, port);
+//                this.connector = new NioRoundRobinConnector(address, port);
             } else if (this.config.getConnectorType() == ConnectorType.AIO) {
-                this.connector = new AioRoundRobinConnector(address, port);
+                this.connector = new AioRoundRobinConnector(address, port, database);
             } else {
                 throw new RoundRobinRuntimeException("不支持的连接器类型");
             }
@@ -44,10 +44,10 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public String[] getColumns(String tableName) {
+    public TableMetadata getTableMetadata(String tableName) {
         Table table = new RemoteTable(tableName, connector);
         TableMetadata metadata = table.getMetadata();
-        return metadata.getColumns();
+        return metadata;
     }
 
     @Override
@@ -70,6 +70,12 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
+    public long increase(String tableName, String column, int pos, int i) {
+        Table table = new RemoteTable(tableName, connector);
+        return table.increase(pos, column, i);
+    }
+
+    @Override
     public RoundRobinView slice(String tableName, int pos,  int size, String... columns) {
         Table table = new RemoteTable(tableName, connector);
         return table.slice(pos, size, columns);
@@ -86,26 +92,23 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public RoundRobinConnection merge(String tableName, MergeType mergeType, RoundRobinView view) {
-        Table table = new RemoteTable(tableName, connector);
-        table.merge(view, mergeType);
-        return this;
+    public RoundRobinView merge(String tableName, MergeType mergeType, RoundRobinView view) {
+        return merge(tableName, mergeType, view.getTime(), view);
     }
 
     @Override
-    public RoundRobinConnection merge(String tableName, MergeType mergeType, RoundRobinView view, Map<String, String> mappings) {
+    public RoundRobinView merge(String tableName, MergeType mergeType, RoundRobinView view, Map<String, String> mappings) {
         return null;
     }
 
     @Override
-    public RoundRobinConnection merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view) {
+    public RoundRobinView merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view) {
         Table table = new RemoteTable(tableName, connector);
-        table.merge(view, mergePos, mergeType);
-        return this;
+        return table.merge(view, mergePos, mergeType);
     }
 
     @Override
-    public RoundRobinConnection merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view, Map<String, String> mappings) {
+    public RoundRobinView merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view, Map<String, String> mappings) {
         return null;
     }
 
@@ -117,6 +120,11 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
     @Override
     public RoundRobinConnection persistent(String... tableNames) throws IOException {
         return this;
+    }
+
+    @Override
+    public Table expand(String tableName, String... columns) {
+        return null;
     }
 
     @Override

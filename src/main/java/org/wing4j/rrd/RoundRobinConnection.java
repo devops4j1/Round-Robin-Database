@@ -1,5 +1,8 @@
 package org.wing4j.rrd;
 
+import org.wing4j.rrd.core.Table;
+import org.wing4j.rrd.core.TableMetadata;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -20,7 +23,7 @@ public interface RoundRobinConnection {
      *
      * @return
      */
-    String[] getColumns(String tableName);
+    TableMetadata getTableMetadata(String tableName);
 
     /**
      * 是否包含头名称
@@ -50,6 +53,16 @@ public interface RoundRobinConnection {
      * @return 连接上下文
      */
     long increase(String tableName, String column, int i);
+
+    /**
+     *
+     * @param tableName
+     * @param column
+     * @param pos
+     * @param i
+     * @return
+     */
+    long increase(String tableName, String column, int pos, int i);
 
     /**
      * 数据切片,获取距今size秒之前的切片数据
@@ -85,7 +98,7 @@ public interface RoundRobinConnection {
      * @param mergeType 合并类型
      * @return 连接上下文
      */
-    RoundRobinConnection merge(String tableName, MergeType mergeType, RoundRobinView view);
+    RoundRobinView merge(String tableName, MergeType mergeType, RoundRobinView view);
 
     /**
      * 合并切片数据到数据库
@@ -95,10 +108,10 @@ public interface RoundRobinConnection {
      * @param mappings 映射关系
      * @return 连接上下文
      */
-    RoundRobinConnection merge(String tableName, MergeType mergeType, RoundRobinView view, Map<String, String> mappings);
+    RoundRobinView merge(String tableName, MergeType mergeType, RoundRobinView view, Map<String, String> mappings);
 
-    RoundRobinConnection merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view);
-    RoundRobinConnection merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view, Map<String, String> mappings);
+    RoundRobinView merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view);
+    RoundRobinView merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view, Map<String, String> mappings);
     /**
      * 持久化
      *
@@ -116,6 +129,13 @@ public interface RoundRobinConnection {
      * @throws IOException
      */
     RoundRobinConnection persistent(String ... tableNames) throws IOException;
+    /**
+     * 增加字段，扩容
+     * @param tableName    表名
+     * @param columns
+     * @return
+     */
+    Table expand(String tableName, String... columns);
     /**
      * 创建表
      * @param tableName 表名

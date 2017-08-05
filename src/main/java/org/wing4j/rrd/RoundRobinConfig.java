@@ -25,5 +25,5 @@ public class RoundRobinConfig {
     /**
      * 连接器类型
      */
-    ConnectorType connectorType = ConnectorType.BIO;
+    ConnectorType connectorType = ConnectorType.AIO;
 }

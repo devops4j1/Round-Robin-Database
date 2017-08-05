@@ -6,6 +6,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class AsyncClientHandler implements CompletionHandler<Void, AsyncClientHandler>, Runnable {
     private AsynchronousSocketChannel clientChannel;
@@ -28,6 +30,7 @@ public class AsyncClientHandler implements CompletionHandler<Void, AsyncClientHa
     public void run() {
         //创建CountDownLatch等待
         latch = new CountDownLatch(1);
+
         //发起异步连接操作，回调参数就是这个类本身，如果连接成功会回调completed方法
         clientChannel.connect(new InetSocketAddress(host, port), this, this);
         try {
@@ -63,12 +66,38 @@ public class AsyncClientHandler implements CompletionHandler<Void, AsyncClientHa
     }
 
     //向服务器发送消息
-    public void sendMsg(String msg) {
+    public String sendMsg(String msg) throws ExecutionException, InterruptedException {
         byte[] req = msg.getBytes();
         ByteBuffer writeBuffer = ByteBuffer.allocate(req.length);
         writeBuffer.put(req);
         writeBuffer.flip();
-        //异步写
-        clientChannel.write(writeBuffer, writeBuffer, new WriteHandler(clientChannel, latch));
+        //创建CountDownLatch等待
+        CountDownLatch latch1 = new CountDownLatch(1);
+        Future future1 = clientChannel.write(writeBuffer);
+        try {
+            future1.get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        while (writeBuffer.hasRemaining()) {
+            //完成全部数据的写入
+            try {
+                clientChannel.write(writeBuffer).get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        writeBuffer.clear();
+        //读取数据
+        clientChannel.read(writeBuffer).get();
+        writeBuffer.flip();
+        byte[] data = new byte[writeBuffer.remaining()];
+        writeBuffer.get(data);
+        System.out.println(Thread.currentThread());
+        return new String(data);
     }
 }

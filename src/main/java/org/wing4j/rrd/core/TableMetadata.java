@@ -22,11 +22,13 @@ public class TableMetadata {
     String[] columns;
     int dataSize;
 
-    public TableMetadata(String fileName, FormatType formatType, String name, String[] columns) throws IOException {
+    public TableMetadata(String fileName, FormatType formatType, String name, String[] columns, int dataSize, TableStatus status) throws IOException {
         this.fileName = fileName;
         this.formatType = formatType;
         this.name = name;
         this.columns = columns;
+        this.dataSize = dataSize;
+        this.status = status;
         if (fileName != null) {
             this.dataFile = new File(fileName);
             if (!this.dataFile.exists()) {

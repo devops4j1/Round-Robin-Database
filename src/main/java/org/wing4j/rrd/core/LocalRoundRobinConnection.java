@@ -3,14 +3,14 @@ package org.wing4j.rrd.core;
 
 import org.wing4j.rrd.*;
 import org.wing4j.rrd.debug.DebugConfig;
+import org.wing4j.rrd.utils.MessageFormatter;
 
-import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.logging.Logger;
 
 /**
  * Created by wing4j on 2017/7/29.
@@ -20,6 +20,7 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
      * 状态
      */
     int status = Status.NORMAL;
+    static Logger LOGGER = Logger.getLogger(LocalRoundRobinConnection.class.getName());
     volatile RoundRobinDatabase database;
     /**
      * 任务执行线程池
@@ -28,29 +29,6 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
 
     LocalRoundRobinConnection(RoundRobinDatabase database) throws IOException {
         this.database = database;
-        String workPath = database.getConfig().getWorkPath();
-        File workPathDir = new File(workPath);
-        if (!workPathDir.exists()) {
-            workPathDir.mkdirs();
-        }
-        if (!workPathDir.exists()) {
-            //TODO 抛出异常
-        }
-        File[] tableFiles = workPathDir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                String fileName = name.toLowerCase().trim();
-                if (fileName.endsWith("rrd")) {
-                    return true;
-                } else {
-                    return false;
-                }
-
-            }
-        });
-        for (File tableFile : tableFiles) {
-            database.openTable(tableFile);
-        }
     }
 
 //    @Override
@@ -77,9 +55,9 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public String[] getColumns(String tableName) {
+    public TableMetadata getTableMetadata(String tableName) {
         Table table = database.getTable(tableName);
-        return table.getMetadata().getColumns();
+        return table.getMetadata();
     }
 
     @Override
@@ -98,6 +76,12 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     public long increase(String tableName, String column, int i) {
         Table table = database.getTable(tableName);
         return table.increase(column, i);
+    }
+
+    @Override
+    public long increase(String tableName, String column, int pos, int i) {
+        Table table = database.getTable(tableName);
+        return table.increase(pos, column, i);
     }
 
     @Override
@@ -122,22 +106,22 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public RoundRobinConnection merge(String tableName, MergeType mergeType, RoundRobinView view) {
+    public RoundRobinView merge(String tableName, MergeType mergeType, RoundRobinView view) {
         return merge(tableName, mergeType, view.getTime(), view);
     }
 
     @Override
-    public RoundRobinConnection merge(String tableName, MergeType mergeType, RoundRobinView view, Map<String, String> mappings) {
+    public RoundRobinView merge(String tableName, MergeType mergeType, RoundRobinView view, Map<String, String> mappings) {
         return null;
     }
 
     @Override
-    public RoundRobinConnection merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view) {
+    public RoundRobinView merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view) {
         if (DebugConfig.DEBUG) {
-            System.out.println("table:" + tableName);
-            System.out.println("mergeType:" + mergeType);
-            System.out.println("view:" + Arrays.asList(view.getMetadata().getColumns()));
-            System.out.println("time:" + view.getTime());
+            LOGGER.info(MessageFormatter.format("table:{}", tableName));
+            LOGGER.info(MessageFormatter.format("mergeType:{}", mergeType));
+            LOGGER.info(MessageFormatter.format("view:{}", Arrays.asList(view.getMetadata().getColumns())));
+            LOGGER.info(MessageFormatter.format("pos:{}", view.getTime()));
         }
         if (!database.existTable(tableName, false)) {
             try {
@@ -147,12 +131,11 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
             }
         }
         Table table = database.getTable(tableName);
-        table.merge(view, mergePos, mergeType);
-        return this;
+        return table.merge(view, mergePos, mergeType);
     }
 
     @Override
-    public RoundRobinConnection merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view, Map<String, String> mappings) {
+    public RoundRobinView merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view, Map<String, String> mappings) {
 
         return null;
     }
@@ -174,6 +157,11 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
+    public Table expand(String tableName, String... columns) {
+        return database.getTable(tableName).expand(columns);
+    }
+
+    @Override
     public RoundRobinConnection createTable(String tableName, String... columns) throws IOException {
         database.createTable(tableName, columns);
         return this;
@@ -189,6 +177,7 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     public void close() throws IOException {
         if (database.getConfig().isAutoPersistent()) {
             persistent();
+            persistent(FormatType.CSV, 1);
         }
         database.close(this);
     }
