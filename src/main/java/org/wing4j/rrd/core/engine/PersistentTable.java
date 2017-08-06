@@ -56,7 +56,7 @@ public class PersistentTable implements Table {
     }
 
     public PersistentTable(String savePath, String instance, String tableName, int maxSize, String... columns) throws IOException {
-        String fileName = savePath + File.separator + instance + File.separator + tableName + ".rrd";
+        String fileName = savePath + File.separator + "database" + File.separator + instance + File.separator + tableName + ".rrd";
         this.metadata = new TableMetadata(fileName, FormatType.BIN, instance, tableName, columns, maxSize, TableStatus.NORMAL);
         this.data = new long[maxSize][columns.length];
     }
@@ -268,11 +268,11 @@ public class PersistentTable implements Table {
                 fileName = fileName.substring(0, fileName.length() - 4);
             }
             File rrdFile = new File(fileName);
-            if(rrdFile.exists()){
+            if (rrdFile.exists()) {
                 rrdFile.delete();
-            }else {
+            } else {
                 File dir = rrdFile.getParentFile();
-                if(!dir.exists()){
+                if (!dir.exists()) {
                     dir.mkdirs();
                 }
             }
@@ -283,7 +283,7 @@ public class PersistentTable implements Table {
                 fileName = fileName.substring(0, fileName.length() - 4);
             }
             File csvFile = new File(fileName);
-            if(csvFile.exists()){
+            if (csvFile.exists()) {
                 csvFile.delete();
             }
             RoundRobinFormat format = new RoundRobinFormatCsvV1(metadata.getInstance(), metadata.getName(), metadata.getColumns(), data, getCurrent());

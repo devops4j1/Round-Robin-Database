@@ -96,7 +96,8 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public RoundRobinView merge(String tableName, MergeType mergeType, RoundRobinView view, Map<String, String> mappings) {
-        return null;
+        Table table = new RemoteTable(tableName, connector);
+        return table.merge(view, view.getTime(), mergeType);
     }
 
     @Override
@@ -107,27 +108,32 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public RoundRobinView merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view, Map<String, String> mappings) {
-        return null;
+        Table table = new RemoteTable(tableName, connector);
+        return table.merge(view, mergePos, mergeType);
     }
 
     @Override
     public RoundRobinConnection persistent(FormatType formatType, int version, String... tableNames) throws IOException {
+        connector.persistentTable(0, FormatType.BIN, 1, tableNames);
         return this;
     }
 
     @Override
     public RoundRobinConnection persistent(String... tableNames) throws IOException {
+        connector.persistentTable(0, FormatType.BIN, 1, tableNames);
         return this;
     }
 
     @Override
-    public RoundRobinConnection persistent(int persistentTime, String... tableNames) throws IOException {
-        return null;
+    public RoundRobinConnection persistent(int persistentTime, FormatType formatType, int version, String... tableNames) throws IOException {
+        connector.persistentTable(persistentTime, formatType, version, tableNames);
+        return this;
     }
 
     @Override
     public Table expand(String tableName, String... columns) {
-        return null;
+        Table table = new RemoteTable(tableName, connector);
+        return table.expand(columns);
     }
 
     @Override

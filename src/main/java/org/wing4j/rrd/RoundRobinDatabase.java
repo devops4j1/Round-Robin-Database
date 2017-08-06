@@ -79,7 +79,7 @@ public interface RoundRobinDatabase {
      * @param persistentTime 持久化时间
      * @return
      */
-    RoundRobinDatabase persistent(String tableName, int persistentTime);
+    RoundRobinDatabase persistent(String tableName, FormatType formatType,int version, int persistentTime);
     /**
      * 关闭数据库
      */

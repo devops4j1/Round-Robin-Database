@@ -695,11 +695,13 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
-    public RoundRobinConnector persistentTable(String[] tableNames, int persistentTime) throws IOException {
+    public RoundRobinConnector persistentTable(int persistentTime, FormatType formatType, int formatVersion, String... tableNames) throws IOException {
         ifCloseThenReopenSocket();
         RoundRobinPersistentTableProtocolV1 protocol = new RoundRobinPersistentTableProtocolV1();
         protocol.setTableNames(tableNames);
         protocol.setPersistentTime(persistentTime);
+        protocol.setFormatType(formatType);
+        protocol.setFormatVersion(formatVersion);
         protocol.setSessionId(sessionId);
         ByteBuffer buffer = protocol.convert();
         buffer.flip();

@@ -238,9 +238,9 @@ public class AioRoundRobinDispatcher {
                 connection = database.getConnection(protocol.getSessionId());
                 //立即执行持久化
                 if(protocol.getPersistentTime() == 0){
-                    connection.persistent(protocol.getTableNames());
+                    connection.persistent(protocol.getFormatType(), protocol.getFormatVersion(), protocol.getTableNames());
                 }else{
-                    connection.persistent(protocol.getPersistentTime(), protocol.getTableNames());
+                    connection.persistent(protocol.getPersistentTime(), protocol.getFormatType(), protocol.getFormatVersion(), protocol.getTableNames());
                 }
             } catch (RoundRobinRuntimeException e) {
                 protocol.setDesc(e.getMessage());

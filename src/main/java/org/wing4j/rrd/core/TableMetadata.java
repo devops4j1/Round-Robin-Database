@@ -33,8 +33,9 @@ public class TableMetadata {
         this.status = status;
         if (fileName != null) {
             this.dataFile = new File(fileName);
-            if (this.dataFile.exists()) {
-                this.dataFile.delete();
+            File dir = this.dataFile.getParentFile();
+            if (dir.exists()) {
+                dir.mkdirs();
             }
         }
     }

@@ -138,11 +138,13 @@ public interface RoundRobinConnection {
     /**
      * 按照持久化时间进行计划持久化
      * @param persistentTime 持久化时间
+     * @param formatType 持久化文件格式
+     * @param version    版本号
      * @param tableNames 表名数组
      * @return 连接上下文
      * @throws IOException
      */
-    RoundRobinConnection persistent(int persistentTime, String...tableNames) throws IOException;
+    RoundRobinConnection persistent(int persistentTime, FormatType formatType, int version, String...tableNames) throws IOException;
 
     /**
      * 增加字段，扩容

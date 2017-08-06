@@ -1,5 +1,6 @@
 package org.wing4j.rrd.net.connector;
 
+import org.wing4j.rrd.FormatType;
 import org.wing4j.rrd.MergeType;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.core.TableMetadata;
@@ -119,7 +120,7 @@ public interface RoundRobinConnector {
      * @return
      * @throws SQLException
      */
-    RoundRobinConnector persistentTable(String[] tableNames, int persistentTime) throws IOException;
+    RoundRobinConnector persistentTable(int persistentTime, FormatType formatType, int version, String... tableNames) throws IOException;
 
     /**
      * 执行SQL语句

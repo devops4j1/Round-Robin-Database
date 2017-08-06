@@ -1,6 +1,7 @@
 package org.wing4j.rrd.net.protocol;
 
 import lombok.Data;
+import org.wing4j.rrd.FormatType;
 import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.utils.HexUtils;
 
@@ -16,6 +17,8 @@ public class RoundRobinPersistentTableProtocolV1 extends BaseRoundRobinProtocol 
     ProtocolType protocolType = ProtocolType.PERSISTENT_TABLE;
     MessageType messageType = MessageType.REQUEST;
     String instance = "default";
+    FormatType formatType;
+    int formatVersion;
     String[] tableNames = new String[0];
     /**
      * 持久化时间，立即执行取值为0
@@ -59,6 +62,10 @@ public class RoundRobinPersistentTableProtocolV1 extends BaseRoundRobinProtocol 
             //表名
             buffer = put(buffer, tableNames[i]);
         }
+        //持久化文件格式
+        buffer = put(buffer, formatType.getCode());
+        //文件版本
+        buffer = put(buffer, formatVersion);
         //持久化时间
         buffer = put(buffer, persistentTime);
         //结束
@@ -97,6 +104,10 @@ public class RoundRobinPersistentTableProtocolV1 extends BaseRoundRobinProtocol 
             //表名
             this.tableNames[i] = get(buffer);
         }
+        //持久化文件格式
+        this.formatType = FormatType.valueOfCode(buffer.getInt());
+        //文件版本
+        this.formatVersion = buffer.getInt();
         //持久化时间
         this.persistentTime = buffer.getInt();
     }

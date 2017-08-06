@@ -1,9 +1,6 @@
 package org.wing4j.rrd.core;
 
-import org.wing4j.rrd.RoundRobinConfig;
-import org.wing4j.rrd.RoundRobinConnection;
-import org.wing4j.rrd.RoundRobinDatabase;
-import org.wing4j.rrd.RoundRobinRuntimeException;
+import org.wing4j.rrd.*;
 import org.wing4j.rrd.client.RemoteRoundRobinConnection;
 import org.wing4j.rrd.core.engine.PersistentTable;
 import org.wing4j.rrd.debug.DebugConfig;
@@ -242,7 +239,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     }
 
     @Override
-    public RoundRobinDatabase persistent(String tableName, int persistentTime) {
+    public RoundRobinDatabase persistent(String tableName, final FormatType formatType, final int version, int persistentTime) {
         final Table table = getTable(tableName);
         Future future = this.scheduledService.schedule(new Runnable() {
             @Override
@@ -251,7 +248,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
                     if (DebugConfig.DEBUG) {
                         LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " will persistent!");
                     }
-                    table.persistent();
+                    table.persistent(formatType, version);
                     if (DebugConfig.DEBUG) {
                         LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " has persistent!");
                     }

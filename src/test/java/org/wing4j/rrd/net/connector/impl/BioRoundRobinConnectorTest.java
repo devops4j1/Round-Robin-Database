@@ -2,6 +2,7 @@ package org.wing4j.rrd.net.connector.impl;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.wing4j.rrd.FormatType;
 import org.wing4j.rrd.MergeType;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.core.TableMetadata;
@@ -126,7 +127,7 @@ public class BioRoundRobinConnectorTest {
 
         }
         connector.createTable("mo9", "request", "response");
-        connector.persistentTable(new String[]{"mo9"}, 0);
+        connector.persistentTable(0, FormatType.CSV, 1,  "mo9");
     }
 
     @Test
@@ -139,7 +140,7 @@ public class BioRoundRobinConnectorTest {
 
         }
         connector.createTable("mo9", "request", "response");
-        connector.persistentTable(new String[]{"mo9"}, 123);
+        connector.persistentTable(0, FormatType.BIN, 1,  "mo9");
     }
 
     @Test

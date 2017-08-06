@@ -172,9 +172,9 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public RoundRobinConnection persistent(int persistentTime, String... tableNames) throws IOException {
+    public RoundRobinConnection persistent(int persistentTime, FormatType formatType, int version, String... tableNames) throws IOException {
         for (String tableName : tableNames) {
-            database.persistent(tableName, persistentTime);
+            database.persistent(tableName, formatType, version, persistentTime);
         }
         return this;
     }
