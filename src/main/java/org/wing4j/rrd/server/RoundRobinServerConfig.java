@@ -24,7 +24,7 @@ public class RoundRobinServerConfig extends RoundRobinConfig{
     /**
      * 数据库文件保存位置
      */
-    String databaseFilePath = "D:/";
+    String databaseFilePath = "D:\\";
     /**
      * 从节点
      */

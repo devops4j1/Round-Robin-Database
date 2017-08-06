@@ -74,6 +74,13 @@ public interface RoundRobinDatabase {
     RoundRobinConfig getConfig();
 
     /**
+     * 创建计划持久化任务
+     * @param tableName 表
+     * @param persistentTime 持久化时间
+     * @return
+     */
+    RoundRobinDatabase persistent(String tableName, int persistentTime);
+    /**
      * 关闭数据库
      */
     void close() throws IOException;

@@ -112,6 +112,14 @@ public interface RoundRobinConnector {
     RoundRobinConnector dropTable(String... tableNames) throws IOException;
 
     /**
+     * 持久化表数据
+     * @param tableNames
+     * @return
+     * @throws SQLException
+     */
+    RoundRobinConnector persistentTable(String[] tableNames, int persistentTime) throws IOException;
+
+    /**
      * 执行SQL语句
      *
      * @param sql
@@ -128,4 +136,5 @@ public interface RoundRobinConnector {
      * @throws SQLException
      */
     RoundRobinView executeQuery(String sql) throws SQLException;
+
 }

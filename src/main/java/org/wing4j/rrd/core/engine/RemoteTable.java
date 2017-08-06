@@ -22,6 +22,12 @@ public class RemoteTable implements Table {
         this.tableName = tableName;
         this.connector = connector;
     }
+
+    @Override
+    public boolean isAutoPersistent() {
+        return false;
+    }
+
     @Override
     public Table addScheduledFuture(Future future) {
         futures.add(future);

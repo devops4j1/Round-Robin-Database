@@ -33,6 +33,7 @@ public class AioRoundRobinDispatcher {
                 if (!this.authorityService.hasAuthority(protocol.getUsername(), protocol.getPassword())) {
                     throw new RoundRobinRuntimeException("无操作权限，可能是用户名或者密码不正确！");
                 }
+                protocol.setPassword("");
                 //创建连接会话
                 connection = database.open();
                 protocol.setSessionId(connection.getSessionId());
@@ -46,6 +47,7 @@ public class AioRoundRobinDispatcher {
             protocol.setMessageType(MessageType.RESPONSE);
             //写应答数据
             resultBuffer = protocol.convert();
+            resultBuffer.flip();
         } else if (protocolType == ProtocolType.DIS_CONNECT && version == 1) {//关闭数据库连接
             RoundRobinDisConnectProtocolV1 protocol = new RoundRobinDisConnectProtocolV1();
             protocol.convert(attachment);
@@ -71,6 +73,7 @@ public class AioRoundRobinDispatcher {
             protocol.setMessageType(MessageType.RESPONSE);
             //写应答数据
             resultBuffer = protocol.convert();
+            resultBuffer.flip();
         } else if (protocolType == ProtocolType.TABLE_METADATA && version == 1) {//获取数据数量
             //读取到数据流
             RoundRobinTableMetadataProtocolV1 protocol = new RoundRobinTableMetadataProtocolV1();
@@ -94,6 +97,7 @@ public class AioRoundRobinDispatcher {
             protocol.setMessageType(MessageType.RESPONSE);
             //写应答数据
             resultBuffer = protocol.convert();
+            resultBuffer.flip();
         } else if (protocolType == ProtocolType.SLICE && version == 1) {
             //读取到数据流
             RoundRobinSliceProtocolV1 protocol = new RoundRobinSliceProtocolV1();
@@ -118,6 +122,7 @@ public class AioRoundRobinDispatcher {
             protocol.setMessageType(MessageType.RESPONSE);
             //写应答数据
             resultBuffer = protocol.convert();
+            resultBuffer.flip();
         } else if (protocolType == ProtocolType.QUERY_PAGE && version == 1) {
         } else if (protocolType == ProtocolType.INCREASE && version == 1) {
             //读取到数据流
@@ -139,6 +144,7 @@ public class AioRoundRobinDispatcher {
             protocol.setMessageType(MessageType.RESPONSE);
             //写应答数据
             resultBuffer = protocol.convert();
+            resultBuffer.flip();
         } else if (protocolType == ProtocolType.CREATE_TABLE && version == 1) {
             //读取到数据流
             RoundRobinCreateTableProtocolV1 protocol = new RoundRobinCreateTableProtocolV1();
@@ -159,6 +165,7 @@ public class AioRoundRobinDispatcher {
             protocol.setMessageType(MessageType.RESPONSE);
             //写应答数据
             resultBuffer = protocol.convert();
+            resultBuffer.flip();
         } else if (protocolType == ProtocolType.DROP_TABLE && version == 1) {
             //读取到数据流
             RoundRobinDropTableProtocolV1 protocol = new RoundRobinDropTableProtocolV1();
@@ -179,6 +186,31 @@ public class AioRoundRobinDispatcher {
             protocol.setMessageType(MessageType.RESPONSE);
             //写应答数据
             resultBuffer = protocol.convert();
+            resultBuffer.flip();
+        } else if (protocolType == ProtocolType.PERSISTENT_TABLE && version == 1) {
+            //读取到数据流
+            RoundRobinPersistentTableProtocolV1 protocol = new RoundRobinPersistentTableProtocolV1();
+            protocol.convert(attachment);
+            RoundRobinConnection connection = null;
+            try {
+                connection = database.getConnection(protocol.getSessionId());
+                //立即执行持久化
+                if(protocol.getPersistentTime() == 0){
+                    connection.persistent(protocol.getTableNames());
+                }else{
+                    connection.persistent(protocol.getPersistentTime(), protocol.getTableNames());
+                }
+            } catch (RoundRobinRuntimeException e) {
+                protocol.setDesc(e.getMessage());
+                protocol.setCode(RspCode.FAIL.getCode());
+            } catch (Exception e) {
+                protocol.setDesc("持久化表发生错误");
+                protocol.setCode(RspCode.FAIL.getCode());
+            }
+            protocol.setMessageType(MessageType.RESPONSE);
+            //写应答数据
+            resultBuffer = protocol.convert();
+            resultBuffer.flip();
         } else if (protocolType == ProtocolType.EXPAND && version == 1) {
             //读取到数据流
             RoundRobinExpandProtocolV1 protocol = new RoundRobinExpandProtocolV1();
@@ -200,6 +232,7 @@ public class AioRoundRobinDispatcher {
             protocol.setMessageType(MessageType.RESPONSE);
             //写应答数据
             resultBuffer = protocol.convert();
+            resultBuffer.flip();
         } else if (protocolType == ProtocolType.MERGE && version == 1) {
             //读取到数据流，构建格式对象
             RoundRobinMergeProtocolV1 protocol = new RoundRobinMergeProtocolV1();
@@ -215,8 +248,7 @@ public class AioRoundRobinDispatcher {
                 protocol.setColumns(newView.getMetadata().getColumns());
                 protocol.setPos(newView.getTime());
                 protocol.setData(newView.getData());
-                connection.persistent(FormatType.CSV, 1);
-                connection.close();
+                protocol.setSize(newView.getData().length);
             } catch (RoundRobinRuntimeException e) {
                 protocol.setDesc(e.getMessage());
                 protocol.setCode(RspCode.FAIL.getCode());
@@ -227,6 +259,7 @@ public class AioRoundRobinDispatcher {
             protocol.setMessageType(MessageType.RESPONSE);
             //写应答数据
             resultBuffer = protocol.convert();
+            resultBuffer.flip();
         } else {
             System.out.println("未知命令");
         }

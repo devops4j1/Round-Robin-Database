@@ -50,10 +50,6 @@ public class AioRoundRobinServer implements RoundRobinServer{
             }
         });
         while (status == RUNNING){
-            Map<String, RoundRobinConnection> connections = database.getConnections();
-            for (String session : connections.keySet()){
-                LOGGER.info(MessageFormatter.format("SessionId:{}, Connection:{}", session, connections.get(session)));
-            }
             Thread.sleep(60 * 1000);
         }
     }

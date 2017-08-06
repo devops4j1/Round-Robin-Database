@@ -13,12 +13,16 @@ import java.nio.ByteBuffer;
 public class RoundRobinMergeProtocolV1Test {
     @Test
     public void testRead() throws Exception {
-        long[][] data = new long[2][2];
+        long[][] data = new long[][]{
+                {1, 2},
+                {3, 4}
+        };
         RoundRobinMergeProtocolV1 format = new RoundRobinMergeProtocolV1();
         format.setMessageType(MessageType.REQUEST);
         format.setData(data);
         format.setColumns(new String[]{"request", "response"});
         format.setPos(2);
+        format.setSize(2);
         format.setMergeType(MergeType.ADD);
         format.setTableName("mo");
         ByteBuffer buffer = format.convert();
@@ -33,11 +37,16 @@ public class RoundRobinMergeProtocolV1Test {
         format2.convert(buffer);
         Assert.assertEquals("mo", format2.getTableName());
         Assert.assertEquals("request", format2.getColumns()[0]);
+        Assert.assertEquals(2, format2.getData().length);
+        Assert.assertEquals(2, format2.getData()[0].length);
     }
 
     @Test
     public void testWrite() throws Exception {
-        long[][] data = new long[2][2];
+        long[][] data = new long[][]{
+                {1, 2},
+                {3, 4}
+        };
         RoundRobinMergeProtocolV1 format = new RoundRobinMergeProtocolV1();
         format.setMessageType(MessageType.RESPONSE);
         format.setData(data);

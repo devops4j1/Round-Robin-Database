@@ -88,7 +88,6 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
         }catch (Exception e){
             resultBuffer = ByteBuffer.wrap("database happens unknown error!".getBytes());
         }finally {
-            resultBuffer.flip();
             if (DebugConfig.DEBUG) {
                 byte[] data = new byte[resultBuffer.limit()];
                 resultBuffer.get(data);

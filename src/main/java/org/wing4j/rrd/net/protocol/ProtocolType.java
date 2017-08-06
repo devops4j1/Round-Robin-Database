@@ -14,6 +14,7 @@ public enum ProtocolType {
     EXPAND(8, "字段扩容"),
     CREATE_TABLE(9, "创建表"),
     DROP_TABLE(10, "删除表"),
+    PERSISTENT_TABLE(11, "持久化表"),
     UNKNOWN(0, "未知命令");
     int code;
     String desc;

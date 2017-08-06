@@ -1,7 +1,6 @@
 package org.wing4j.rrd.net.protocol;
 
 import lombok.Data;
-import lombok.ToString;
 import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.utils.HexUtils;
 
@@ -9,17 +8,19 @@ import java.nio.ByteBuffer;
 
 /**
  * Created by wing4j on 2017/8/4.
- * 删除表协议
+ * 持久化表数据协议
  */
 @Data
-@ToString
-public class RoundRobinDropTableProtocolV1 extends BaseRoundRobinProtocol {
+public class RoundRobinPersistentTableProtocolV1 extends BaseRoundRobinProtocol {
     int version = 1;
-    ProtocolType protocolType = ProtocolType.DROP_TABLE;
+    ProtocolType protocolType = ProtocolType.PERSISTENT_TABLE;
     MessageType messageType = MessageType.REQUEST;
     String instance = "default";
     String[] tableNames = new String[0];
-
+    /**
+     * 持久化时间，立即执行取值为0
+     */
+    int persistentTime = 0;
     @Override
     public ByteBuffer convert() {
         ByteBuffer buffer = ByteBuffer.allocate(100);
@@ -28,30 +29,24 @@ public class RoundRobinDropTableProtocolV1 extends BaseRoundRobinProtocol {
         int lengthPos = buffer.position();
         buffer.putInt(0);
         //命令
-        buffer = put(buffer, protocolType.getCode());
+        buffer.putInt(protocolType.getCode());
         if (DebugConfig.DEBUG) {
             System.out.println("protocol Type:" + protocolType);
         }
         //版本号
-        buffer = put(buffer, version);
+        buffer.putInt(version);
         if (DebugConfig.DEBUG) {
             System.out.println("version:" + version);
         }
-        //请求类型
-        buffer = put(buffer, messageType.getCode());
+        //报文类型
+        buffer.putInt(messageType.getCode());
         if (DebugConfig.DEBUG) {
             System.out.println("message Type:" + messageType);
         }
         //应答编码
         buffer = put(buffer, code);
-        if (DebugConfig.DEBUG) {
-            System.out.println("code:" + code);
-        }
         //应答描述
         buffer = put(buffer, desc);
-        if (DebugConfig.DEBUG) {
-            System.out.println("desc:" + desc);
-        }
         //会话ID
         buffer = put(buffer, sessionId);
         //实例名长度
@@ -64,9 +59,14 @@ public class RoundRobinDropTableProtocolV1 extends BaseRoundRobinProtocol {
             //表名
             buffer = put(buffer, tableNames[i]);
         }
+        //持久化时间
+        buffer = put(buffer, persistentTime);
         //结束
         //回填,将报文总长度回填到第一个字节
         buffer.putInt(lengthPos, buffer.position() - 4);
+        if (DebugConfig.DEBUG) {
+            System.out.println(HexUtils.toDisplayString(buffer.array()));
+        }
         return buffer;
     }
 
@@ -97,5 +97,7 @@ public class RoundRobinDropTableProtocolV1 extends BaseRoundRobinProtocol {
             //表名
             this.tableNames[i] = get(buffer);
         }
+        //持久化时间
+        this.persistentTime = buffer.getInt();
     }
 }

@@ -109,6 +109,11 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
+    public RoundRobinConnection persistent(int persistentTime, String... tableNames) throws IOException {
+        return null;
+    }
+
+    @Override
     public Table expand(String tableName, String... columns) {
         return null;
     }

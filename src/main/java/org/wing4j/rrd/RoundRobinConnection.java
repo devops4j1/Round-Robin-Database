@@ -12,6 +12,7 @@ import java.util.Map;
  */
 public interface RoundRobinConnection {
     String getSessionId();
+
     /**
      * 获取数据库
      *
@@ -134,6 +135,15 @@ public interface RoundRobinConnection {
     RoundRobinConnection persistent(String... tableNames) throws IOException;
 
     /**
+     * 按照持久化时间进行计划持久化
+     * @param persistentTime 持久化时间
+     * @param tableNames 表名数组
+     * @return 连接上下文
+     * @throws IOException
+     */
+    RoundRobinConnection persistent(int persistentTime, String...tableNames) throws IOException;
+
+    /**
      * 增加字段，扩容
      *
      * @param tableName 表名
@@ -182,6 +192,7 @@ public interface RoundRobinConnection {
 
     /**
      * 获取最后活动时间
+     *
      * @return
      */
     long getLastActiveTime();

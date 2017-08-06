@@ -33,8 +33,8 @@ public class TableMetadata {
         this.status = status;
         if (fileName != null) {
             this.dataFile = new File(fileName);
-            if (!this.dataFile.exists()) {
-                this.dataFile.createNewFile();
+            if (this.dataFile.exists()) {
+                this.dataFile.delete();
             }
         }
     }

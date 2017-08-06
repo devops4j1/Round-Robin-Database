@@ -24,11 +24,25 @@ import java.util.logging.Logger;
  * 持久化表
  */
 public class PersistentTable implements Table {
-    Set<Future> futures = new HashSet<>();
+    volatile Set<Future> futures = new HashSet<>();
     static Logger LOGGER = Logger.getLogger(PersistentTable.class.getName());
+    /**
+     * 元信息
+     */
     TableMetadata metadata;
+    /**
+     * 数据
+     */
     long[][] data;
-    volatile List<RoundRobinTrigger>[] triggers;
+    /**
+     * 变更记录数
+     */
+    volatile int changeRecordNum = 0;
+    /**
+     * 注册的触发器
+     */
+    volatile List<RoundRobinTrigger> triggers;
+    RoundRobinConfig config;
 
     public PersistentTable(File file) throws IOException {
         RoundRobinFormatLoader loader = new RoundRobinFormatLoader(file);
@@ -45,6 +59,11 @@ public class PersistentTable implements Table {
         String fileName = savePath + File.separator + instance + File.separator + tableName + ".rrd";
         this.metadata = new TableMetadata(fileName, FormatType.BIN, instance, tableName, columns, maxSize, TableStatus.NORMAL);
         this.data = new long[maxSize][columns.length];
+    }
+
+    @Override
+    public boolean isAutoPersistent() {
+        return changeRecordNum > config.getAutoPersistentRecordThreshold();
     }
 
     @Override
@@ -101,6 +120,7 @@ public class PersistentTable implements Table {
 
     long increase(int pos, int idx, int val) {
         this.data[pos][idx] += val;
+        changeRecordNum++;
         return this.data[pos][idx];
     }
 
@@ -123,6 +143,7 @@ public class PersistentTable implements Table {
 
     long set(int pos, int idx, long val) {
         this.data[pos][idx] = val;
+        changeRecordNum++;
         return this.data[pos][idx];
     }
 
@@ -184,6 +205,7 @@ public class PersistentTable implements Table {
                 System.arraycopy(oldData, 0, newData0, 0, oldData.length);
                 for (int j = oldData.length; j < newData0.length; j++) {
                     newData0[j] = 0L;
+                    changeRecordNum++;
                 }
                 data[i] = newData0;
             }
@@ -225,6 +247,7 @@ public class PersistentTable implements Table {
                     this.data[mergePos + i][idx1] = (this.data[mergePos + i][idx1] + data[i][idx0]) / 2;
                     newData[i][idx0] = this.data[mergePos + i][idx1];
                 }
+                changeRecordNum++;
             }
         }
 
@@ -244,17 +267,26 @@ public class PersistentTable implements Table {
             if (!fileName.endsWith("\\.rrd")) {
                 fileName = fileName.substring(0, fileName.length() - 4);
             }
+            File rrdFile = new File(fileName);
+            if(rrdFile.exists()){
+                rrdFile.delete();
+            }
             RoundRobinFormat format = new RoundRobinFormatBinV1(metadata.getInstance(), metadata.getName(), metadata.getColumns(), data, getCurrent());
             format.write(fileName + ".rrd");
         } else if (formatType == FormatType.CSV && version == 1) {
             if (!fileName.endsWith("\\.csv")) {
                 fileName = fileName.substring(0, fileName.length() - 4);
             }
+            File csvFile = new File(fileName);
+            if(csvFile.exists()){
+                csvFile.delete();
+            }
             RoundRobinFormat format = new RoundRobinFormatCsvV1(metadata.getInstance(), metadata.getName(), metadata.getColumns(), data, getCurrent());
             format.write(fileName + ".csv");
         } else {
             throw new RoundRobinRuntimeException("不支持的文件格式和文件版本");
         }
+        changeRecordNum = 0;
         return this;
     }
 

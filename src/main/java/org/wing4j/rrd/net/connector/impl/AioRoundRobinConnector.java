@@ -166,6 +166,11 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
+    public RoundRobinConnector persistentTable(String[] tableNames, int persistentTime) throws IOException {
+        return null;
+    }
+
+    @Override
     public int execute(String sql) throws SQLException {
         return 0;
     }

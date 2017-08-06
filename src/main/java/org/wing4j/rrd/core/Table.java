@@ -13,6 +13,11 @@ import java.util.concurrent.Future;
  */
 public interface Table {
     /**
+     * 是否允许自动持久化
+     * @return
+     */
+    boolean isAutoPersistent();
+    /**
      * 获取与表有关的定时任务
      * @param future
      * @return

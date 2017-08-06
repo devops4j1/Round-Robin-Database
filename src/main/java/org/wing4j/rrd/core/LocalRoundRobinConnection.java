@@ -56,7 +56,6 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public boolean contain(String tableName, String column) {
-        this.lastActiveTime = System.currentTimeMillis();
         Table table = database.getTable(tableName);
         return table.getMetadata().contain(column);
     }
@@ -154,6 +153,14 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     public RoundRobinConnection persistent(String... tableNames) throws IOException {
         for (Table table : database.listTable(tableNames)) {
             table.persistent();
+        }
+        return this;
+    }
+
+    @Override
+    public RoundRobinConnection persistent(int persistentTime, String... tableNames) throws IOException {
+        for(String tableName : tableNames){
+            database.persistent(tableName, persistentTime);
         }
         return this;
     }

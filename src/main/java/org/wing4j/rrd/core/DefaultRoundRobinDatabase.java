@@ -6,6 +6,7 @@ import org.wing4j.rrd.RoundRobinDatabase;
 import org.wing4j.rrd.RoundRobinRuntimeException;
 import org.wing4j.rrd.client.RemoteRoundRobinConnection;
 import org.wing4j.rrd.core.engine.PersistentTable;
+import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
 
 import java.io.File;
@@ -46,8 +47,11 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
                 try {
                     for (RoundRobinConnection connection : connections.values()) {
                         long time = (System.currentTimeMillis() - connection.getLastActiveTime()) / 1000;
+                        if(DebugConfig.DEBUG){
+                            LOGGER.info("sessionId :" + connection.getSessionId() + " last active time " + time + "seconds");
+                        }
                         if (time > config.getAutoDisconnectThreshold()) {
-                            LOGGER.info("sessionId :" + connection.getSessionId() + " has timeout! auto disconnect just now!");
+                            LOGGER.info("sessionId :" + connection.getSessionId() + " last active time " + time + "seconds ,has timeout! auto disconnect just now!");
                             connection.close();
                             LOGGER.info("sessionId :" + connection.getSessionId() + " has disconnect!");
                         }
@@ -56,16 +60,16 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
                     LOGGER.info("schedule check timeout connection happens error!");
                 }
             }
-        }, config.getAutoDisconnectThreshold(), config.getAutoDisconnectThreshold() / 2, TimeUnit.MINUTES);
-        String workPath = config.getWorkPath() + File.separator + "database" + File.separator + instance;
-        File workPathDir = new File(workPath);
-        if (!workPathDir.exists()) {
-            workPathDir.mkdirs();
+        }, config.getAutoDisconnectThreshold(), config.getAutoDisconnectThreshold() / 2, TimeUnit.SECONDS);
+        String databasePath = config.getWorkPath() + File.separator + "database" + File.separator + instance;
+        File databasePathDir = new File(databasePath);
+        if (!databasePathDir.exists()) {
+            databasePathDir.mkdirs();
         }
-        if (!workPathDir.exists()) {
-            //TODO 抛出异常
+        if (!databasePathDir.exists()) {
+            throw new RoundRobinRuntimeException("创建数据库实例工作目录发生错误!");
         }
-        File[] tableFiles = workPathDir.listFiles(new FilenameFilter() {
+        File[] tableFiles = databasePathDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
                 String fileName = name.toLowerCase().trim();
@@ -88,19 +92,27 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
      * @param table
      */
     void register(final Table table) {
-        LOGGER.info("load table " + instance + "." + table.getMetadata().getName());
+        LOGGER.info("加载表数据,[" + instance + "." + table.getMetadata().getName() + "]");
         Future future = this.scheduledService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 try {
-                    table.persistent();
+                    if(table.isAutoPersistent()){
+                        if(DebugConfig.DEBUG){
+                            LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " will persistent!");
+                        }
+                        table.persistent();
+                        if(DebugConfig.DEBUG){
+                            LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " has persistent!");
+                        }
+                    }
                 } catch (IOException e) {
-                    LOGGER.info("schedule persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
+                    LOGGER.info("auto persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
                 }
             }
-        }, config.getAutoPersistentPeriodSec(), config.getAutoPersistentPeriodSec(), TimeUnit.MINUTES);
+        }, config.getAutoPersistentPeriodSec(), config.getAutoPersistentPeriodSec(), TimeUnit.SECONDS);
         table.addScheduledFuture(future);
-        //注册后绑定触发器
+        //注册表数据
         tables.put(table.getMetadata().getName(), table);
     }
 
@@ -143,7 +155,6 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
 
     @Override
     public RoundRobinConnection open() throws IOException {
-        //TODO 创建一个计时器，进行数据的异步写入
         RoundRobinConnection connection = new LocalRoundRobinConnection(this);
         connections.put(connection.getSessionId(), connection);
         return connection;
@@ -223,6 +234,28 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     @Override
     public RoundRobinConfig getConfig() {
         return config;
+    }
+
+    @Override
+    public RoundRobinDatabase persistent(String tableName, int persistentTime) {
+        final Table table = getTable(tableName);
+        Future future = this.scheduledService.schedule(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if(DebugConfig.DEBUG){
+                        LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " will persistent!");
+                    }
+                    table.persistent();
+                    if(DebugConfig.DEBUG){
+                        LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " has persistent!");
+                    }
+                } catch (IOException e) {
+                    LOGGER.info("persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
+                }
+            }
+        }, persistentTime, TimeUnit.SECONDS);
+        return this;
     }
 
     @Override
