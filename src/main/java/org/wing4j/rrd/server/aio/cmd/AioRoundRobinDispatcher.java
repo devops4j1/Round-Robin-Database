@@ -124,6 +124,48 @@ public class AioRoundRobinDispatcher {
             resultBuffer = protocol.convert();
             resultBuffer.flip();
         } else if (protocolType == ProtocolType.QUERY_PAGE && version == 1) {
+        } else if (protocolType == ProtocolType.SET && version == 1) {
+            //读取到数据流
+            RoundRobinSetProtocolV1 protocol = new RoundRobinSetProtocolV1();
+            protocol.convert(attachment);
+            RoundRobinConnection connection = null;
+            try {
+                //进行合并视图操作
+                connection = database.getConnection(protocol.getSessionId());
+                long i = connection.set(protocol.getTableName(), protocol.getColumn(), protocol.getPos(), protocol.getValue());
+                protocol.setNewValue(i);
+            } catch (RoundRobinRuntimeException e) {
+                protocol.setDesc(e.getMessage());
+                protocol.setCode(RspCode.FAIL.getCode());
+            } catch (Exception e) {
+                protocol.setDesc("设置值操作发生异常");
+                protocol.setCode(RspCode.FAIL.getCode());
+            }
+            protocol.setMessageType(MessageType.RESPONSE);
+            //写应答数据
+            resultBuffer = protocol.convert();
+            resultBuffer.flip();
+        } else if (protocolType == ProtocolType.GET && version == 1) {
+            //读取到数据流
+            RoundRobinGetProtocolV1 protocol = new RoundRobinGetProtocolV1();
+            protocol.convert(attachment);
+            RoundRobinConnection connection = null;
+            try {
+                //进行合并视图操作
+                connection = database.getConnection(protocol.getSessionId());
+                long i = connection.get(protocol.getTableName(), protocol.getColumn(), protocol.getPos());
+                protocol.setValue(i);
+            } catch (RoundRobinRuntimeException e) {
+                protocol.setDesc(e.getMessage());
+                protocol.setCode(RspCode.FAIL.getCode());
+            } catch (Exception e) {
+                protocol.setDesc("获取值操作发生异常");
+                protocol.setCode(RspCode.FAIL.getCode());
+            }
+            protocol.setMessageType(MessageType.RESPONSE);
+            //写应答数据
+            resultBuffer = protocol.convert();
+            resultBuffer.flip();
         } else if (protocolType == ProtocolType.INCREASE && version == 1) {
             //读取到数据流
             RoundRobinIncreaseProtocolV1 protocol = new RoundRobinIncreaseProtocolV1();

@@ -75,6 +75,20 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
+    public long set(String tableName, String column, int pos, long i) {
+        this.lastActiveTime = System.currentTimeMillis();
+        Table table = database.getTable(tableName);
+        return table.set(pos, column, i);
+    }
+
+    @Override
+    public long get(String tableName, String column, int pos) {
+        this.lastActiveTime = System.currentTimeMillis();
+        Table table = database.getTable(tableName);
+        return table.get(pos, column);
+    }
+
+    @Override
     public long increase(String tableName, String column, int pos, int i) {
         this.lastActiveTime = System.currentTimeMillis();
         Table table = database.getTable(tableName);
@@ -159,7 +173,7 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public RoundRobinConnection persistent(int persistentTime, String... tableNames) throws IOException {
-        for(String tableName : tableNames){
+        for (String tableName : tableNames) {
             database.persistent(tableName, persistentTime);
         }
         return this;
@@ -186,7 +200,7 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
-    public int execute(String sql) throws SQLException{
+    public int execute(String sql) throws SQLException {
         this.lastActiveTime = System.currentTimeMillis();
         return 0;
     }

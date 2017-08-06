@@ -103,13 +103,21 @@ public class RemoteTable implements Table {
     }
 
     @Override
-    public long set(int time, String column, long val) {
-        return 0;
+    public long set(int pos, String column, long val) {
+        try {
+            return connector.set(tableName, column, pos, val);
+        } catch (Exception e) {
+            throw new RoundRobinRuntimeException("", e);
+        }
     }
 
     @Override
-    public long get(int time, String column) {
-        return 0;
+    public long get(int pos, String column) {
+        try {
+            return connector.get(tableName, column, pos);
+        } catch (Exception e) {
+            throw new RoundRobinRuntimeException("", e);
+        }
     }
 
     @Override

@@ -278,6 +278,125 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
+    public long set(String tableName, String column, int pos, long val) throws IOException {
+        ifCloseThenReopenSocket();
+        RoundRobinSetProtocolV1 protocol = new RoundRobinSetProtocolV1();
+        protocol.setSessionId(sessionId);
+        protocol.setTableName(tableName);
+        protocol.setColumn(column);
+        protocol.setPos(pos);
+        protocol.setValue(val);
+        ByteBuffer buffer = protocol.convert();
+        buffer.flip();
+        byte[] data = new byte[buffer.remaining()];
+        buffer.get(data);
+        if (DebugConfig.DEBUG) {
+            System.out.println(data.length);
+            System.out.println(HexUtils.toDisplayString(data));
+        }
+        OutputStream os = socket.getOutputStream();
+        try {
+            os.write(data);
+        } catch (Exception e) {
+            os.close();
+            socket.close();
+            throw new RoundRobinRuntimeException("发送数据发生异常");
+        }
+        InputStream is = socket.getInputStream();
+        byte[] sizeLenBytes = new byte[4];
+        byte[] dataBytes = new byte[0];
+        try {
+            is.read(sizeLenBytes);
+            int len = MessageUtils.bytes2int(sizeLenBytes);
+            if (is.available() < len - 4) {
+                System.out.println(HexUtils.toDisplayString(sizeLenBytes));
+                throw new RoundRobinRuntimeException("无效报文");
+            }
+            dataBytes = new byte[len];
+            is.read(dataBytes);
+        } finally {
+            os.close();
+            is.close();
+            socket.close();
+        }
+        buffer = ByteBuffer.wrap(dataBytes);
+        ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
+        int version = buffer.getInt();
+        MessageType messageType = MessageType.valueOfCode(buffer.getInt());
+        if (protocolType == ProtocolType.SET && version == 1 && messageType == MessageType.RESPONSE) {
+            protocol.convert(buffer);
+            if (RspCode.valueOfCode(protocol.getCode()) == RspCode.SUCCESS) {
+                //返回自增后的值
+                return protocol.getNewValue();
+            } else {
+                throw new RoundRobinRuntimeException(protocol.getCode() + ":" + protocol.getDesc());
+            }
+        } else {
+            System.out.println(HexUtils.toDisplayString(dataBytes));
+            throw new RoundRobinRuntimeException("无效的应答");
+        }
+    }
+
+    @Override
+    public long get(String tableName, String column, int pos) throws IOException {
+        ifCloseThenReopenSocket();
+        RoundRobinGetProtocolV1 protocol = new RoundRobinGetProtocolV1();
+        protocol.setSessionId(sessionId);
+        protocol.setTableName(tableName);
+        protocol.setColumn(column);
+        protocol.setPos(pos);
+        ByteBuffer buffer = protocol.convert();
+        buffer.flip();
+        byte[] data = new byte[buffer.remaining()];
+        buffer.get(data);
+        if (DebugConfig.DEBUG) {
+            System.out.println(data.length);
+            System.out.println(HexUtils.toDisplayString(data));
+        }
+        OutputStream os = socket.getOutputStream();
+        try {
+            os.write(data);
+        } catch (Exception e) {
+            os.close();
+            socket.close();
+            throw new RoundRobinRuntimeException("发送数据发生异常");
+        }
+        InputStream is = socket.getInputStream();
+        byte[] sizeLenBytes = new byte[4];
+        byte[] dataBytes = new byte[0];
+        try {
+            is.read(sizeLenBytes);
+            int len = MessageUtils.bytes2int(sizeLenBytes);
+            if (is.available() < len - 4) {
+                System.out.println(HexUtils.toDisplayString(sizeLenBytes));
+                throw new RoundRobinRuntimeException("无效报文");
+            }
+            dataBytes = new byte[len];
+            is.read(dataBytes);
+        } finally {
+            os.close();
+            is.close();
+            socket.close();
+        }
+        buffer = ByteBuffer.wrap(dataBytes);
+        ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
+        int version = buffer.getInt();
+        MessageType messageType = MessageType.valueOfCode(buffer.getInt());
+        if (protocolType == ProtocolType.GET && version == 1 && messageType == MessageType.RESPONSE) {
+            protocol.convert(buffer);
+            if (RspCode.valueOfCode(protocol.getCode()) == RspCode.SUCCESS) {
+                //返回自增后的值
+                return protocol.getValue();
+            } else {
+                throw new RoundRobinRuntimeException(protocol.getCode() + ":" + protocol.getDesc());
+            }
+        } else {
+            System.out.println(HexUtils.toDisplayString(dataBytes));
+            throw new RoundRobinRuntimeException("无效的应答");
+        }
+    }
+
+    @Override
     public RoundRobinView slice(String tableName, int pos, int size, String... columns) throws IOException {
         ifCloseThenReopenSocket();
         RoundRobinSliceProtocolV1 protocol = new RoundRobinSliceProtocolV1();

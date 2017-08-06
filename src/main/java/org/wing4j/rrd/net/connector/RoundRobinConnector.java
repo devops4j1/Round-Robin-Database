@@ -59,6 +59,8 @@ public interface RoundRobinConnector {
      * @throws IOException
      */
     long increase(String tableName, String column, int pos, int i) throws IOException;
+    long set(String tableName, String column, int pos, long i) throws IOException;
+    long get(String tableName, String column, int pos) throws IOException;
 
     /**
      * 读取数据

@@ -15,6 +15,8 @@ public enum ProtocolType {
     CREATE_TABLE(9, "创建表"),
     DROP_TABLE(10, "删除表"),
     PERSISTENT_TABLE(11, "持久化表"),
+    GET(12, "获取数据"),
+    SET(13, "设置数据"),
     UNKNOWN(0, "未知命令");
     int code;
     String desc;

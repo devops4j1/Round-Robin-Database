@@ -87,6 +87,16 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
+    public long set(String tableName, String column, int pos, long i) throws IOException {
+        return 0;
+    }
+
+    @Override
+    public long get(String tableName, String column, int pos) throws IOException {
+        return 0;
+    }
+
+    @Override
     public RoundRobinView slice(String tableName, int pos, int size, String... columns) throws IOException {
         return null;
     }

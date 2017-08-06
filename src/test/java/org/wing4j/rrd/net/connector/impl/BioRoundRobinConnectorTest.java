@@ -1,5 +1,6 @@
 package org.wing4j.rrd.net.connector.impl;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.wing4j.rrd.MergeType;
 import org.wing4j.rrd.RoundRobinView;
@@ -139,5 +140,39 @@ public class BioRoundRobinConnectorTest {
         }
         connector.createTable("mo9", "request", "response");
         connector.persistentTable(new String[]{"mo9"}, 123);
+    }
+
+    @Test
+    public void testSet() throws Exception {
+        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        connector.connect("admin", "password");
+        try {
+            connector.dropTable("mo9");
+        }catch (Exception e){
+
+        }
+        connector.createTable("mo9", "request", "response");
+        long val = connector.set("mo9", "request", 0, 123);
+        System.out.println(val);
+    }
+
+    @Test
+    public void testGet() throws Exception {
+        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        connector.connect("admin", "password");
+        try {
+            connector.dropTable("mo9");
+        }catch (Exception e){
+
+        }
+        connector.createTable("mo9", "request", "response");
+        for (int i = 0; i < 1000; i++) {
+            long val2 = connector.set("mo9", "request", 0, i);
+            System.out.println(val2);
+            Assert.assertEquals(i, val2);
+            long val3 = connector.get("mo9", "request", 0);
+            System.out.println(val3);
+            Assert.assertEquals(i, val2);
+        }
     }
 }

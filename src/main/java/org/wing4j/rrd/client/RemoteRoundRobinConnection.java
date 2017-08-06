@@ -56,6 +56,18 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
     }
 
     @Override
+    public long set(String tableName, String column, int pos, long i) {
+        Table table = new RemoteTable(tableName, connector);
+        return table.set(pos, column, i);
+    }
+
+    @Override
+    public long get(String tableName, String column, int pos) {
+        Table table = new RemoteTable(tableName, connector);
+        return table.get(pos, column);
+    }
+
+    @Override
     public long increase(String tableName, String column, int pos, int i) {
         Table table = new RemoteTable(tableName, connector);
         return table.increase(pos, column, i);

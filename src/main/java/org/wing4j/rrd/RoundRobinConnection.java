@@ -54,7 +54,8 @@ public interface RoundRobinConnection {
      * @return 连接上下文
      */
     long increase(String tableName, String column, int i);
-
+    long set(String tableName, String column, int pos, long i);
+    long get(String tableName, String column, int pos);
     /**
      * @param tableName
      * @param column
