@@ -6,13 +6,15 @@ import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 /**
  * Created by wing4j on 2017/8/4.
  */
 public class RemoteTable implements Table {
-    Future future;
+    Set<Future> futures = new HashSet<>();
     String tableName;
     RoundRobinConnector connector;
 
@@ -20,16 +22,22 @@ public class RemoteTable implements Table {
         this.tableName = tableName;
         this.connector = connector;
     }
-
     @Override
-    public Table setScheduledFuture(Future future) {
-        this.future = future;
+    public Table addScheduledFuture(Future future) {
+        futures.add(future);
         return this;
     }
 
     @Override
-    public Future getScheduledFuture() {
-        return future;
+    public Future[] getScheduledFutures() {
+        return futures.toArray(new Future[futures.size()]);
+    }
+
+    @Override
+    public Table removeScheduledFutures(Future future) {
+        future.cancel(true);
+        futures.remove(future);
+        return this;
     }
 
     @Override

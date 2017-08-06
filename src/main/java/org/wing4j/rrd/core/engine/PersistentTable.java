@@ -12,8 +12,7 @@ import org.wing4j.rrd.utils.MessageFormatter;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
@@ -22,7 +21,7 @@ import java.util.logging.Logger;
  * 持久化表
  */
 public class PersistentTable implements Table {
-    Future future;
+    Set<Future> futures = new HashSet<>();
     static Logger LOGGER = Logger.getLogger(PersistentTable.class.getName());
     TableMetadata metadata;
     long[][] data;
@@ -46,14 +45,21 @@ public class PersistentTable implements Table {
     }
 
     @Override
-    public Table setScheduledFuture(Future future) {
-        this.future = future;
+    public Table addScheduledFuture(Future future) {
+        futures.add(future);
         return this;
     }
 
     @Override
-    public Future getScheduledFuture() {
-        return future;
+    public Future[] getScheduledFutures() {
+        return futures.toArray(new Future[futures.size()]);
+    }
+
+    @Override
+    public Table removeScheduledFutures(Future future) {
+        future.cancel(true);
+        futures.remove(future);
+        return this;
     }
 
     public TableMetadata getMetadata() {

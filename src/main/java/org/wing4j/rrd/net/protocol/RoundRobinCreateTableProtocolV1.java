@@ -20,6 +20,7 @@ public class RoundRobinCreateTableProtocolV1 extends BaseRoundRobinProtocol {
     String instance = "default";
     String tableName;
     String[] columns;
+    int dataSize;
 
     @Override
     public ByteBuffer convert() {
@@ -71,6 +72,8 @@ public class RoundRobinCreateTableProtocolV1 extends BaseRoundRobinProtocol {
             String column = this.columns[i];
             buffer = put(buffer, column);
         }
+        //数据行数
+        buffer = put(buffer, this.dataSize);
         //结束
         //回填,将报文总长度回填到第一个字节
         buffer.putInt(lengthPos, buffer.position() - 4);
@@ -106,5 +109,7 @@ public class RoundRobinCreateTableProtocolV1 extends BaseRoundRobinProtocol {
         for (int i = 0; i < columnNum; i++) {
             columns[i] = get(buffer);
         }
+        //数据行数
+        this.dataSize = buffer.getInt();
     }
 }

@@ -43,6 +43,12 @@ public class AioRoundRobinServer implements RoundRobinServer{
         this.listenThread = new Thread(listener, "Round-Robin-Database-listener");
         this.listenThread.start();
         status = RUNNING;
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            @Override
+            public void run() {
+                System.out.println("---------------------------");
+            }
+        });
         while (status == RUNNING){
             Map<String, RoundRobinConnection> connections = database.getConnections();
             for (String session : connections.keySet()){

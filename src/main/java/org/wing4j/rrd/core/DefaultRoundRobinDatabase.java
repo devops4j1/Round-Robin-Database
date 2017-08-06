@@ -80,7 +80,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
                 }
             }
         }, 1, 1, TimeUnit.MINUTES);
-        table.setScheduledFuture(future);
+        table.addScheduledFuture(future);
         //注册后绑定触发器
         tables.put(table.getMetadata().getName(), table);
     }
@@ -160,7 +160,10 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
             Table table = tables.get(tableName);
             try {
                 table.drop();
-                table.getScheduledFuture().cancel(false);
+                for (Future future :table.getScheduledFutures()){
+                    future.cancel(false);
+                    table.removeScheduledFutures(future);
+                }
                 tables.remove(tableName);
             } catch (Exception e) {
                 //TODO 处理删表错误

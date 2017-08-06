@@ -14,15 +14,12 @@ import java.nio.ByteBuffer;
 public class RoundRobinMergeProtocolV1Test {
     @Test
     public void testRead() throws Exception {
-        RoundRobinConfig config = new RoundRobinConfig();
-        RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
-        RoundRobinConnection connection = database.open();
-        RoundRobinView view = connection.slice("mo9", 1* 60 ,1 * 60, "request");
+        long[][] data = new long[2][2];
         RoundRobinMergeProtocolV1 format = new RoundRobinMergeProtocolV1();
         format.setMessageType(MessageType.REQUEST);
-        format.setData(view.getData());
-        format.setColumns(new String[]{"request"});
-        format.setPos(view.getTime());
+        format.setData(data);
+        format.setColumns(new String[]{"request", "response"});
+        format.setPos(2);
         format.setMergeType(MergeType.ADD);
         format.setTableName("mo");
         ByteBuffer buffer = format.convert();
@@ -41,10 +38,12 @@ public class RoundRobinMergeProtocolV1Test {
 
     @Test
     public void testWrite() throws Exception {
+        long[][] data = new long[2][2];
         RoundRobinMergeProtocolV1 format = new RoundRobinMergeProtocolV1();
         format.setMessageType(MessageType.RESPONSE);
+        format.setData(data);
         format.setColumns(new String[]{"request", "response"});
-        format.setPos(60);
+        format.setPos(2);
         format.setMergeType(MergeType.ADD);
         format.setTableName("mo");
         ByteBuffer buffer = format.convert();
@@ -60,6 +59,6 @@ public class RoundRobinMergeProtocolV1Test {
         Assert.assertEquals("mo", format2.getTableName());
         Assert.assertEquals("request", format2.getColumns()[0]);
         Assert.assertEquals("response", format2.getColumns()[1]);
-        Assert.assertEquals(60, format2.getPos());
+        Assert.assertEquals(2, format2.getPos());
     }
 }

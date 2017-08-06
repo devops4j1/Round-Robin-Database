@@ -9,8 +9,24 @@ import java.util.concurrent.Future;
  * Created by wing4j on 2017/8/3.
  */
 public interface Table {
-    Table setScheduledFuture(Future future);
-    Future getScheduledFuture();
+    /**
+     * 获取与表有关的定时任务
+     * @param future
+     * @return
+     */
+    Table addScheduledFuture(Future future);
+
+    /**
+     * 设置与表有关的定时任务
+     * @return
+     */
+    Future[] getScheduledFutures();
+
+    /**
+     * 移除定时任务
+     * @param future
+     */
+    Table removeScheduledFutures(Future future);
     /**
      * 获取表元信息
      *
