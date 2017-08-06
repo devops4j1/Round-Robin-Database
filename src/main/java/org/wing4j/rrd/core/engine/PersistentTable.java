@@ -270,6 +270,11 @@ public class PersistentTable implements Table {
             File rrdFile = new File(fileName);
             if(rrdFile.exists()){
                 rrdFile.delete();
+            }else {
+                File dir = rrdFile.getParentFile();
+                if(!dir.exists()){
+                    dir.mkdirs();
+                }
             }
             RoundRobinFormat format = new RoundRobinFormatBinV1(metadata.getInstance(), metadata.getName(), metadata.getColumns(), data, getCurrent());
             format.write(fileName + ".rrd");

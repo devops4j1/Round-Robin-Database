@@ -26,12 +26,15 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     static Logger LOGGER = Logger.getLogger(DefaultRoundRobinDatabase.class.getName());
     //实例名
     String instance;
-    ScheduledExecutorService scheduledService = null;
-
-    Map<String, RoundRobinConnection> connections = new ConcurrentHashMap();
-
-    static RoundRobinDatabase database;
+    //计划任务池
+    final ScheduledExecutorService scheduledService;
+    //连接池
+    final Map<String, RoundRobinConnection> connections = new ConcurrentHashMap();
+    //数据库实例
+    final static Map<String, RoundRobinDatabase> instances = new ConcurrentHashMap();
+    //配置对象
     RoundRobinConfig config;
+    //检查连接超时句柄
     Future checkConnectionTimeoutFuture;
 
     final Map<String, Table> tables = new HashMap<>();
@@ -47,7 +50,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
                 try {
                     for (RoundRobinConnection connection : connections.values()) {
                         long time = (System.currentTimeMillis() - connection.getLastActiveTime()) / 1000;
-                        if(DebugConfig.DEBUG){
+                        if (DebugConfig.DEBUG) {
                             LOGGER.info("sessionId :" + connection.getSessionId() + " last active time " + time + "seconds");
                         }
                         if (time > config.getAutoDisconnectThreshold()) {
@@ -97,12 +100,12 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
             @Override
             public void run() {
                 try {
-                    if(table.isAutoPersistent()){
-                        if(DebugConfig.DEBUG){
+                    if (table.isAutoPersistent()) {
+                        if (DebugConfig.DEBUG) {
                             LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " will persistent!");
                         }
                         table.persistent();
-                        if(DebugConfig.DEBUG){
+                        if (DebugConfig.DEBUG) {
                             LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " has persistent!");
                         }
                     }
@@ -121,8 +124,10 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     }
 
     public static RoundRobinDatabase init(String instance, RoundRobinConfig config) throws IOException {
+        RoundRobinDatabase database = instances.get(instance);
         if (database == null) {
-            synchronized (RoundRobinDatabase.class) {
+            synchronized (instances) {
+                database = instances.get(instance);
                 if (database == null) {
                     database = new DefaultRoundRobinDatabase(instance, config);
                 }
@@ -243,11 +248,11 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
             @Override
             public void run() {
                 try {
-                    if(DebugConfig.DEBUG){
+                    if (DebugConfig.DEBUG) {
                         LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " will persistent!");
                     }
                     table.persistent();
-                    if(DebugConfig.DEBUG){
+                    if (DebugConfig.DEBUG) {
                         LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " has persistent!");
                     }
                 } catch (IOException e) {

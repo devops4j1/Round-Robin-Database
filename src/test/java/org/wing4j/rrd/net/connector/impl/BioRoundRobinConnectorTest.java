@@ -36,7 +36,11 @@ public class BioRoundRobinConnectorTest {
     public void testGetTableMetadata() throws Exception {
         RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
         connector.connect("admin", "password");
-        connector.dropTable("mo9");
+        try {
+            connector.dropTable("mo9");
+        }catch (Exception e){
+
+        }
         connector.createTable("mo9", "request", "response");
         for (int i = 0; i < 10; i++) {
             TableMetadata metadata = connector.getTableMetadata("mo9");
@@ -48,7 +52,11 @@ public class BioRoundRobinConnectorTest {
     public void testIncrease() throws Exception {
         RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
         connector.connect("admin", "password");
-        connector.dropTable("mo9");
+        try {
+            connector.dropTable("mo9");
+        }catch (Exception e){
+
+        }
         connector.createTable("mo9", "request", "response");
         for (int i = 0; i < 10; i++) {
             long v = connector.increase("mo9", "request", 2, 2);
@@ -61,7 +69,11 @@ public class BioRoundRobinConnectorTest {
     public void testExpand() throws Exception {
         RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
         connector.connect("admin", "password");
-        connector.dropTable("mo9");
+        try {
+            connector.dropTable("mo9");
+        }catch (Exception e){
+
+        }
         connector.createTable("mo9", "request", "response");
         TableMetadata table = connector.expand("mo9", "rep", "other1");
         System.out.println(table);
@@ -106,6 +118,13 @@ public class BioRoundRobinConnectorTest {
     @Test
     public void testPersistentTable() throws Exception {
         RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        connector.connect("admin", "password");
+        try {
+            connector.dropTable("mo9");
+        }catch (Exception e){
+
+        }
+        connector.createTable("mo9", "request", "response");
         connector.persistentTable(new String[]{"mo9"}, 0);
     }
 
