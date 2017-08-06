@@ -114,7 +114,7 @@ public class BioRoundRobinConnectorTest {
     public void testConnect() throws Exception {
         RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
         String sessionId = connector.connect("admin", "password");
-//        connector.disConnect("73bc9ddb68314294bbee8dea96b82371");
+//        connector.disconnect("73bc9ddb68314294bbee8dea96b82371");
     }
 
     @Test
@@ -159,21 +159,33 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testGet() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
-        connector.connect("admin", "password");
-        try {
-            connector.dropTable("mo9");
-        }catch (Exception e){
+        Thread[] threads = new Thread[50];
+        for (int i = 0; i < threads.length; i++) {
+            threads[i] = new Thread(){
+                @Override
+                public void run() {
 
+                    try {
+                        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+                        connector.connect("admin", "password");
+                        for (int i = 0; i < 1000; i++) {
+                            long val2 = connector.set("mo9", "request", 0, i);
+//                            System.out.println(val2);
+                            Assert.assertEquals(i, val2);
+                            long val3 = connector.get("mo9", "request", 0);
+//                            System.out.println(val3);
+                            Assert.assertEquals(i, val2);
+                        }
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+            };
         }
-        connector.createTable("mo9", "request", "response");
-        for (int i = 0; i < 1000; i++) {
-            long val2 = connector.set("mo9", "request", 0, i);
-            System.out.println(val2);
-            Assert.assertEquals(i, val2);
-            long val3 = connector.get("mo9", "request", 0);
-            System.out.println(val3);
-            Assert.assertEquals(i, val2);
+        for (Thread t : threads){
+            t.start();
         }
+
+        Thread.sleep(120 * 1000);
     }
 }

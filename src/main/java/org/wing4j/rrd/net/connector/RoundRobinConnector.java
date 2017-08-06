@@ -39,7 +39,7 @@ public interface RoundRobinConnector {
      *
      * @param sessionId 会话
      */
-    void disConnect(String sessionId) throws IOException;
+    void disconnect(String sessionId) throws IOException;
 
     /**
      * 获取表对象

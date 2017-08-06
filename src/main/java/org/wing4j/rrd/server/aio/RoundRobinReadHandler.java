@@ -103,6 +103,6 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
 
     @Override
     public void failed(Throwable exc, ByteBuffer attachment) {
-
+        exc.printStackTrace();
     }
 }

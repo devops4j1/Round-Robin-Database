@@ -163,7 +163,7 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public void close() throws IOException {
-        connector.disConnect(sessionId);
+        connector.disconnect(sessionId);
         database.close(this);
     }
 

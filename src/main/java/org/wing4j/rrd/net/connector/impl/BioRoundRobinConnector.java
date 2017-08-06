@@ -36,7 +36,6 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
         this.port = port;
         this.database = database;
         this.config = config;
-        this.socket = new Socket(address, port);
     }
 
     void ifCloseThenReopenSocket() throws IOException {
@@ -79,10 +78,12 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } finally {
-            os.close();
+        } catch (Exception e) {
             is.close();
+            os.close();
             socket.close();
+        } finally {
+            os.flush();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -104,7 +105,7 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
-    public void disConnect(String sessionId) throws IOException {
+    public void disconnect(String sessionId) throws IOException {
         ifCloseThenReopenSocket();
         RoundRobinDisConnectProtocolV1 protocol = new RoundRobinDisConnectProtocolV1();
         protocol.setSessionId(sessionId);
@@ -120,7 +121,7 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
         try {
             os.write(data);
         } catch (Exception e) {
-            os.close();
+            os.flush();
             socket.close();
             throw new RoundRobinRuntimeException("发送数据发生异常");
         }
@@ -136,10 +137,12 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } finally {
-            os.close();
+        } catch (Exception e) {
             is.close();
+            os.close();
             socket.close();
+        } finally {
+            os.flush();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -176,6 +179,7 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
         try {
             os.write(data);
         } catch (Exception e) {
+            os.flush();
             os.close();
             socket.close();
             throw new RoundRobinRuntimeException("发送数据发生异常");
@@ -192,10 +196,12 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } finally {
-            os.close();
+        } catch (Exception e) {
             is.close();
+            os.close();
             socket.close();
+        } finally {
+            os.flush();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -254,10 +260,12 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } finally {
-            os.close();
+        } catch (Exception e) {
             is.close();
+            os.close();
             socket.close();
+        } finally {
+            os.flush();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -314,10 +322,12 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } finally {
-            os.close();
+        } catch (Exception e) {
             is.close();
+            os.close();
             socket.close();
+        } finally {
+            os.flush();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -373,10 +383,12 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } finally {
-            os.close();
+        } catch (Exception e) {
             is.close();
+            os.close();
             socket.close();
+        } finally {
+            os.flush();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -433,10 +445,12 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } finally {
-            os.close();
+        } catch (Exception e) {
             is.close();
+            os.close();
             socket.close();
+        } finally {
+            os.flush();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -495,10 +509,12 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } finally {
-            os.close();
+        } catch (Exception e) {
             is.close();
+            os.close();
             socket.close();
+        } finally {
+            os.flush();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -554,10 +570,12 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } finally {
-            os.close();
+        } catch (Exception e) {
             is.close();
+            os.close();
             socket.close();
+        } finally {
+            os.flush();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -614,10 +632,12 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } finally {
-            os.close();
+        } catch (Exception e) {
             is.close();
+            os.close();
             socket.close();
+        } finally {
+            os.flush();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -672,10 +692,12 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } finally {
-            os.close();
+        } catch (Exception e) {
             is.close();
+            os.close();
             socket.close();
+        } finally {
+            os.flush();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -731,10 +753,12 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } finally {
-            os.close();
+        } catch (Exception e) {
             is.close();
+            os.close();
             socket.close();
+        } finally {
+            os.flush();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());

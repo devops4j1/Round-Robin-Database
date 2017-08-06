@@ -51,7 +51,7 @@ public class AioRoundRobinConnector implements RoundRobinConnector {
     }
 
     @Override
-    public void disConnect(String sessionId) throws IOException {
+    public void disconnect(String sessionId) throws IOException {
 
     }
 
