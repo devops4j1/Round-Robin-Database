@@ -1,9 +1,7 @@
 package org.wing4j.rrd.aio.server;
 
 import javax.script.ScriptEngine;
-
 import javax.script.ScriptEngineManager;
-
 import javax.script.ScriptException;
 
 public final class Calculator {

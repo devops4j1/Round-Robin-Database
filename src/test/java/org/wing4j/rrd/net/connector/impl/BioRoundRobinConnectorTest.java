@@ -2,7 +2,6 @@ package org.wing4j.rrd.net.connector.impl;
 
 import org.junit.Test;
 import org.wing4j.rrd.MergeType;
-import org.wing4j.rrd.RoundRobinConnection;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
@@ -83,6 +82,6 @@ public class BioRoundRobinConnectorTest {
     public void testConnect() throws Exception {
         RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
         String sessionId = connector.connect("admin", "password");
-        connector.disConnect(sessionId);
+//        connector.disConnect(sessionId);
     }
 }

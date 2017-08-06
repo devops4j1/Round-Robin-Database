@@ -31,14 +31,33 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
 
     static RoundRobinDatabase database;
     RoundRobinConfig config;
+    Future checkConnectionTimeoutFuture;
 
     final Map<String, Table> tables = new HashMap<>();
 
-    private DefaultRoundRobinDatabase(String instance, RoundRobinConfig config) throws IOException {
+    private DefaultRoundRobinDatabase(String instance, final RoundRobinConfig config) throws IOException {
         this.instance = instance;
         this.config = config;
         this.scheduledService = Executors.newSingleThreadScheduledExecutor();
-        String workPath = config.getWorkPath() + File.separator + instance;
+
+        this.checkConnectionTimeoutFuture = this.scheduledService.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    for (RoundRobinConnection connection : connections.values()) {
+                        long time = (System.currentTimeMillis() - connection.getLastActiveTime()) / 1000;
+                        if (time > config.getAutoDisconnectThreshold()) {
+                            LOGGER.info("sessionId :" + connection.getSessionId() + " has timeout! auto disconnect just now!");
+                            connection.close();
+                            LOGGER.info("sessionId :" + connection.getSessionId() + " has disconnect!");
+                        }
+                    }
+                } catch (IOException e) {
+                    LOGGER.info("schedule check timeout connection happens error!");
+                }
+            }
+        }, config.getAutoDisconnectThreshold(), config.getAutoDisconnectThreshold() / 2, TimeUnit.MINUTES);
+        String workPath = config.getWorkPath() + File.separator + "database" + File.separator + instance;
         File workPathDir = new File(workPath);
         if (!workPathDir.exists()) {
             workPathDir.mkdirs();
@@ -79,7 +98,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
                     LOGGER.info("schedule persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
                 }
             }
-        }, 1, 1, TimeUnit.MINUTES);
+        }, config.getAutoPersistentPeriodSec(), config.getAutoPersistentPeriodSec(), TimeUnit.MINUTES);
         table.addScheduledFuture(future);
         //注册后绑定触发器
         tables.put(table.getMetadata().getName(), table);
@@ -160,7 +179,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
             Table table = tables.get(tableName);
             try {
                 table.drop();
-                for (Future future :table.getScheduledFutures()){
+                for (Future future : table.getScheduledFutures()) {
                     future.cancel(false);
                     table.removeScheduledFutures(future);
                 }
@@ -212,6 +231,8 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
             connection.close();
             connections.remove(connection);
         }
+        checkConnectionTimeoutFuture.cancel(true);
+        scheduledService.shutdown();
     }
 
     @Override

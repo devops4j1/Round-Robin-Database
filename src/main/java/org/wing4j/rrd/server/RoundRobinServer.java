@@ -15,7 +15,7 @@ public interface RoundRobinServer {
      * 获取配置对象
      * @return 配置对象
      */
-    RoundRobinServerConfig getConfig();
+    RoundRobinServerConfig getServerConfig();
 
     RoundRobinDatabase getDatabase();
 

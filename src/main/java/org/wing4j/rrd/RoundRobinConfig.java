@@ -23,6 +23,14 @@ public class RoundRobinConfig {
      */
     String workPath = "./target";
     /**
+     * 自动化持久频率（单位秒）
+     */
+    int autoPersistentPeriodSec = 120;
+    /**
+     * 自动断开连接阈值
+     */
+    int autoDisconnectThreshold = 5 * 60;
+    /**
      * 连接器类型
      */
     ConnectorType connectorType = ConnectorType.AIO;

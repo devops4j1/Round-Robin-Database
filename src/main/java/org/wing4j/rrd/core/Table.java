@@ -1,6 +1,9 @@
 package org.wing4j.rrd.core;
 
-import org.wing4j.rrd.*;
+import org.wing4j.rrd.FormatType;
+import org.wing4j.rrd.MergeType;
+import org.wing4j.rrd.RoundRobinTrigger;
+import org.wing4j.rrd.RoundRobinView;
 
 import java.io.IOException;
 import java.util.concurrent.Future;

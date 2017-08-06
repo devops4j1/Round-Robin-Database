@@ -2,11 +2,8 @@ package org.wing4j.rrd.net.protocol;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.wing4j.rrd.core.TableStatus;
 
 import java.nio.ByteBuffer;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by wing4j on 2017/8/4.

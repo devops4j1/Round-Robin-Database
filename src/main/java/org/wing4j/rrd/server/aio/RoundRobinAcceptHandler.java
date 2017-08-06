@@ -1,7 +1,7 @@
 package org.wing4j.rrd.server.aio;
 
 import org.wing4j.rrd.RoundRobinDatabase;
-import org.wing4j.rrd.server.RoundRobinServer;
+import org.wing4j.rrd.server.RoundRobinServerConfig;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -16,9 +16,11 @@ import java.util.logging.Logger;
  */
 public class RoundRobinAcceptHandler implements CompletionHandler<AsynchronousSocketChannel, AsynchronousServerSocketChannel> {
     static Logger LOGGER = Logger.getLogger(AioRoundRobinServer.class.getName());
+    RoundRobinServerConfig serverConfig;
     RoundRobinDatabase database;
 
-    public RoundRobinAcceptHandler(RoundRobinDatabase database) {
+    public RoundRobinAcceptHandler(RoundRobinServerConfig serverConfig, RoundRobinDatabase database) {
+        this.serverConfig = serverConfig;
         this.database = database;
     }
 
@@ -28,7 +30,7 @@ public class RoundRobinAcceptHandler implements CompletionHandler<AsynchronousSo
             attachment.accept(attachment, this);
             LOGGER.info(Thread.currentThread().getName() + " " + channel.getRemoteAddress().toString() + " accept");
             ByteBuffer clientBuffer = ByteBuffer.allocate(4);
-            channel.read(clientBuffer, clientBuffer, new RoundRobinReadHandler(channel, database));
+            channel.read(clientBuffer, clientBuffer, new RoundRobinReadHandler(channel, this.serverConfig, this.database));
         } catch (IOException e) {
             LOGGER.info(Thread.currentThread().getName() + " happens error! ");
         }

@@ -1,10 +1,8 @@
 package org.wing4j.rrd.client;
 
 import org.junit.Test;
-import org.wing4j.rrd.*;
-import org.wing4j.rrd.core.DefaultRoundRobinDatabase;
+import org.wing4j.rrd.RoundRobinConnection;
 import org.wing4j.rrd.core.TableMetadata;
-import org.wing4j.rrd.core.format.csv.v1.RoundRobinFormatCsvV1;
 import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
 
 /**

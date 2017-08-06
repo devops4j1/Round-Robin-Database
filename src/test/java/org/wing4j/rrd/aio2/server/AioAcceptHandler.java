@@ -1,12 +1,10 @@
 package org.wing4j.rrd.aio2.server;
 
 import java.io.IOException;
-import java.nio.ByteBuffer; 
-import java.nio.channels.AsynchronousServerSocketChannel; 
-import java.nio.channels.AsynchronousSocketChannel; 
-import java.nio.channels.CompletionHandler; 
-import java.util.concurrent.ExecutionException; 
-import java.util.concurrent.Future; 
+import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousServerSocketChannel;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.CompletionHandler;
  
 public class AioAcceptHandler implements CompletionHandler<AsynchronousSocketChannel, AsynchronousServerSocketChannel> {
     public void cancelled(AsynchronousServerSocketChannel attachment) { 

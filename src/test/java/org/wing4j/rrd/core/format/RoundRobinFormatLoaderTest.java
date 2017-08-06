@@ -7,8 +7,6 @@ import org.wing4j.rrd.core.format.bin.v1.RoundRobinFormatBinV1;
 import java.io.File;
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.*;
-
 /**
  * Created by wing4j on 2017/8/5.
  */

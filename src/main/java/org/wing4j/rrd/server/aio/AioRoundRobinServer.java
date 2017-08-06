@@ -18,17 +18,17 @@ import java.util.logging.Logger;
 @Data
 public class AioRoundRobinServer implements RoundRobinServer{
     static Logger LOGGER = Logger.getLogger(AioRoundRobinServer.class.getName());
-    RoundRobinServerConfig config;
+    RoundRobinServerConfig serverConfig;
     RoundRobinListener listener;
     Thread listenThread;
     RoundRobinDatabase database;
     int status = STOP;
 
-    public AioRoundRobinServer(RoundRobinServerConfig config) {
-        this.config = config;
+    public AioRoundRobinServer(RoundRobinServerConfig serverConfig) {
+        this.serverConfig = serverConfig;
         try {
             LOGGER.info("ready to init [default] database.");
-            this.database = DefaultRoundRobinDatabase.init(config);
+            this.database = DefaultRoundRobinDatabase.init(serverConfig);
             LOGGER.info("init database.");
         } catch (IOException e) {
             e.printStackTrace();

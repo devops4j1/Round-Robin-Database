@@ -1,13 +1,6 @@
 package org.wing4j.rrd.core.engine;
 
 import org.junit.Test;
-import org.wing4j.rrd.core.Table;
-import org.wing4j.rrd.core.TableMetadata;
-import org.wing4j.rrd.net.connector.RoundRobinConnector;
-import org.wing4j.rrd.net.connector.impl.AioRoundRobinConnector;
-import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by wing4j on 2017/8/5.

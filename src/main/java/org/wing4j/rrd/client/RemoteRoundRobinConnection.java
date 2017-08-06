@@ -7,14 +7,10 @@ import org.wing4j.rrd.core.Table;
 import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.core.engine.RemoteTable;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
-import org.wing4j.rrd.net.connector.impl.AioRoundRobinConnector;
-import org.wing4j.rrd.net.connector.impl.BioRoundRobinConnector;
-import org.wing4j.rrd.server.RoundRobinServer;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Created by wing4j on 2017/7/31.
@@ -146,5 +142,10 @@ public class RemoteRoundRobinConnection implements RoundRobinConnection {
     public void close() throws IOException {
         connector.disConnect(sessionId);
         database.close(this);
+    }
+
+    @Override
+    public long getLastActiveTime() {
+        return 0;
     }
 }

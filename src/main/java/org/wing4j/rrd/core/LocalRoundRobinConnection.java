@@ -25,6 +25,7 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     String sessionId;
     static Logger LOGGER = Logger.getLogger(LocalRoundRobinConnection.class.getName());
     volatile RoundRobinDatabase database;
+    volatile long lastActiveTime;
     /**
      * 任务执行线程池
      */
@@ -33,6 +34,7 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
     LocalRoundRobinConnection(RoundRobinDatabase database) throws IOException {
         this.database = database;
         this.sessionId = UUID.randomUUID().toString().replaceAll("-", "");
+        this.lastActiveTime = System.currentTimeMillis();
     }
 
     @Override
@@ -47,47 +49,55 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public TableMetadata getTableMetadata(String tableName) {
+        this.lastActiveTime = System.currentTimeMillis();
         Table table = database.getTable(tableName);
         return table.getMetadata();
     }
 
     @Override
     public boolean contain(String tableName, String column) {
+        this.lastActiveTime = System.currentTimeMillis();
         Table table = database.getTable(tableName);
         return table.getMetadata().contain(column);
     }
 
     @Override
     public long increase(String tableName, String column) {
+        this.lastActiveTime = System.currentTimeMillis();
         Table table = database.getTable(tableName);
         return table.increase(column);
     }
 
     @Override
     public long increase(String tableName, String column, int i) {
+        this.lastActiveTime = System.currentTimeMillis();
         Table table = database.getTable(tableName);
         return table.increase(column, i);
     }
 
     @Override
     public long increase(String tableName, String column, int pos, int i) {
+        this.lastActiveTime = System.currentTimeMillis();
         Table table = database.getTable(tableName);
         return table.increase(pos, column, i);
     }
 
     @Override
     public RoundRobinView slice(String tableName, int pos, int size, String... columns) {
+        this.lastActiveTime = System.currentTimeMillis();
         Table table = database.getTable(tableName);
         return table.slice(pos, size, columns);
     }
 
     @Override
     public RoundRobinView slice(int size, String... fullNames) {
+        this.lastActiveTime = System.currentTimeMillis();
         return null;
     }
 
     @Override
     public RoundRobinConnection registerTrigger(String tableName, RoundRobinTrigger trigger) {
+        this.lastActiveTime = System.currentTimeMillis();
         Table table = database.getTable(tableName);
         if (table == null) {
             //TODO
@@ -108,6 +118,7 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public RoundRobinView merge(String tableName, MergeType mergeType, int mergePos, RoundRobinView view) {
+        this.lastActiveTime = System.currentTimeMillis();
         if (DebugConfig.DEBUG) {
             LOGGER.info(MessageFormatter.format("table:{}", tableName));
             LOGGER.info(MessageFormatter.format("mergeType:{}", mergeType));
@@ -149,37 +160,48 @@ public class LocalRoundRobinConnection implements RoundRobinConnection {
 
     @Override
     public Table expand(String tableName, String... columns) {
+        this.lastActiveTime = System.currentTimeMillis();
         return database.getTable(tableName).expand(columns);
     }
 
     @Override
     public RoundRobinConnection createTable(String tableName, String... columns) throws IOException {
+        this.lastActiveTime = System.currentTimeMillis();
         database.createTable(tableName, columns);
         return this;
     }
 
     @Override
     public RoundRobinConnection dropTable(String... tableNames) throws IOException {
+        this.lastActiveTime = System.currentTimeMillis();
         database.dropTable(tableNames);
         return this;
     }
 
     @Override
     public int execute(String sql) throws SQLException{
+        this.lastActiveTime = System.currentTimeMillis();
         return 0;
     }
 
     @Override
     public RoundRobinView executeQuery(String sql) throws SQLException {
+        this.lastActiveTime = System.currentTimeMillis();
         return null;
     }
 
     @Override
     public void close() throws IOException {
+        this.lastActiveTime = System.currentTimeMillis();
         if (database.getConfig().isAutoPersistent()) {
             persistent();
             persistent(FormatType.CSV, 1);
         }
         database.close(this);
+    }
+
+    @Override
+    public long getLastActiveTime() {
+        return lastActiveTime;
     }
 }

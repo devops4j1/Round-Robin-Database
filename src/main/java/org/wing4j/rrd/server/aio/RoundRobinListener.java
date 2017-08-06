@@ -25,8 +25,8 @@ public class RoundRobinListener implements Runnable {
 
     @Override
     public void run() {
-        RoundRobinServerConfig config = server.getConfig();
-        LOGGER.info("open " + config.getListenPort() + " port.");
+        RoundRobinServerConfig serverConfig = server.getServerConfig();
+        LOGGER.info("open " + serverConfig.getListenPort() + " port.");
         ExecutorService executor = Executors.newCachedThreadPool();
         //异步通道组
         AsynchronousChannelGroup asyncChannelGroup = null;
@@ -40,11 +40,11 @@ public class RoundRobinListener implements Runnable {
         }
 
         try {
-            listener.bind(new InetSocketAddress(config.getListenPort()));
+            listener.bind(new InetSocketAddress(serverConfig.getListenPort()));
         } catch (IOException e) {
-            LOGGER.warning("listen port " + config.getListenPort() + " already use!");
+            LOGGER.warning("listen port " + serverConfig.getListenPort() + " already use!");
         }
-        listener.accept(listener, new RoundRobinAcceptHandler(server.getDatabase()));
+        listener.accept(listener, new RoundRobinAcceptHandler(serverConfig, server.getDatabase()));
         LOGGER.info("Round Robin Database startup finish...");
     }
 }

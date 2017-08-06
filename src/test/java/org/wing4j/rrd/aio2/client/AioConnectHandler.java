@@ -1,6 +1,5 @@
 package org.wing4j.rrd.aio2.client;
 
-import java.util.concurrent.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;

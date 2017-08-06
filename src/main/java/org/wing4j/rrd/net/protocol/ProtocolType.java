@@ -13,6 +13,7 @@ public enum ProtocolType {
     QUERY_PAGE(7, "分页查看"),
     EXPAND(8, "字段扩容"),
     CREATE_TABLE(9, "创建表"),
+    DROP_TABLE(10, "删除表"),
     UNKNOWN(0, "未知命令");
     int code;
     String desc;

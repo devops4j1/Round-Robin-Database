@@ -2,8 +2,7 @@ package org.wing4j.rrd.net.protocol;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.wing4j.rrd.*;
-import org.wing4j.rrd.core.DefaultRoundRobinDatabase;
+import org.wing4j.rrd.MergeType;
 import org.wing4j.rrd.utils.HexUtils;
 
 import java.nio.ByteBuffer;

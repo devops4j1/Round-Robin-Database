@@ -179,4 +179,10 @@ public interface RoundRobinConnection {
      * 关闭连接
      */
     void close() throws IOException;
+
+    /**
+     * 获取最后活动时间
+     * @return
+     */
+    long getLastActiveTime();
 }

@@ -1,7 +1,6 @@
 package org.wing4j.rrd.net.connector;
 
 import org.wing4j.rrd.MergeType;
-import org.wing4j.rrd.RoundRobinConnection;
 import org.wing4j.rrd.RoundRobinView;
 import org.wing4j.rrd.core.TableMetadata;
 

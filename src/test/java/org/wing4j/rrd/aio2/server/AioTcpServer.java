@@ -3,10 +3,8 @@ package org.wing4j.rrd.aio2.server;
 import java.net.InetSocketAddress;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
-import java.nio.channels.AsynchronousSocketChannel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class AioTcpServer implements Runnable {
     private AsynchronousChannelGroup asyncChannelGroup;

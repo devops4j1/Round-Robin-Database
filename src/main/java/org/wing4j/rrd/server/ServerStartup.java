@@ -4,7 +4,6 @@ import org.wing4j.rrd.RoundRobinRuntimeException;
 import org.wing4j.rrd.server.aio.AioRoundRobinServer;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 
 /**
  * Created by wing4j on 2017/8/2.

@@ -2,8 +2,6 @@ package org.wing4j.rrd.aio.server;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 /**
  * Created by wing4j on 2017/8/5.
  */
