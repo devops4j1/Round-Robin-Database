@@ -46,18 +46,6 @@ public class AioRoundRobinServer implements RoundRobinServer {
         this.listenThread = new Thread(listener, "Round-Robin-Database-listener");
         this.listenThread.start();
         status = RUNNING;
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                LOGGER.info("begin to persistent table !");
-                if (DebugConfig.DEBUG) {
-                    database.persistent(FormatType.CSV, 1, 0);
-                } else {
-                    database.persistent(FormatType.BIN, 1, 0);
-                }
-                LOGGER.info("persistent table finish!");
-            }
-        });
         while (status == RUNNING) {
             Thread.sleep(60 * 1000);
         }
@@ -65,6 +53,7 @@ public class AioRoundRobinServer implements RoundRobinServer {
 
     @Override
     public void stop() {
-        listenThread.interrupt();
+        status = STOP;
+        System.exit(15);
     }
 }

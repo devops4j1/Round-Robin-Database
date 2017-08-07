@@ -2,8 +2,10 @@ package org.wing4j.rrd;
 
 import lombok.Data;
 import lombok.ToString;
+import org.wing4j.rrd.debug.DebugConfig;
 
 import java.io.*;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -24,7 +26,7 @@ public class RoundRobinConfig {
     /**
      * 工作路径
      */
-    String workPath = "target";
+    String rrdHome = null;
     /**
      * 自动化持久频率（单位秒）
      */
@@ -43,10 +45,11 @@ public class RoundRobinConfig {
     ConnectorType connectorType = ConnectorType.AIO;
 
     public RoundRobinConfig() {
+        this.rrdHome = getParameter("rrd.home", "target");
         Properties config = new Properties();
         FileInputStream fis = null;
         try {
-            File file = new File(new File(workPath), "etc" + File.separator + "config.properties");
+            File file = new File(new File(rrdHome), "etc" + File.separator + "config.properties");
             if (!file.exists()) {
                 File etcDir = file.getParentFile();
                 if (!etcDir.exists()) {
@@ -83,9 +86,9 @@ public class RoundRobinConfig {
             }
         }
         {
-            String key = "org.wing4j.rrd.database.workPath";
+            String key = "org.wing4j.rrd.database.rrdHome";
             if (config.containsKey(key)) {
-                workPath = config.getProperty(key);
+                rrdHome = config.getProperty(key);
             }
         }
         {
@@ -119,14 +122,13 @@ public class RoundRobinConfig {
                 Properties config = new Properties();
                 config.setProperty("org.wing4j.rrd.database.autoPersistent", Boolean.toString(RoundRobinConfig.this.isAutoPersistent()));
                 config.setProperty("org.wing4j.rrd.database.asyncPersistent", Boolean.toString(RoundRobinConfig.this.isAsyncPersistent()));
-                config.setProperty("org.wing4j.rrd.database.workPath", RoundRobinConfig.this.getWorkPath());
                 config.setProperty("org.wing4j.rrd.database.autoPersistentPeriodSec", Integer.toString(RoundRobinConfig.this.getAutoPersistentPeriodSec()));
                 config.setProperty("org.wing4j.rrd.database.autoDisconnectThreshold", Integer.toString(RoundRobinConfig.this.getAutoDisconnectThreshold()));
                 config.setProperty("org.wing4j.rrd.database.autoPersistentRecordThreshold", Integer.toString(RoundRobinConfig.this.getAutoPersistentRecordThreshold()));
                 config.setProperty("org.wing4j.rrd.database.connectorType", RoundRobinConfig.this.getConnectorType().name());
                 FileOutputStream fos = null;
                 try {
-                    File file = new File(new File(workPath), "etc" + File.separator + "config.properties");
+                    File file = new File(new File(rrdHome), "etc" + File.separator + "config.properties");
                     if (!file.exists()) {
                         File etcDir = file.getParentFile();
                         if (!etcDir.exists()) {
@@ -150,5 +152,28 @@ public class RoundRobinConfig {
                 }
             }
         });
+    }
+
+    String getParameter(String key, String def) {
+        String val = def;
+        Properties properties = System.getProperties();
+        if(DebugConfig.DEBUG){
+            for (Object k : properties.keySet()){
+                System.out.println(k + "=" + properties.get(k));
+            }
+        }
+        if (properties.containsKey(key)) {
+            val = properties.getProperty(key);
+            System.out.println("round-robin-database " + key + " use " + val);
+        } else {
+            Map<String, String> env = System.getenv();
+            if (env.containsKey(key)) {
+                val = env.get(key);
+                System.out.println("round-robin-database " + key + " use " + val);
+            } else {
+                System.out.println("round-robin-database " + key + " use " + val);
+            }
+        }
+        return val;
     }
 }

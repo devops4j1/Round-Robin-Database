@@ -61,7 +61,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
                 }
             }
         }, config.getAutoDisconnectThreshold(), config.getAutoDisconnectThreshold() / 2, TimeUnit.SECONDS);
-        String databasePath = config.getWorkPath() + File.separator + "database" + File.separator + instance;
+        String databasePath = config.getRrdHome() + File.separator + "database" + File.separator + instance;
         File databasePathDir = new File(databasePath);
         if (!databasePathDir.exists()) {
             databasePathDir.mkdirs();
@@ -173,7 +173,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
         if (existTable(tableName, false)) {
             throw new RoundRobinRuntimeException(tableName + " is exist!");
         }
-        Table table = new PersistentTable(config.getWorkPath(), instance, tableName, DAY_SECOND, columns);
+        Table table = new PersistentTable(config.getRrdHome(), instance, tableName, DAY_SECOND, columns);
         register(table);
         return this;
     }

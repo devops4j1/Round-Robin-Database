@@ -1,5 +1,7 @@
 package org.wing4j.rrd.server.aio;
 
+import org.wing4j.rrd.FormatType;
+import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.server.RoundRobinServer;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
 
@@ -37,14 +39,32 @@ public class RoundRobinListener implements Runnable {
             listener = AsynchronousServerSocketChannel.open(asyncChannelGroup);
         } catch (IOException e) {
             LOGGER.warning("Round Robin Database startup happens error...");
+            server.stop();
+            return;
         }
 
         try {
             listener.bind(new InetSocketAddress(serverConfig.getListenPort()));
+            listener.accept(listener, new RoundRobinAcceptHandler(serverConfig, server.getDatabase()));
+            LOGGER.info("Round Robin Database startup finish...");
         } catch (IOException e) {
             LOGGER.warning("listen port " + serverConfig.getListenPort() + " already use!");
+            server.stop();
+            return;
         }
-        listener.accept(listener, new RoundRobinAcceptHandler(serverConfig, server.getDatabase()));
-        LOGGER.info("Round Robin Database startup finish...");
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                LOGGER.info("begin to persistent table !");
+                if (DebugConfig.DEBUG) {
+                    server.getDatabase().persistent(FormatType.CSV, 1, 0);
+                } else {
+                    server.getDatabase().persistent(FormatType.BIN, 1, 0);
+                }
+                LOGGER.info("persistent table finish!");
+            }
+        });
+
     }
 }

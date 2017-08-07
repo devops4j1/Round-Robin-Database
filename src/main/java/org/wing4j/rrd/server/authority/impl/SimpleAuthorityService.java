@@ -45,9 +45,9 @@ public class SimpleAuthorityService implements AuthorityService {
     void loadConfig(Properties authorities) {
         FileInputStream fis = null;
         try {
-            File file = new File(serverConfig.getWorkPath() + File.separator + "etc" + File.separator + "authorities.properties");
+            File file = new File(serverConfig.getRrdHome() + File.separator + "etc" + File.separator + "authorities.properties");
             if(!file.exists()){
-                File etcDir = new File(serverConfig.getWorkPath() + File.separator + "etc");
+                File etcDir = new File(serverConfig.getRrdHome() + File.separator + "etc");
                 if(!etcDir.exists()){
                     etcDir.mkdirs();
                 }

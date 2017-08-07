@@ -109,7 +109,7 @@ public class DefaultRoundRobinDatabaseTest {
     @Test
          public void testOpen() throws Exception {
         RoundRobinConfig config = new RoundRobinConfig();
-        config.setWorkPath("./target/x");
+        config.setRrdHome("./target/x");
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
         RoundRobinConnection connection = database.open("127.0.0.1", 8099, "admin", "password");
         connection.close();
@@ -118,7 +118,7 @@ public class DefaultRoundRobinDatabaseTest {
     @Test
     public void testIncrease() throws Exception {
         RoundRobinConfig config = new RoundRobinConfig();
-        config.setWorkPath("./target/x");
+        config.setRrdHome("./target/x");
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
         RoundRobinConnection connection = database.open("127.0.0.1", 8099, "admin", "password");
         for (int i = 0; i < 100; i++) {
@@ -140,7 +140,7 @@ public class DefaultRoundRobinDatabaseTest {
     @Test
     public void testCreateTable() throws Exception {
         RoundRobinConfig config = new RoundRobinConfig();
-        config.setWorkPath("./target/x");
+        config.setRrdHome("./target/x");
         RoundRobinDatabase database = DefaultRoundRobinDatabase.init(config);
         RoundRobinConnection connection = database.open("127.0.0.1", 8099, "admin", "password");
 //        for (int i = 0; i < 100; i++) {
