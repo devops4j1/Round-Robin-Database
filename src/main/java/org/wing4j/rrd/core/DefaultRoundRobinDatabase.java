@@ -57,7 +57,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
                         }
                     }
                 } catch (IOException e) {
-                    LOGGER.info("schedule check timeout connection happens error!");
+                    LOGGER.warning("schedule check timeout connection happens error!");
                 }
             }
         }, config.getAutoDisconnectThreshold(), config.getAutoDisconnectThreshold() / 2, TimeUnit.SECONDS);
@@ -92,7 +92,10 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
      * @param table
      */
     void register(final Table table) {
-        LOGGER.info("加载表数据,[" + instance + "." + table.getMetadata().getName() + "]");
+        LOGGER.info("正在加载表[" + instance + "." + table.getMetadata().getName() + "]数据");
+        //注册表数据
+        tables.put(table.getMetadata().getName(), table);
+        LOGGER.info("正在创建表[" + instance + "." + table.getMetadata().getName() + "]任务事件");
         Future future = this.scheduledService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -107,13 +110,11 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
                         }
                     }
                 } catch (IOException e) {
-                    LOGGER.info("auto persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
+                    LOGGER.warning("auto persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
                 }
             }
         }, config.getAutoPersistentPeriodSec(), config.getAutoPersistentPeriodSec(), TimeUnit.SECONDS);
         table.addScheduledFuture(future);
-        //注册表数据
-        tables.put(table.getMetadata().getName(), table);
     }
 
     public static RoundRobinDatabase init(RoundRobinConfig config) throws IOException {
@@ -191,14 +192,17 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
             existTable(tableName, true);
             Table table = tables.get(tableName);
             try {
+                LOGGER.info("正在卸载表[" + table.getMetadata().getInstance() + "." + tableName + "]");
+                tables.remove(tableName);
+                LOGGER.info("正在删除[" + table.getMetadata().getInstance() + "." + tableName + "]表数据文件");
                 table.drop();
+                LOGGER.info("正在结束表[" + table.getMetadata().getInstance() + "." + tableName + "]注册的任务事件");
                 for (Future future : table.getScheduledFutures()) {
                     future.cancel(false);
                     table.removeScheduledFutures(future);
                 }
-                tables.remove(tableName);
             } catch (Exception e) {
-                //TODO 处理删表错误
+                LOGGER.warning("drop table " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
             }
         }
         return this;
@@ -251,7 +255,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
                     LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " has persistent!");
                 }
             } catch (IOException e) {
-                LOGGER.info("persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
+                LOGGER.warning("persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
             }
         } else {
             Future future = this.scheduledService.schedule(new Runnable() {
@@ -266,7 +270,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
                             LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " has persistent!");
                         }
                     } catch (IOException e) {
-                        LOGGER.info("persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
+                        LOGGER.warning("persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
                     }
                 }
             }, persistentTime, TimeUnit.SECONDS);

@@ -54,6 +54,7 @@ public class AioRoundRobinServer implements RoundRobinServer {
     @Override
     public void stop() {
         status = STOP;
+        LOGGER.warning("Round Robin Database is shutdown now!");
         System.exit(15);
     }
 }

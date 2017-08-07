@@ -24,6 +24,10 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
     long[][] data = new long[0][0];
     int[] timeline = new int[0];
 
+    public void setData(long[][] data){
+        this.data = data;
+        this.resultSize = data.length;
+    }
     @Override
     public ByteBuffer convert() {
         ByteBuffer buffer = ByteBuffer.allocate(100);

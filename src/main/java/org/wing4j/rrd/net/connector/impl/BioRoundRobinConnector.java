@@ -439,14 +439,20 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
         try {
             is.read(sizeLenBytes);
             int len = MessageUtils.bytes2int(sizeLenBytes);
+            if(DebugConfig.DEBUG){
+                System.out.println(is.available());
+            }
             if (is.available() < len - 4) {
-                System.out.println(HexUtils.toDisplayString(sizeLenBytes));
+                dataBytes = new byte[is.available()];
+                is.read(dataBytes);
+                System.out.println(HexUtils.toDisplayString(dataBytes));
                 throw new RoundRobinRuntimeException("无效报文");
             }
             dataBytes = new byte[len];
             is.read(dataBytes);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             socket.close();
+            throw e;
         } finally {
             os.flush();
             is.close();

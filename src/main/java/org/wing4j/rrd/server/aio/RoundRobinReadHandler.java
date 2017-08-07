@@ -50,6 +50,7 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
             future.get();
         } catch (Exception e) {
             resultBuffer = ByteBuffer.wrap("database happens unknown error!".getBytes());
+
             //注册异步写入返回信息
             channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.serverConfig, this.database));
             return;

@@ -17,7 +17,8 @@ public enum ProtocolType {
     PERSISTENT_TABLE(11, "持久化表"),
     GET(12, "获取数据"),
     SET(13, "设置数据"),
-    UNKNOWN(0, "未知命令");
+    UNKNOWN(0, "未知命令"),
+    ERROR(-1, "异常");
     int code;
     String desc;
 

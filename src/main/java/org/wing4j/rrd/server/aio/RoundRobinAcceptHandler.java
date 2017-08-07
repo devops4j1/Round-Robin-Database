@@ -4,10 +4,9 @@ import org.wing4j.rrd.RoundRobinDatabase;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousServerSocketChannel;
-import java.nio.channels.AsynchronousSocketChannel;
-import java.nio.channels.CompletionHandler;
+import java.nio.channels.*;
 import java.util.logging.Logger;
 
 /**
@@ -26,18 +25,73 @@ public class RoundRobinAcceptHandler implements CompletionHandler<AsynchronousSo
 
     @Override
     public void completed(AsynchronousSocketChannel channel, AsynchronousServerSocketChannel attachment) {
+        LOGGER.info(Thread.currentThread().getName() + " 接受来自" + getAddress(channel) + "的请求");
         try {
             attachment.accept(attachment, this);
-            LOGGER.info(Thread.currentThread().getName() + " " + channel.getRemoteAddress().toString() + " accept");
-            ByteBuffer clientBuffer = ByteBuffer.allocate(4);
-            channel.read(clientBuffer, clientBuffer, new RoundRobinReadHandler(channel, this.serverConfig, this.database));
-        } catch (IOException e) {
+        } catch (AcceptPendingException e) {
             LOGGER.info(Thread.currentThread().getName() + " happens error! ");
+            closeQuietly(channel);
+            return;
+        } catch (NotYetBoundException e) {
+            LOGGER.info(Thread.currentThread().getName() + " happens error! ");
+            closeQuietly(channel);
+            return;
+        } catch (ShutdownChannelGroupException e) {
+            LOGGER.info(Thread.currentThread().getName() + " happens error! ");
+            closeQuietly(channel);
+            return;
+        }
+
+        ByteBuffer clientBuffer = ByteBuffer.allocate(4);
+        try {
+            channel.read(clientBuffer, clientBuffer, new RoundRobinReadHandler(channel, this.serverConfig, this.database));
+        } catch (IllegalArgumentException e) {
+            LOGGER.info(Thread.currentThread().getName() + " happens error! ");
+            closeQuietly(channel);
+            return;
+        } catch (NotYetBoundException e) {
+            LOGGER.info(Thread.currentThread().getName() + " happens error! ");
+            closeQuietly(channel);
+            return;
+        } catch (ReadPendingException e) {
+            LOGGER.info(Thread.currentThread().getName() + " happens error! ");
+            closeQuietly(channel);
+            return;
+        } catch (ShutdownChannelGroupException e) {
+            LOGGER.info(Thread.currentThread().getName() + " happens error! ");
+            closeQuietly(channel);
+            return;
+        }
+    }
+
+    /**
+     * 优雅地关闭套接字
+     *
+     * @param channel
+     */
+    void closeQuietly(AsynchronousSocketChannel channel) {
+        try {
+            if (channel != null && channel.isOpen()) {
+                channel.shutdownInput();
+                channel.shutdownOutput();
+                channel.close();
+            }
+        } catch (IOException e) {
+            LOGGER.warning("关闭套接字发生错误");
+            e.printStackTrace();
         }
     }
 
     @Override
     public void failed(Throwable exc, AsynchronousServerSocketChannel attachment) {
+        exc.printStackTrace();
+    }
 
+    String getAddress(AsynchronousSocketChannel address) {
+        try {
+            return address.getRemoteAddress().toString();
+        } catch (IOException e) {
+            return "获取IP失败";
+        }
     }
 }
