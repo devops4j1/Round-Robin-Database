@@ -79,11 +79,11 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             dataBytes = new byte[len];
             is.read(dataBytes);
         } catch (Exception e) {
-            is.close();
-            os.close();
             socket.close();
         } finally {
             os.flush();
+            is.close();
+            os.close();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -138,11 +138,11 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             dataBytes = new byte[len];
             is.read(dataBytes);
         } catch (Exception e) {
-            is.close();
-            os.close();
             socket.close();
         } finally {
             os.flush();
+            is.close();
+            os.close();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -197,11 +197,11 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             dataBytes = new byte[len];
             is.read(dataBytes);
         } catch (Exception e) {
-            is.close();
-            os.close();
             socket.close();
         } finally {
             os.flush();
+            is.close();
+            os.close();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -261,11 +261,11 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             dataBytes = new byte[len];
             is.read(dataBytes);
         } catch (Exception e) {
-            is.close();
-            os.close();
             socket.close();
         } finally {
             os.flush();
+            is.close();
+            os.close();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -323,11 +323,11 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             dataBytes = new byte[len];
             is.read(dataBytes);
         } catch (Exception e) {
-            is.close();
-            os.close();
             socket.close();
         } finally {
             os.flush();
+            is.close();
+            os.close();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -384,11 +384,11 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             dataBytes = new byte[len];
             is.read(dataBytes);
         } catch (Exception e) {
-            is.close();
-            os.close();
             socket.close();
         } finally {
             os.flush();
+            is.close();
+            os.close();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -446,11 +446,11 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             dataBytes = new byte[len];
             is.read(dataBytes);
         } catch (Exception e) {
-            is.close();
-            os.close();
             socket.close();
         } finally {
             os.flush();
+            is.close();
+            os.close();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -510,11 +510,11 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             dataBytes = new byte[len];
             is.read(dataBytes);
         } catch (Exception e) {
-            is.close();
-            os.close();
             socket.close();
         } finally {
             os.flush();
+            is.close();
+            os.close();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -571,11 +571,11 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             dataBytes = new byte[len];
             is.read(dataBytes);
         } catch (Exception e) {
-            is.close();
-            os.close();
             socket.close();
         } finally {
             os.flush();
+            is.close();
+            os.close();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -633,11 +633,11 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             dataBytes = new byte[len];
             is.read(dataBytes);
         } catch (Exception e) {
-            is.close();
-            os.close();
             socket.close();
         } finally {
             os.flush();
+            is.close();
+            os.close();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -693,11 +693,11 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             dataBytes = new byte[len];
             is.read(dataBytes);
         } catch (Exception e) {
-            is.close();
-            os.close();
             socket.close();
         } finally {
             os.flush();
+            is.close();
+            os.close();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
@@ -754,11 +754,11 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             dataBytes = new byte[len];
             is.read(dataBytes);
         } catch (Exception e) {
-            is.close();
-            os.close();
             socket.close();
         } finally {
             os.flush();
+            is.close();
+            os.close();
         }
         buffer = ByteBuffer.wrap(dataBytes);
         ProtocolType protocolType = ProtocolType.valueOfCode(buffer.getInt());
