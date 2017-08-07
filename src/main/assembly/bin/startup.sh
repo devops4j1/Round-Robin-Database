@@ -1,0 +1,1 @@
+nohup java -jar round-robin-database-1.0.0-SNAPSHOT.jar & > database.out

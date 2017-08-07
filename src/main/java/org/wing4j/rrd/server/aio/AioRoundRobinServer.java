@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  * Created by wing4j on 2017/7/31.
  */
 @Data
-public class AioRoundRobinServer implements RoundRobinServer{
+public class AioRoundRobinServer implements RoundRobinServer {
     static Logger LOGGER = Logger.getLogger(AioRoundRobinServer.class.getName());
     RoundRobinServerConfig serverConfig;
     RoundRobinListener listener;
@@ -46,17 +46,19 @@ public class AioRoundRobinServer implements RoundRobinServer{
         this.listenThread = new Thread(listener, "Round-Robin-Database-listener");
         this.listenThread.start();
         status = RUNNING;
-        Runtime.getRuntime().addShutdownHook(new Thread(){
+        Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                if(DebugConfig.DEBUG){
+                LOGGER.info("begin to persistent table !");
+                if (DebugConfig.DEBUG) {
                     database.persistent(FormatType.CSV, 1, 0);
-                }else{
+                } else {
                     database.persistent(FormatType.BIN, 1, 0);
                 }
+                LOGGER.info("persistent table finish!");
             }
         });
-        while (status == RUNNING){
+        while (status == RUNNING) {
             Thread.sleep(60 * 1000);
         }
     }

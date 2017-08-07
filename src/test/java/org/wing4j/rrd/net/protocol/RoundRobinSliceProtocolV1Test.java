@@ -17,6 +17,7 @@ public class RoundRobinSliceProtocolV1Test {
         format.setMessageType(MessageType.RESPONSE);
         format.setColumns(new String[]{"request", "response"});
         format.setPos(3);
+        format.setTimeline(new int[]{102,103});
         format.setResultSize(2);
         long[][] data = new long[][]{
                 {1, 2},
@@ -45,6 +46,8 @@ public class RoundRobinSliceProtocolV1Test {
         Assert.assertEquals(2, format2.getData()[0][1]);
         Assert.assertEquals(3, format2.getData()[1][0]);
         Assert.assertEquals(4, format2.getData()[1][1]);
+        Assert.assertEquals(102, format2.getTimeline()[0]);
+        Assert.assertEquals(103, format2.getTimeline()[1]);
     }
 
     @Test
