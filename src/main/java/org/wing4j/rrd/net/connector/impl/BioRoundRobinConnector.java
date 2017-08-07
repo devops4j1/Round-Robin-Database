@@ -460,7 +460,7 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
             protocol.convert(buffer);
             if (RspCode.valueOfCode(protocol.getCode()) == RspCode.SUCCESS) {
                 //构建视图对象对象
-                return new RoundRobinView(protocol.getColumns(), protocol.getPos(), protocol.getData());
+                return new RoundRobinView(protocol.getColumns(), protocol.getTimeline(), protocol.getData());
             } else {
                 throw new RoundRobinRuntimeException(protocol.getCode() + ":" + protocol.getDesc());
             }

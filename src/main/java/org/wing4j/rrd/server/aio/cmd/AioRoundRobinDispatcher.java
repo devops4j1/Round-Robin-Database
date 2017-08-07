@@ -109,8 +109,9 @@ public class AioRoundRobinDispatcher {
                 RoundRobinView view = connection.slice(protocol.getTableName(), protocol.getPos(), protocol.getSize(), protocol.getColumns());
                 protocol.setPos(view.getTime());
                 protocol.setResultSize(view.getData().length);
-                protocol.setData(view.getData());
                 protocol.setColumns(view.getMetadata().getColumns());
+                protocol.setData(view.getData());
+                protocol.setTimeline(view.getTimeline());
             } catch (RoundRobinRuntimeException e) {
                 protocol.setDesc(e.getMessage());
                 protocol.setCode(RspCode.FAIL.getCode());

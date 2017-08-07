@@ -1,9 +1,12 @@
 package org.wing4j.rrd.server.aio;
 
 import lombok.Data;
+import org.wing4j.rrd.FormatType;
 import org.wing4j.rrd.RoundRobinConnection;
 import org.wing4j.rrd.RoundRobinDatabase;
 import org.wing4j.rrd.core.DefaultRoundRobinDatabase;
+import org.wing4j.rrd.core.Table;
+import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.server.RoundRobinServer;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
 import org.wing4j.rrd.utils.MessageFormatter;
@@ -46,7 +49,11 @@ public class AioRoundRobinServer implements RoundRobinServer{
         Runtime.getRuntime().addShutdownHook(new Thread(){
             @Override
             public void run() {
-                System.out.println("---------------------------");
+                if(DebugConfig.DEBUG){
+                    database.persistent(FormatType.CSV, 1, 0);
+                }else{
+                    database.persistent(FormatType.BIN, 1, 0);
+                }
             }
         });
         while (status == RUNNING){

@@ -22,6 +22,7 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
     int size = 0;
     int resultSize = 0;
     long[][] data = new long[0][0];
+    int[] timeline = new int[0];
 
     @Override
     public ByteBuffer convert() {
@@ -79,6 +80,10 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
                 buffer = put(buffer, this.data[i][j]);
             }
         }
+        //时间线
+        for (int i = 0; i < this.resultSize; i++) {
+            buffer = put(buffer, this.timeline[i]);
+        }
         //结束
         //回填,将报文总长度回填到第一个字节
         buffer.putInt(lengthPos, buffer.position() - 4);
@@ -129,6 +134,11 @@ public class RoundRobinSliceProtocolV1 extends BaseRoundRobinProtocol {
             for (int j = 0; j < columnNum; j++) {
                 this.data[i][j] = buffer.getLong();
             }
+        }
+        //时间线
+        this.timeline = new int[this.resultSize];
+        for (int i = 0; i < this.resultSize; i++) {
+            this.timeline[i] = buffer.getInt();
         }
     }
 }

@@ -80,6 +80,7 @@ public interface RoundRobinDatabase {
      * @return
      */
     RoundRobinDatabase persistent(String tableName, FormatType formatType,int version, int persistentTime);
+    RoundRobinDatabase persistent(FormatType formatType,int version, int persistentTime);
     /**
      * 关闭数据库
      */

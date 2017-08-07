@@ -186,8 +186,9 @@ public class PersistentTable implements Table {
             pos = pos + RoundRobinDatabase.DAY_SECOND;
         }
         for (int i = 0; i < size; i++) {
+            int i0 = (pos + i) % RoundRobinDatabase.DAY_SECOND;
+            timeline0[i] = i0;
             for (int j = 0; j < columns.length; j++) {
-                int i0 = (pos + i) % RoundRobinDatabase.DAY_SECOND;
                 data0[i][j] = data[i0][indexes[j]];
             }
         }

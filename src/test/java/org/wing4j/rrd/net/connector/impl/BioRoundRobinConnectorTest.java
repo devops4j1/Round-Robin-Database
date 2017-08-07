@@ -13,9 +13,12 @@ import org.wing4j.rrd.net.connector.RoundRobinConnector;
  */
 public class BioRoundRobinConnectorTest {
 
+    String address = "interface-platform-manager.d1.jr-zbj.com";
+//    String address = "127.0.0.1";
+
     @Test
     public void testMerge() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
         String sessionId = connector.connect("admin", "password");
         try {
             connector.dropTable("mo9");
@@ -36,7 +39,7 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testGetTableMetadata() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
         connector.connect("admin", "password");
 //        try {
 //            connector.dropTable("mo9");
@@ -52,7 +55,7 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testIncrease() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
         connector.connect("admin", "password");
         try {
             connector.dropTable("mo9");
@@ -69,7 +72,7 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testExpand() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
         connector.connect("admin", "password");
 //        try {
 //            connector.dropTable("mo9");
@@ -83,7 +86,7 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testCreateTable() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
         connector.connect("admin", "password");
         try {
             connector.dropTable("mo9");
@@ -95,16 +98,16 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testSlice() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
         connector.connect("admin", "password");
-        try {
-            connector.dropTable("mo9");
-        }catch (Exception e){
-
-        }
-        connector.createTable("mo9", "request", "response");
+//        try {
+//            connector.dropTable("mo9");
+//        }catch (Exception e){
+//
+//        }
+//        connector.createTable("mo9", "request", "response");
         for (int i = 0; i < 1; i++) {
-            RoundRobinView view = connector.slice("mo9", 110, 100, "request");
+            RoundRobinView view = connector.slice("mo9", 100, 100, "request");
             System.out.println(view);
         }
 
@@ -112,14 +115,14 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testConnect() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
         String sessionId = connector.connect("admin", "password");
 //        connector.disconnect("73bc9ddb68314294bbee8dea96b82371");
     }
 
     @Test
     public void testPersistentTable() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
         connector.connect("admin", "password");
 //        try {
 //            connector.dropTable("mo9");
@@ -132,7 +135,7 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testPersistentTable1() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
         connector.connect("admin", "password");
         try {
             connector.dropTable("mo9");
@@ -145,7 +148,7 @@ public class BioRoundRobinConnectorTest {
 
     @Test
     public void testSet() throws Exception {
-        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
         connector.connect("admin", "password");
 //        try {
 //            connector.dropTable("mo9");
@@ -154,19 +157,19 @@ public class BioRoundRobinConnectorTest {
 //        }
 //        connector.createTable("mo9", "request", "response");
         long val = connector.set("mo9", "request", 2, 123);
-        System.out.println(val);
+//        System.out.println(val);
     }
 
     @Test
     public void testGet() throws Exception {
-        Thread[] threads = new Thread[1];
+        Thread[] threads = new Thread[100];
         for (int i = 0; i < threads.length; i++) {
             threads[i] = new Thread(){
                 @Override
                 public void run() {
 
                     try {
-                        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, "127.0.0.1", 8099);
+                        RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
                         connector.connect("admin", "password");
                         for (int i = 0; i < 1000; i++) {
                             long val2 = connector.set("mo9", "request", 0, i);

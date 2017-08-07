@@ -241,22 +241,60 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     @Override
     public RoundRobinDatabase persistent(String tableName, final FormatType formatType, final int version, int persistentTime) {
         final Table table = getTable(tableName);
-        Future future = this.scheduledService.schedule(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (DebugConfig.DEBUG) {
-                        LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " will persistent!");
-                    }
-                    table.persistent(formatType, version);
-                    if (DebugConfig.DEBUG) {
-                        LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " has persistent!");
-                    }
-                } catch (IOException e) {
-                    LOGGER.info("persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
+        if (persistentTime == 0) {
+            try {
+                if (DebugConfig.DEBUG) {
+                    LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " will persistent!");
                 }
+                table.persistent(formatType, version);
+                if (DebugConfig.DEBUG) {
+                    LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " has persistent!");
+                }
+            } catch (IOException e) {
+                LOGGER.info("persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
             }
-        }, persistentTime, TimeUnit.SECONDS);
+        } else {
+            Future future = this.scheduledService.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (DebugConfig.DEBUG) {
+                            LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " will persistent!");
+                        }
+                        table.persistent(formatType, version);
+                        if (DebugConfig.DEBUG) {
+                            LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " has persistent!");
+                        }
+                    } catch (IOException e) {
+                        LOGGER.info("persistent " + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + "happens error!");
+                    }
+                }
+            }, persistentTime, TimeUnit.SECONDS);
+        }
+        return this;
+    }
+
+    @Override
+    public RoundRobinDatabase persistent(final FormatType formatType, final int version, final int persistentTime) {
+        for (final Table table : tables.values()) {
+            if (persistentTime == 0) {
+                persistent(table.getMetadata().getName(), FormatType.BIN, 1, 0);
+            } else {
+                Future future = this.scheduledService.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (DebugConfig.DEBUG) {
+                            LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " will persistent!");
+                        }
+                        persistent(table.getMetadata().getName(), FormatType.BIN, 1, persistentTime);
+                        if (DebugConfig.DEBUG) {
+                            LOGGER.info("" + table.getMetadata().getInstance() + "." + table.getMetadata().getName() + " has persistent!");
+                        }
+                    }
+                }, persistentTime, TimeUnit.SECONDS);
+            }
+        }
+
         return this;
     }
 

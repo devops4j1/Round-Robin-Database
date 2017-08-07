@@ -14,6 +14,8 @@ import java.util.Properties;
  */
 public class SimpleAuthorityService implements AuthorityService {
     RoundRobinServerConfig serverConfig;
+    Properties authorities = null;
+    long lastLoadTime = System.currentTimeMillis();
 
     public SimpleAuthorityService(RoundRobinServerConfig serverConfig) {
         this.serverConfig = serverConfig;
@@ -21,7 +23,26 @@ public class SimpleAuthorityService implements AuthorityService {
 
     @Override
     public boolean hasAuthority(String username, String password) {
-        Properties authorities = new Properties();
+        if(authorities == null){
+            synchronized (this){
+                if(authorities == null){
+                    authorities = new Properties();
+                    loadConfig(authorities);
+                }
+            }
+        }
+        if(System.currentTimeMillis() - lastLoadTime > 60 * 1000){
+            synchronized (this) {
+                if(System.currentTimeMillis() - lastLoadTime > 60 * 1000){
+                    authorities = new Properties();
+                    loadConfig(authorities);
+                }
+            }
+        }
+        return password.equals(authorities.getProperty(username));
+    }
+
+    void loadConfig(Properties authorities) {
         FileInputStream fis = null;
         try {
             File file = new File(serverConfig.getWorkPath() + File.separator + "etc" + File.separator + "authorities.properties");
@@ -30,7 +51,6 @@ public class SimpleAuthorityService implements AuthorityService {
                 if(!etcDir.exists()){
                     etcDir.mkdirs();
                 }
-                file.createNewFile();
             }else{
                 fis = new FileInputStream(file);
                 authorities.load(fis);
@@ -48,6 +68,5 @@ public class SimpleAuthorityService implements AuthorityService {
                 }
             }
         }
-        return password.equals(authorities.getProperty(username));
     }
 }
