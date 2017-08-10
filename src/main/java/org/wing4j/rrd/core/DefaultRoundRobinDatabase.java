@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Logger;
 
 /**
@@ -21,6 +23,7 @@ import java.util.logging.Logger;
  */
 public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
     static Logger LOGGER = Logger.getLogger(DefaultRoundRobinDatabase.class.getName());
+    ReadWriteLock readWriteLock;
     //实例名
     String instance;
     //计划任务池
@@ -40,7 +43,7 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
         this.instance = instance;
         this.config = config;
         this.scheduledService = Executors.newSingleThreadScheduledExecutor();
-
+        this.readWriteLock = new ReentrantReadWriteLock();
         this.checkConnectionTimeoutFuture = this.scheduledService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -81,8 +84,14 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
 
             }
         });
-        for (File tableFile : tableFiles) {
-            openTable(tableFile);
+        this.readWriteLock.readLock().lock();
+        try {
+            for (File tableFile : tableFiles) {
+                openTable(tableFile);
+
+            }
+        } finally {
+            this.readWriteLock.readLock().unlock();
         }
     }
 
@@ -216,7 +225,13 @@ public class DefaultRoundRobinDatabase implements RoundRobinDatabase {
      * @return
      */
     public boolean existTable(String tableName, boolean throwException) {
-        boolean exist = tables.containsKey(tableName);
+        this.readWriteLock.readLock().lock();
+        boolean exist = false;
+        try {
+            exist = tables.containsKey(tableName);
+        } finally {
+            this.readWriteLock.readLock().unlock();
+        }
         if (throwException && !exist) {
             throw new RoundRobinRuntimeException(tableName + " is not exist!");
         }

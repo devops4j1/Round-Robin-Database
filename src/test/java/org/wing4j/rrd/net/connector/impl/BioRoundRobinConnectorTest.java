@@ -65,7 +65,7 @@ public class BioRoundRobinConnectorTest {
         connector.createTable("mo9", "request", "response");
         for (int i = 0; i < 1000; i++) {
             try {
-                long v = connector.increase("mo9", "request", i, 1);
+                long v = connector.increase("mo9", "request", i, i);
                 System.out.println(v);
             }catch (Exception e){
                 System.out.println("----------" + i);

@@ -2,6 +2,7 @@ package org.wing4j.rrd.server;
 
 import org.wing4j.rrd.RoundRobinRuntimeException;
 import org.wing4j.rrd.server.aio.AioRoundRobinServer;
+import org.wing4j.rrd.server.nio.NioRoundRobinServer;
 
 import java.lang.reflect.Constructor;
 
@@ -27,6 +28,6 @@ public class ServerStartup {
 
     public static void main(String[] args) throws Exception {
         ServerStartup serverStartup = new ServerStartup();
-        serverStartup.startup(AioRoundRobinServer.class.getName());
+        serverStartup.startup(NioRoundRobinServer.class.getName());
     }
 }

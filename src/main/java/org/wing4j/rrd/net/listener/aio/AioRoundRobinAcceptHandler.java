@@ -1,10 +1,10 @@
-package org.wing4j.rrd.server.aio;
+package org.wing4j.rrd.net.listener.aio;
 
 import org.wing4j.rrd.RoundRobinDatabase;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
+import org.wing4j.rrd.server.aio.AioRoundRobinServer;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.logging.Logger;
@@ -13,12 +13,12 @@ import java.util.logging.Logger;
  * Created by wing4j on 2017/8/1.
  * 环形数据库监听到客户端接入
  */
-public class RoundRobinAcceptHandler implements CompletionHandler<AsynchronousSocketChannel, AsynchronousServerSocketChannel> {
+public class AioRoundRobinAcceptHandler implements CompletionHandler<AsynchronousSocketChannel, AsynchronousServerSocketChannel> {
     static Logger LOGGER = Logger.getLogger(AioRoundRobinServer.class.getName());
     RoundRobinServerConfig serverConfig;
     RoundRobinDatabase database;
 
-    public RoundRobinAcceptHandler(RoundRobinServerConfig serverConfig, RoundRobinDatabase database) {
+    public AioRoundRobinAcceptHandler(RoundRobinServerConfig serverConfig, RoundRobinDatabase database) {
         this.serverConfig = serverConfig;
         this.database = database;
     }
@@ -44,7 +44,7 @@ public class RoundRobinAcceptHandler implements CompletionHandler<AsynchronousSo
 
         ByteBuffer clientBuffer = ByteBuffer.allocate(4);
         try {
-            channel.read(clientBuffer, clientBuffer, new RoundRobinReadHandler(channel, this.serverConfig, this.database));
+            channel.read(clientBuffer, clientBuffer, new AioRoundRobinReadHandler(channel, this.serverConfig, this.database));
         } catch (IllegalArgumentException e) {
             LOGGER.info(Thread.currentThread().getName() + " happens error! ");
             closeQuietly(channel);

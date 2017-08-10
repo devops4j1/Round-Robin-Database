@@ -1,18 +1,14 @@
 package org.wing4j.rrd.server.aio;
 
 import lombok.Data;
-import org.wing4j.rrd.FormatType;
-import org.wing4j.rrd.RoundRobinConnection;
 import org.wing4j.rrd.RoundRobinDatabase;
 import org.wing4j.rrd.core.DefaultRoundRobinDatabase;
-import org.wing4j.rrd.core.Table;
-import org.wing4j.rrd.debug.DebugConfig;
+import org.wing4j.rrd.net.listener.aio.AioRoundRobinListener;
 import org.wing4j.rrd.server.RoundRobinServer;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
-import org.wing4j.rrd.utils.MessageFormatter;
+import org.wing4j.rrd.server.ServerInterceptor;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -22,7 +18,7 @@ import java.util.logging.Logger;
 public class AioRoundRobinServer implements RoundRobinServer {
     static Logger LOGGER = Logger.getLogger(AioRoundRobinServer.class.getName());
     RoundRobinServerConfig serverConfig;
-    RoundRobinListener listener;
+    AioRoundRobinListener listener;
     Thread listenThread;
     RoundRobinDatabase database;
     int status = STOP;
@@ -40,11 +36,17 @@ public class AioRoundRobinServer implements RoundRobinServer {
 
 
     @Override
+    public void registerInterceptor(ServerInterceptor interceptor) {
+
+    }
+
+    @Override
     public void start() throws InterruptedException, IOException {
         LOGGER.info("start listener.");
-        this.listener = new RoundRobinListener(this);
+        this.listener = new AioRoundRobinListener(this);
         this.listenThread = new Thread(listener, "Round-Robin-Database-listener");
         this.listenThread.start();
+        LOGGER.info("startup finish.");
         status = RUNNING;
         while (status == RUNNING) {
             Thread.sleep(60 * 1000);

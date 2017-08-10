@@ -22,6 +22,14 @@ public class RoundRobinServerConfig extends RoundRobinConfig{
      */
     int listenPort = 8099;
     /**
+     * 重置连接计数器阈值
+     */
+    int rebuildCountThreshold = 512;
+    /**
+     *
+     */
+    long minSelectTimeInNanoSeconds = 500000L;
+    /**
      * 从节点
      */
     Set<String> slaves = new HashSet<>();

@@ -5,7 +5,7 @@ import org.wing4j.rrd.RoundRobinRuntimeException;
 import org.wing4j.rrd.net.connector.RoundRobinConnector;
 import org.wing4j.rrd.net.protocol.ProtocolType;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
-import org.wing4j.rrd.server.aio.RoundRobinWriteHandler;
+import org.wing4j.rrd.net.listener.aio.AioRoundRobinWriteHandler;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -32,7 +32,7 @@ public class ConnectHandler implements CompletionHandler<Void, AsynchronousSocke
     public void completed(Void result, AsynchronousSocketChannel connector) {
         buffer.flip();
         if (protocolType == ProtocolType.MERGE) {
-            connector.write(buffer, buffer, new RoundRobinWriteHandler(connector, this.serverConfig, this.database));
+            connector.write(buffer, buffer, new AioRoundRobinWriteHandler(connector, this.serverConfig, this.database));
         } else if (protocolType == ProtocolType.TABLE_METADATA) {
             Future writeResult = connector.write(buffer);
             try {
@@ -48,7 +48,7 @@ public class ConnectHandler implements CompletionHandler<Void, AsynchronousSocke
                 throw new RoundRobinRuntimeException("接收数据发生失败");
             }
         } else if (protocolType == ProtocolType.INCREASE) {
-            connector.write(buffer, buffer, new RoundRobinWriteHandler(connector, this.serverConfig, this.database));
+            connector.write(buffer, buffer, new AioRoundRobinWriteHandler(connector, this.serverConfig, this.database));
         } else if (protocolType == ProtocolType.SLICE) {
             Future writeResult = connector.write(buffer);
             try {
@@ -76,9 +76,9 @@ public class ConnectHandler implements CompletionHandler<Void, AsynchronousSocke
             }
             buffer.flip();
         } else if (protocolType == ProtocolType.EXPAND) {
-            connector.write(buffer, buffer, new RoundRobinWriteHandler(connector, this.serverConfig, this.database));
+            connector.write(buffer, buffer, new AioRoundRobinWriteHandler(connector, this.serverConfig, this.database));
         } else if (protocolType == ProtocolType.CREATE_TABLE) {
-            connector.write(buffer, buffer, new RoundRobinWriteHandler(connector, this.serverConfig, this.database));
+            connector.write(buffer, buffer, new AioRoundRobinWriteHandler(connector, this.serverConfig, this.database));
         }
     }
 

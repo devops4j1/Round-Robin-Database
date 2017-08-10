@@ -1,4 +1,4 @@
-package org.wing4j.rrd.server.aio;
+package org.wing4j.rrd.net.listener.aio;
 
 import org.wing4j.rrd.RoundRobinDatabase;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
@@ -11,13 +11,13 @@ import java.util.logging.Logger;
 /**
  * Created by wing4j on 2017/8/1.
  */
-public class RoundRobinWriteHandler implements CompletionHandler<Integer, ByteBuffer> {
+public class AioRoundRobinWriteHandler implements CompletionHandler<Integer, ByteBuffer> {
     AsynchronousSocketChannel channel;
     RoundRobinServerConfig serverConfig;
     RoundRobinDatabase database;
-    static Logger LOGGER = Logger.getLogger(RoundRobinWriteHandler.class.getName());
+    static Logger LOGGER = Logger.getLogger(AioRoundRobinWriteHandler.class.getName());
 
-    public RoundRobinWriteHandler(AsynchronousSocketChannel channel, RoundRobinServerConfig serverConfig, RoundRobinDatabase database) {
+    public AioRoundRobinWriteHandler(AsynchronousSocketChannel channel, RoundRobinServerConfig serverConfig, RoundRobinDatabase database) {
         this.channel = channel;
         this.serverConfig = serverConfig;
         this.database = database;
@@ -29,7 +29,7 @@ public class RoundRobinWriteHandler implements CompletionHandler<Integer, ByteBu
             channel.write(attachment, attachment, this);
         } else {//发送完则进行读取
             ByteBuffer readBuffer = ByteBuffer.allocate(1024);
-            channel.read(readBuffer, readBuffer, new RoundRobinReadHandler(channel, this.serverConfig, this.database));
+            channel.read(readBuffer, readBuffer, new AioRoundRobinReadHandler(channel, this.serverConfig, this.database));
         }
     }
 

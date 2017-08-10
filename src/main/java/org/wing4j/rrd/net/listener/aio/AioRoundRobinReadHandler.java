@@ -1,34 +1,29 @@
-package org.wing4j.rrd.server.aio;
+package org.wing4j.rrd.net.listener.aio;
 
 import org.wing4j.rrd.*;
-import org.wing4j.rrd.core.Table;
-import org.wing4j.rrd.core.TableMetadata;
 import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.net.protocol.*;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
 import org.wing4j.rrd.server.aio.cmd.AioRoundRobinDispatcher;
 import org.wing4j.rrd.utils.HexUtils;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 /**
  * Created by wing4j on 2017/8/1.
  */
-public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuffer> {
-    static Logger LOGGER = Logger.getLogger(RoundRobinReadHandler.class.getName());
+public class AioRoundRobinReadHandler implements CompletionHandler<Integer, ByteBuffer> {
+    static Logger LOGGER = Logger.getLogger(AioRoundRobinReadHandler.class.getName());
     AsynchronousSocketChannel channel;
     RoundRobinServerConfig serverConfig;
     RoundRobinDatabase database;
     AioRoundRobinDispatcher dispatcher;
 
-    public RoundRobinReadHandler(AsynchronousSocketChannel channel,RoundRobinServerConfig serverConfig, RoundRobinDatabase database) {
+    public AioRoundRobinReadHandler(AsynchronousSocketChannel channel, RoundRobinServerConfig serverConfig, RoundRobinDatabase database) {
         this.channel = channel;
         this.database = database;
         this.dispatcher = new AioRoundRobinDispatcher(serverConfig);
@@ -52,7 +47,7 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
             resultBuffer = ByteBuffer.wrap("database happens unknown error!".getBytes());
 
             //注册异步写入返回信息
-            channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.serverConfig, this.database));
+            channel.write(resultBuffer, resultBuffer, new AioRoundRobinWriteHandler(channel, this.serverConfig, this.database));
             return;
         }
         attachment.flip();
@@ -60,7 +55,7 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
             LOGGER.info("无效的报文格式");
             resultBuffer = ByteBuffer.wrap("illegal message format!".getBytes());
             //注册异步写入返回信息
-            channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.serverConfig, this.database));
+            channel.write(resultBuffer, resultBuffer, new AioRoundRobinWriteHandler(channel, this.serverConfig, this.database));
             return;
         }
         //命令类型
@@ -81,7 +76,7 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
             LOGGER.info("报文格式不为请求报文格式");
             resultBuffer = ByteBuffer.wrap(" message is not request format!".getBytes());
             //注册异步写入返回信息
-            channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.serverConfig, this.database));
+            channel.write(resultBuffer, resultBuffer, new AioRoundRobinWriteHandler(channel, this.serverConfig, this.database));
             return;
         }
         try {
@@ -96,7 +91,7 @@ public class RoundRobinReadHandler implements CompletionHandler<Integer, ByteBuf
                 resultBuffer.flip();
             }
             //注册异步写入返回信息
-            channel.write(resultBuffer, resultBuffer, new RoundRobinWriteHandler(channel, this.serverConfig, this.database));
+            channel.write(resultBuffer, resultBuffer, new AioRoundRobinWriteHandler(channel, this.serverConfig, this.database));
         }
 
 

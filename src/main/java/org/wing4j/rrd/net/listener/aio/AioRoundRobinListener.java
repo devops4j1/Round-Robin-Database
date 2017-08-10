@@ -1,7 +1,8 @@
-package org.wing4j.rrd.server.aio;
+package org.wing4j.rrd.net.listener.aio;
 
 import org.wing4j.rrd.FormatType;
 import org.wing4j.rrd.debug.DebugConfig;
+import org.wing4j.rrd.net.listener.RoundRobinListener;
 import org.wing4j.rrd.server.RoundRobinServer;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
 
@@ -16,11 +17,11 @@ import java.util.logging.Logger;
 /**
  * Created by wing4j on 2017/8/1.
  */
-public class RoundRobinListener implements Runnable {
-    static Logger LOGGER = Logger.getLogger(RoundRobinListener.class.getName());
+public class AioRoundRobinListener extends Thread implements RoundRobinListener {
+    static Logger LOGGER = Logger.getLogger(AioRoundRobinListener.class.getName());
     RoundRobinServer server;
 
-    public RoundRobinListener(RoundRobinServer server) {
+    public AioRoundRobinListener(RoundRobinServer server) {
         LOGGER.info("builder listener...");
         this.server = server;
     }
@@ -45,7 +46,7 @@ public class RoundRobinListener implements Runnable {
 
         try {
             listener.bind(new InetSocketAddress(serverConfig.getListenPort()));
-            listener.accept(listener, new RoundRobinAcceptHandler(serverConfig, server.getDatabase()));
+            listener.accept(listener, new AioRoundRobinAcceptHandler(serverConfig, server.getDatabase()));
             LOGGER.info("Round Robin Database startup finish...");
         } catch (IOException e) {
             LOGGER.warning("listen port " + serverConfig.getListenPort() + " already use!");
@@ -66,5 +67,10 @@ public class RoundRobinListener implements Runnable {
             }
         });
 
+    }
+
+    @Override
+    public int getPort() {
+        return 0;
     }
 }

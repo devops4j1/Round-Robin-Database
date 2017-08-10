@@ -11,6 +11,12 @@ import java.io.IOException;
 public interface RoundRobinServer {
     int RUNNING = 1;
     int STOP = 0;
+
+    /**
+     * 注册拦截器
+     * @param interceptor
+     */
+    void registerInterceptor(ServerInterceptor interceptor);
     /**
      * 获取配置对象
      * @return 配置对象
