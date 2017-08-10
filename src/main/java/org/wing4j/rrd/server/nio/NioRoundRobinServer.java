@@ -4,6 +4,8 @@ import lombok.Getter;
 import org.wing4j.rrd.RoundRobinDatabase;
 import org.wing4j.rrd.core.DefaultRoundRobinDatabase;
 import org.wing4j.rrd.net.listener.RoundRobinListener;
+import org.wing4j.rrd.net.listener.nio.NioConnectionFactory;
+import org.wing4j.rrd.net.listener.nio.NioRoundRobinReactorPool;
 import org.wing4j.rrd.net.listener.nio.NioRoundRobinListener;
 import org.wing4j.rrd.server.RoundRobinServer;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
@@ -18,15 +20,17 @@ import java.util.logging.Logger;
 public class NioRoundRobinServer implements RoundRobinServer{
     static Logger LOGGER = Logger.getLogger(NioRoundRobinServer.class.getName());
     @Getter
-    RoundRobinServerConfig serverConfig;
+    final RoundRobinServerConfig serverConfig;
     @Getter
     RoundRobinDatabase database;
-    RoundRobinListener listener;
+    final RoundRobinListener listener;
+    final NioRoundRobinReactorPool nioReactorPool;
     int status = STOP;
 
     public NioRoundRobinServer(RoundRobinServerConfig serverConfig) throws IOException {
         this.serverConfig = serverConfig;
-        this.listener = new NioRoundRobinListener(this);
+        this.nioReactorPool = new NioRoundRobinReactorPool(this, "server", serverConfig.getMaxReactorSize());
+        this.listener = new NioRoundRobinListener(this, new NioConnectionFactory(), nioReactorPool);
         try {
             LOGGER.info("ready to init [default] database.");
             this.database = DefaultRoundRobinDatabase.init(serverConfig);
@@ -43,7 +47,9 @@ public class NioRoundRobinServer implements RoundRobinServer{
 
     @Override
     public void start() throws InterruptedException, IOException {
-        LOGGER.info("start listener.");
+        LOGGER.info("startup reactor.");
+        this.nioReactorPool.startup();
+        LOGGER.info("startup listener.");
         this.listener.start();
         LOGGER.info("startup finish.");
         status = RUNNING;

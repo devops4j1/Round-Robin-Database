@@ -4,7 +4,7 @@ import org.wing4j.rrd.*;
 import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.net.protocol.*;
 import org.wing4j.rrd.server.RoundRobinServerConfig;
-import org.wing4j.rrd.server.aio.cmd.AioRoundRobinDispatcher;
+import org.wing4j.rrd.server.cmd.RoundRobinCommandDispatcher;
 import org.wing4j.rrd.utils.HexUtils;
 
 import java.nio.ByteBuffer;
@@ -21,12 +21,12 @@ public class AioRoundRobinReadHandler implements CompletionHandler<Integer, Byte
     AsynchronousSocketChannel channel;
     RoundRobinServerConfig serverConfig;
     RoundRobinDatabase database;
-    AioRoundRobinDispatcher dispatcher;
+    RoundRobinCommandDispatcher dispatcher;
 
     public AioRoundRobinReadHandler(AsynchronousSocketChannel channel, RoundRobinServerConfig serverConfig, RoundRobinDatabase database) {
         this.channel = channel;
         this.database = database;
-        this.dispatcher = new AioRoundRobinDispatcher(serverConfig);
+        this.dispatcher = new RoundRobinCommandDispatcher(serverConfig);
     }
     @Override
     public void completed(Integer result, ByteBuffer attachment) {

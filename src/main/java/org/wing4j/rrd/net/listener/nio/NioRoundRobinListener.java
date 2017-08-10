@@ -26,21 +26,25 @@ public class NioRoundRobinListener extends Thread implements RoundRobinListener 
     //已接受连接计数器
     int acceptCount;
     private volatile Selector selector;
-    RoundRobinServer server;
-    private final ServerSocketChannel serverChannel;
+    final RoundRobinServer server;
+    final ServerSocketChannel serverChannel;
+    NioRoundRobinReactorPool nioReactorPool;
+    NioConnectionFactory factory;
 
-    public NioRoundRobinListener(RoundRobinServer server) throws IOException {
+    public NioRoundRobinListener(RoundRobinServer server, NioConnectionFactory factory, NioRoundRobinReactorPool nioReactorPool) throws IOException {
         setName("Nio-listener");
         this.server = server;
         this.port = server.getServerConfig().getListenPort();
         this.selector = Selector.open();
         this.serverChannel = ServerSocketChannel.open();
         this.serverChannel.configureBlocking(false);
+        this.factory = factory;
+        this.nioReactorPool = nioReactorPool;
         //设置TCP属性
         serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);//
         serverChannel.setOption(StandardSocketOptions.SO_RCVBUF, 1024 * 16 * 2);//
         // backlog=100
-        serverChannel.bind(new InetSocketAddress("localhost", port), 100);
+        serverChannel.bind(new InetSocketAddress(port), 100);
         this.serverChannel.register(selector, SelectionKey.OP_ACCEPT);//服务端接收客户端连接事件
     }
 
@@ -87,15 +91,13 @@ public class NioRoundRobinListener extends Thread implements RoundRobinListener 
     }
 
     void accept() {
-        System.out.println("------------------------accept");
         SocketChannel channel = null;
         try {
             channel = serverChannel.accept();
             channel.configureBlocking(false);
-            channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-            channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-            new NioRoundRobinReadHandler(channel, );
-            //TODO 读取套接字通道
+            NioRoundRobinConnection connection = factory.make(server, channel);
+            NioRoundRobinReactor reactor = nioReactorPool.getNextReactor();
+            reactor.postRegister(connection);
         } catch (Exception e) {
             LOGGER.warning(getName() + e);
             if (channel == null) {

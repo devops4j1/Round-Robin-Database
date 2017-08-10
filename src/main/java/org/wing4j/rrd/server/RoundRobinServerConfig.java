@@ -30,6 +30,10 @@ public class RoundRobinServerConfig extends RoundRobinConfig{
      */
     long minSelectTimeInNanoSeconds = 500000L;
     /**
+     * 最大反射器数量
+     */
+    int maxReactorSize = 10;
+    /**
      * 从节点
      */
     Set<String> slaves = new HashSet<>();

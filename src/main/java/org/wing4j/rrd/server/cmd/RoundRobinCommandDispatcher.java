@@ -1,4 +1,4 @@
-package org.wing4j.rrd.server.aio.cmd;
+package org.wing4j.rrd.server.cmd;
 
 import org.wing4j.rrd.*;
 import org.wing4j.rrd.core.Table;
@@ -15,10 +15,10 @@ import java.nio.ByteBuffer;
  * Created by wing4j on 2017/8/6.
  * AIO分发器
  */
-public class AioRoundRobinDispatcher {
+public class RoundRobinCommandDispatcher {
     AuthorityService authorityService;
 
-    public AioRoundRobinDispatcher(RoundRobinServerConfig serverConfig) {
+    public RoundRobinCommandDispatcher(RoundRobinServerConfig serverConfig) {
         this.authorityService = new SimpleAuthorityService(serverConfig);
     }
 

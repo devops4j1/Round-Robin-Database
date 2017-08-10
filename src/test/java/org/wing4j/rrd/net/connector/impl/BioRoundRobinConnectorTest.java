@@ -13,8 +13,8 @@ import org.wing4j.rrd.net.connector.RoundRobinConnector;
  */
 public class BioRoundRobinConnectorTest {
 
-    String address = "interface-platform-manager.d1.jr-zbj.com";
-//    String address = "127.0.0.1";
+//    String address = "interface-platform-manager.d1.jr-zbj.com";
+    String address = "127.0.0.1";
 
     @Test
     public void testMerge() throws Exception {
@@ -121,6 +121,7 @@ public class BioRoundRobinConnectorTest {
     public void testConnect() throws Exception {
         RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
         String sessionId = connector.connect("admin", "password");
+        System.out.println(sessionId);
 //        connector.disconnect("73bc9ddb68314294bbee8dea96b82371");
     }
 
