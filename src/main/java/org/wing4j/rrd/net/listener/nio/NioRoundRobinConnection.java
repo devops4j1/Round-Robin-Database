@@ -11,9 +11,11 @@ import org.wing4j.rrd.server.cmd.RoundRobinCommandDispatcher;
 import org.wing4j.rrd.utils.HexUtils;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousChannel;
 import java.nio.channels.NetworkChannel;
+import java.nio.channels.SocketChannel;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -34,11 +36,20 @@ public class NioRoundRobinConnection implements ClosableConnection {
     protected volatile ByteBuffer writeBuffer = ByteBuffer.allocate(1024);
     @Getter
     protected final RoundRobinReadWriteHandler readWriteHandler;
+    @Getter
     protected final ConcurrentLinkedQueue<ByteBuffer> writeQueue = new ConcurrentLinkedQueue<ByteBuffer>();
     @Getter
     protected volatile int readBufferOffset;
     @Getter
     protected long netInBytes;
+    @Getter
+    protected long netOutBytes;
+    @Getter
+    protected int writeAttempts;
+    @Getter
+    protected long lastReadTime;
+    @Getter
+    protected long lastWriteTime;
 
     public NioRoundRobinConnection(RoundRobinServer server, NetworkChannel channel) {
         this.channel = channel;
@@ -54,6 +65,11 @@ public class NioRoundRobinConnection implements ClosableConnection {
     }
 
     public void asyncRead() throws IOException {
+        if (!channel.isOpen()) {
+            this.closed.set(true);
+            close("通道已经关闭");
+            return;
+        }
         readWriteHandler.asyncRead();
     }
 
@@ -62,7 +78,7 @@ public class NioRoundRobinConnection implements ClosableConnection {
     }
 
     ByteBuffer compactReadBuffer(ByteBuffer buffer, int offset) {
-        if(buffer == null) {
+        if (buffer == null) {
             return null;
         }
         buffer.limit(buffer.position());
@@ -79,8 +95,7 @@ public class NioRoundRobinConnection implements ClosableConnection {
         if (got < 0) {
             this.close("stream closed");
             return;
-        } else if (got == 0
-                && !this.channel.isOpen()) {
+        } else if (got == 0 && !this.channel.isOpen()) {
             this.close("socket closed");
             return;
         }
@@ -89,7 +104,7 @@ public class NioRoundRobinConnection implements ClosableConnection {
         int offset = readBufferOffset, length = 0, position = readBuffer.position();
         for (; ; ) {
             length = getPacketLength(readBuffer, offset);
-            if (length == -1) {
+            if (length <= 0) {
                 if (offset != 0) {
                     this.readBuffer = compactReadBuffer(readBuffer, offset);
                 } else if (readBuffer != null && !readBuffer.hasRemaining()) {
@@ -128,9 +143,9 @@ public class NioRoundRobinConnection implements ClosableConnection {
 //                        recycle(readBuffer);
 //                        readBuffer = ByteBuffer.allocate(1024);
 //                    } else {
-                        if (readBuffer != null) {
-                            readBuffer.clear();
-                        }
+                    if (readBuffer != null) {
+                        readBuffer.clear();
+                    }
 //                    }
                     // no more data ,break
                     readBufferOffset = 0;
@@ -155,6 +170,7 @@ public class NioRoundRobinConnection implements ClosableConnection {
             }
         }
     }
+
     public void handle(byte[] data) {
         ByteBuffer attachment = ByteBuffer.wrap(data);
         ByteBuffer resultBuffer = null;
@@ -172,7 +188,7 @@ public class NioRoundRobinConnection implements ClosableConnection {
         if (DebugConfig.DEBUG) {
             LOGGER.info("报文类型:" + messageType);
         }
-        if(messageType != MessageType.REQUEST){
+        if (messageType != MessageType.REQUEST) {
             LOGGER.info("报文格式不为请求报文格式");
             resultBuffer = ByteBuffer.wrap(" message is not request format!".getBytes());
             //注册异步写入返回信息
@@ -181,9 +197,9 @@ public class NioRoundRobinConnection implements ClosableConnection {
         }
         try {
             resultBuffer = this.dispatcher.dispatch(protocolType, version, attachment, this.server.getDatabase());
-        }catch (Exception e){
+        } catch (Exception e) {
             resultBuffer = ByteBuffer.wrap("database happens unknown error!".getBytes());
-        }finally {
+        } finally {
             if (DebugConfig.DEBUG) {
                 byte[] data0 = new byte[resultBuffer.limit()];
                 resultBuffer.get(data0);
@@ -201,7 +217,66 @@ public class NioRoundRobinConnection implements ClosableConnection {
     }
 
     public void close(String cause) {
-        System.out.println(cause);
+        if (isClosed()) {
+            closeSocket();
+            cleanUp();
+            if (cause == null || cause.isEmpty()) {
+                return;
+            }
+        }
+    }
+
+    void closeSocket() {
+        if (channel != null) {
+            if (channel instanceof SocketChannel) {
+                Socket socket = ((SocketChannel) channel).socket();
+                if (socket != null) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        LOGGER.warning("closeChannelError" + e);
+                    }
+                }
+            }
+
+            boolean socketClosed = true;
+            try {
+                channel.close();
+            } catch (Exception e) {
+                socketClosed = false;
+                LOGGER.warning("AbstractConnectionCloseError" + e);
+            }
+
+            boolean closed = socketClosed && (!channel.isOpen());
+            if (closed == false) {
+                LOGGER.warning("close socket of connnection failed " + this);
+            }
+        }
+    }
+
+    /**
+     * 回收资源
+     */
+    void cleanUp() {
+        // 清理资源占用
+        if (readBuffer != null) {
+            this.recycle(readBuffer);
+            this.readBuffer = null;
+            this.readBufferOffset = 0;
+        }
+
+        if (writeBuffer != null) {
+            recycle(writeBuffer);
+            this.writeBuffer = null;
+        }
+        ByteBuffer buffer = null;
+        while ((buffer = writeQueue.poll()) != null) {
+            recycle(buffer);
+        }
+    }
+
+    public final void recycle(ByteBuffer buffer) {
+
     }
 
     @Override

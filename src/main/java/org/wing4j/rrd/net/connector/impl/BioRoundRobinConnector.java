@@ -70,16 +70,30 @@ public class BioRoundRobinConnector implements RoundRobinConnector {
         byte[] sizeLenBytes = new byte[4];
         byte[] dataBytes = new byte[0];
         try {
-            is.read(sizeLenBytes);
-            int len = MessageUtils.bytes2int(sizeLenBytes);
-            if (is.available() < len - 4) {
-                System.out.println(HexUtils.toDisplayString(sizeLenBytes));
-                throw new RoundRobinRuntimeException("无效报文");
+            int len = 0;
+            long beginTime = System.currentTimeMillis();
+            while (len <= 0){
+                if(System.currentTimeMillis() - beginTime > 30 * 1000){
+                   throw new RoundRobinRuntimeException("超时");
+                }
+                is.read(sizeLenBytes);
+                len = MessageUtils.bytes2int(sizeLenBytes);
+                if(DebugConfig.DEBUG){
+                    System.out.println("无效报文" + HexUtils.toDisplayString(sizeLenBytes));
+                }
+                Thread.sleep(100);
             }
             dataBytes = new byte[len];
-            is.read(dataBytes);
+            int infactReadLen = is.read(dataBytes);
+            if(infactReadLen < len){
+                if(DebugConfig.DEBUG){
+                    System.out.println("无效报文" + HexUtils.toDisplayString(sizeLenBytes));
+                }
+                throw new RoundRobinRuntimeException("无效报文");
+            }
         } catch (Exception e) {
             socket.close();
+            throw new RoundRobinRuntimeException("无效的应答", e);
         } finally {
             os.flush();
             is.close();

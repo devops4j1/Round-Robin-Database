@@ -1,6 +1,8 @@
 package org.wing4j.rrd.net.listener.nio;
 
+import org.wing4j.rrd.debug.DebugConfig;
 import org.wing4j.rrd.net.listener.RoundRobinReadWriteHandler;
+import org.wing4j.rrd.utils.HexUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -48,9 +50,136 @@ public class NioReadWriteHandler implements RoundRobinReadWriteHandler {
         connection.onReadData(got);
     }
 
+     boolean write0() throws IOException {
+        int written = 0;
+        ByteBuffer buffer = connection.getWriteBuffer();
+        if (buffer != null) {
+            while (buffer.hasRemaining()) {
+                written = channel.write(buffer);
+                if (written > 0) {
+                    connection.netOutBytes += written;
+                    connection.lastWriteTime = System.currentTimeMillis();
+                } else {
+                    break;
+                }
+            }
+            if(DebugConfig.DEBUG){
+                buffer.flip();
+                byte[] data0 = new byte[buffer.limit()];
+                System.out.println("write:" + HexUtils.toDisplayString(data0));
+            }
+            if (buffer.hasRemaining()) {
+                connection.writeAttempts++;
+                return false;
+            } else {
+                connection.writeBuffer = null;
+                connection.recycle(buffer);
+            }
+        }
+        while ((buffer = connection.getWriteQueue().poll()) != null) {
+            if (buffer.limit() == 0) {
+                connection.recycle(buffer);
+                connection.close("quit send");
+                return true;
+            }
+
+            buffer.flip();
+            try {
+                while (buffer.hasRemaining()) {
+                    written = channel.write(buffer);// java.io.IOException:
+                    // Connection reset by peer
+                    if (written > 0) {
+                        connection.netOutBytes += written;
+                        connection.lastWriteTime = System.currentTimeMillis();
+                    } else {
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                connection.recycle(buffer);
+                throw e;
+            }
+            if (buffer.hasRemaining()) {
+                connection.writeBuffer = buffer;
+                connection.writeAttempts++;
+                return false;
+            } else {
+                connection.recycle(buffer);
+            }
+        }
+        return true;
+    }
+
+     void disableWrite() {
+        try {
+            SelectionKey key = this.processKey;
+            key.interestOps(key.interestOps() & OP_NOT_WRITE);
+        } catch (Exception e) {
+           LOGGER.warning("can't disable write " + e + " connection " + connection);
+        }
+
+    }
+
+     void enableWrite(boolean wakeup) {
+        boolean needWakeup = false;
+        try {
+            SelectionKey key = this.processKey;
+            key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
+            needWakeup = true;
+        } catch (Exception e) {
+            LOGGER.warning("can't enable write " + e);
+
+        }
+        if (needWakeup && wakeup) {
+            processKey.selector().wakeup();
+        }
+    }
+
+     void disableRead() {
+
+        SelectionKey key = this.processKey;
+        key.interestOps(key.interestOps() & OP_NOT_READ);
+    }
+
+    public void enableRead() {
+
+        boolean needWakeup = false;
+        try {
+            SelectionKey key = this.processKey;
+            key.interestOps(key.interestOps() | SelectionKey.OP_READ);
+            needWakeup = true;
+        } catch (Exception e) {
+            LOGGER.warning("enable read fail " + e);
+        }
+        if (needWakeup) {
+            processKey.selector().wakeup();
+        }
+    }
     @Override
     public void doNextWriteCheck() {
-        System.out.println(Thread.currentThread().getName() + " doNextWriteCheck");
+        if (!writing.compareAndSet(false, true)) {
+            return;
+        }
+
+        try {
+            boolean noMoreData = write0();
+            writing.set(false);
+            if (noMoreData && connection.getWriteQueue().isEmpty()) {
+                if ((processKey.isValid() && (processKey.interestOps() & SelectionKey.OP_WRITE) != 0)) {
+                    disableWrite();
+                }
+
+            } else {
+
+                if ((processKey.isValid() && (processKey.interestOps() & SelectionKey.OP_WRITE) == 0)) {
+                    enableWrite(false);
+                }
+            }
+
+        } catch (IOException e) {
+            LOGGER.warning("caught err:" + e);
+            connection.close("err:" + e);
+        }
     }
 
     void clearSelectionKey() {

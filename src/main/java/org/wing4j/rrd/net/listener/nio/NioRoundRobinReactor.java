@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -45,22 +46,23 @@ public class NioRoundRobinReactor implements Runnable {
         selector.wakeup();
     }
     final void startup() {
-        new Thread(this, name + "-RW").start();
+        new Thread(this, name + "-reactor").start();
     }
 
     @Override
     public void run() {
         int invalidSelectCount = 0;
-        Set<SelectionKey> keys = null;
+
         for (; ; ) {
             ++reactCount;
+            Set<SelectionKey> keys = null;
             try {
                 final Selector tSelector = this.selector;
                 long start = System.nanoTime();
                 tSelector.select(500L);
                 long end = System.nanoTime();
                 register(tSelector);
-                keys = tSelector.selectedKeys();
+                keys = new HashSet<>(tSelector.selectedKeys());
                 if (keys.size() == 0 && (end - start) < server.getServerConfig().getMinSelectTimeInNanoSeconds()) {
                     invalidSelectCount++;
                 } else {
@@ -109,6 +111,7 @@ public class NioRoundRobinReactor implements Runnable {
                             continue;
                         }
                     }
+
                 }
                 if (invalidSelectCount > server.getServerConfig().getRebuildCountThreshold()) {
                     final Selector rebuildSelector = SelectorUtil.rebuildSelector(this.selector);
