@@ -58,7 +58,6 @@ public class NioReadWriteHandler implements RoundRobinReadWriteHandler {
             got = channel.read(connection.readBuffer);
         }catch (Exception e){
             connection.close(null);
-            e.printStackTrace();
             return;
         }
         //对已读取字节数进行处理

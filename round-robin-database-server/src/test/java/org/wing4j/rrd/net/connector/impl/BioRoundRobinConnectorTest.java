@@ -157,14 +157,14 @@ public class BioRoundRobinConnectorTest {
     public void testSet() throws Exception {
         RoundRobinConnector connector = new BioRoundRobinConnector(null, null, address, 8099);
         connector.connect("admin", "password");
-//        try {
-//            connector.dropTable("mo9");
-//        }catch (Exception e){
-//
-//        }
-//        connector.createTable("mo9", "request", "response");
+        try {
+            connector.dropTable("mo9");
+        }catch (Exception e){
+
+        }
+        connector.createTable("mo9", "request", "response");
         long val = connector.set("mo9", "request", 2, 123);
-//        System.out.println(val);
+        System.out.println(val);
     }
 
     @Test
