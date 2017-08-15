@@ -31,9 +31,9 @@ public class NioRoundRobinConnection implements ClosableConnection {
     @Getter
     protected final SocketChannel channel;
     @Getter
-    protected volatile ByteBuffer readBuffer = ByteBuffer.allocate(1024);
+    protected volatile ByteBuffer readBuffer = null;
     @Getter
-    protected volatile ByteBuffer writeBuffer = ByteBuffer.allocate(1024);
+    protected volatile ByteBuffer writeBuffer = null;
     @Getter
     protected final RoundRobinReadWriteHandler readWriteHandler;
     @Getter
@@ -240,12 +240,11 @@ public class NioRoundRobinConnection implements ClosableConnection {
     }
 
     public void close(String cause) {
-        if (isClosed()) {
-            closeSocket();
-            cleanUp();
-            if (cause == null || cause.isEmpty()) {
-                return;
-            }
+        closeSocket();
+        cleanUp();
+        closed.set(true);
+        if (cause == null || cause.isEmpty()) {
+            return;
         }
     }
 

@@ -45,10 +45,22 @@ public class NioReadWriteHandler implements RoundRobinReadWriteHandler {
         //读取连接上的读取缓冲
         ByteBuffer readBuffer = connection.getReadBuffer();
         if(readBuffer == null){
-            connection.readBuffer = ByteBuffer.allocate(1024);
+            readBuffer = ByteBuffer.allocate(1024);
+            connection.readBuffer = readBuffer;
         }
         //读取缓冲区，返回已读取字节数
-        int got = connection.getChannel().read(readBuffer);
+        SocketChannel channel = connection.getChannel();
+        if(!channel.isOpen()){
+            return;
+        }
+        int got = 0;
+        try{
+            got = channel.read(connection.readBuffer);
+        }catch (Exception e){
+            connection.close(null);
+            e.printStackTrace();
+            return;
+        }
         //对已读取字节数进行处理
         connection.onReadData(got);
     }
@@ -79,14 +91,13 @@ public class NioReadWriteHandler implements RoundRobinReadWriteHandler {
                 connection.recycle(buffer);
             }
         }
+         //从写入队列获取结果信息
         while ((buffer = connection.getWriteQueue().poll()) != null) {
             if (buffer.limit() == 0) {
                 connection.recycle(buffer);
                 connection.close("quit send");
                 return true;
             }
-
-            buffer.flip();
             try {
                 while (buffer.hasRemaining()) {
                     written = connection.getChannel().write(buffer);// java.io.IOException:

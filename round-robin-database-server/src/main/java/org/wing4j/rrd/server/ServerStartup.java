@@ -22,6 +22,7 @@ public class ServerStartup {
         }
         Constructor constructor = serverClass.getConstructor(RoundRobinServerConfig.class);
         RoundRobinServerConfig config = new RoundRobinServerConfig();
+        config.setRrdHome("./target");
         RoundRobinServer server = (RoundRobinServer) constructor.newInstance(config);
         server.start();
     }

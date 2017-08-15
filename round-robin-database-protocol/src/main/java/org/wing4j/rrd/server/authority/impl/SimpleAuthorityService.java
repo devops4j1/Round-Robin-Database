@@ -51,6 +51,7 @@ public class SimpleAuthorityService implements AuthorityService {
                 if(!etcDir.exists()){
                     etcDir.mkdirs();
                 }
+                file.createNewFile();
             }else{
                 fis = new FileInputStream(file);
                 authorities.load(fis);
